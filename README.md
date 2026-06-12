@@ -40,14 +40,21 @@ Service   Service   Service   Service
 
 ## Como executar
 
-### 1. Subir a infraestrutura
+### Opção rápida — script automático (Windows)
+
+```powershell
+# Na pasta C:\Projects\Easypet\
+.\start-all.ps1
+```
+
+Abre o Windows Terminal com uma aba por serviço já em execução.
+
+### Manual
 
 ```bash
 cp .env.example .env
 docker compose up -d
 ```
-
-### 2. Subir os serviços
 
 Consulte o guia completo em [docs/getting-started.md](docs/getting-started.md).
 
