@@ -16,6 +16,7 @@ O Easypet é uma plataforma de gestão de cuidados pet baseada em microsserviço
 | [Easypet-pet-service](https://github.com/Randygomesdev/Easypet-pet-service) | Gestão de pets e prontuários |
 | [Easypet-partner-service](https://github.com/Randygomesdev/Easypet-partner-service) | Gestão de estabelecimentos |
 | [Easypet-booking-service](https://github.com/Randygomesdev/Easypet-booking-service) | Agendamentos e atendimentos |
+| [Easypet-payment-service](https://github.com/Randygomesdev/Easypet-payment-service) | Pagamentos e pacotes de serviços |
 | [Easypet-frontend](https://github.com/Randygomesdev/Easypet-frontend) | Interface web React |
 
 ## Arquitetura
