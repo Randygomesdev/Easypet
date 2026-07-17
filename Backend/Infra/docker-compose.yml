@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+
+  auth-db:
+    image: postgres:15-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${AUTH_DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-admin_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  pet-db:
+    image: postgres:15-alpine
+    container_name: pet-db
+    environment:
+      POSTGRES_DB: pet_db
+      POSTGRES_USER: ${PET_DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${PET_DB_PASSWORD:-admin_password}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pet_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  partner-db:
+    image: postgres:15-alpine
+    container_name: partner-db
+    environment:
+      POSTGRES_DB: partner_db
+      POSTGRES_USER: ${PARTNER_DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${PARTNER_DB_PASSWORD:-admin_password}
+    ports:
+      - "5434:5432"
+    volumes:
+      - partner_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  booking-db:
+    image: postgres:15-alpine
+    container_name: booking-db
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: ${BOOKING_DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${BOOKING_DB_PASSWORD:-admin_password}
+    ports:
+      - "5435:5432"
+    volumes:
+      - booking_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  payment-db:
+    image: postgres:15-alpine
+    container_name: payment-db
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: ${PAYMENT_DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${PAYMENT_DB_PASSWORD:-admin_password}
+    ports:
+      - "5436:5432"
+    volumes:
+      - payment_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: easypet-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2024-01-28T22-35-53Z
+    container_name: easypet-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-admin_password}
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: easypet-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@easypet.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - auth-db
+      - pet-db
+      - partner-db
+      - booking-db
+      - payment-db
+    restart: unless-stopped
+
+volumes:
+  auth_data:
+  pet_data:
+  partner_data:
+  booking_data:
+  payment_data:
+  minio_data:
