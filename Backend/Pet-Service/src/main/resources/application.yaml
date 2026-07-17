@@ -1,0 +1,37 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: pet-service
+
+  config:
+    import:
+      - optional:file:.env[.properties]
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+  datasource:
+    url: ${PET_DB_URL}
+    username: ${PET_DB_USERNAME}
+    password: ${PET_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+jwt:
+  secret: ${JWT_SECRET}

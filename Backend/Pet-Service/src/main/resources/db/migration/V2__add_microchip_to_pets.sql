@@ -1,0 +1,1 @@
+ALTER TABLE pets ADD COLUMN microchip_number VARCHAR(100) UNIQUE;
