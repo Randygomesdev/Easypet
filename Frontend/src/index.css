@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  /* ─── Brand ─── */
+  --color-primary-50:  #e8f0f7;
+  --color-primary-100: #c5d8ec;
+  --color-primary-200: #9dbfdf;
+  --color-primary-300: #74a5d2;
+  --color-primary-400: #4f8ec8;
+  --color-primary-500: #2e78be;
+  --color-primary-600: #1e5ea0;
+  --color-primary-700: #16426b; /* ← base */
+  --color-primary-800: #0f2f50;
+  --color-primary-900: #081c31;
+
+  --color-secondary-50:  #fef5e7;
+  --color-secondary-100: #fde4bb;
+  --color-secondary-200: #fbd08a;
+  --color-secondary-300: #f9bc59;
+  --color-secondary-400: #f7aa30;
+  --color-secondary-500: #ee9019; /* ← base */
+  --color-secondary-600: #d07a0f;
+  --color-secondary-700: #a8600a;
+  --color-secondary-800: #7f4706;
+  --color-secondary-900: #562e02;
+
+  /* ─── Gray scale ─── */
+  --color-gray-50:  #f6f6f8; /* background-gray */
+  --color-gray-100: #ebebef;
+  --color-gray-200: #d8d8e0;
+  --color-gray-300: #c0c0cc;
+  --color-gray-400: #a0a0b2;
+  --color-gray-500: #808098;
+  --color-gray-600: #606078;
+  --color-gray-700: #484860;
+  --color-gray-800: #303048;
+  --color-gray-900: #1a1a30;
+
+  /* ─── Semantic (light mode) ─── */
+  --color-bg:          #f6f6f8; /* página */
+  --color-surface:     #ffffff; /* header, sidebar, cards */
+  --color-border:      #ebebef;
+
+  --color-text-heading: #16426b;
+  --color-text-body:    #484860;
+  --color-text-muted:   #808098;
+  --color-text-placeholder: #c0c0cc;
+
+  --color-icon-default: #808098;
+  --color-icon-active:  #16426b;
+}
+
+/* ─── Dark mode overrides ─── */
+html.dark {
+  --color-bg:          #16426b;
+  --color-surface:     #0f2f50;
+  --color-border:      #2a6090;
+  --color-shadow:      rgba(0, 0, 0, 0.4);
+
+  --color-text-heading: #e8f0f7;
+  --color-text-body:    #c5d8ec;
+  --color-text-muted:   #7a9ab8;
+  --color-text-placeholder: #4a6880;
+
+  --color-icon-default: #7a9ab8;
+  --color-icon-active:  #9dbfdf;
+}
+
+/* ─── Base styles ─── */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text-body);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
