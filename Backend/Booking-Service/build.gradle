@@ -32,10 +32,10 @@ dependencies {
 	// Dotenv para variáveis de ambiente
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
-	// JWT
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+	// Signed fixtures for tests. Runtime delegates bearer verification to Auth.
+	testImplementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	testRuntimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	testRuntimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'

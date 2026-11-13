@@ -5,8 +5,6 @@ import br.com.easypet.booking.dto.request.BookingRequest;
 import br.com.easypet.booking.dto.response.BookingResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
 
@@ -15,29 +13,22 @@ public interface BookingMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "receptionCustomerId", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "customerPackageId", ignore = true)
-    @Mapping(target = "isFittingRequest", source = "requestFitting")
+    @Mapping(target = "isFittingRequest", ignore = true)
+    @Mapping(target = "scheduledEnd", ignore = true)
+    @Mapping(target = "cancellationReason", ignore = true)
+    @Mapping(target = "noShowReason", ignore = true)
+    @Mapping(target = "readyAt", ignore = true)
+    @Mapping(target = "eventVersion", ignore = true)
     Booking toEntity(BookingRequest request);
 
     BookingResponse toResponse(Booking booking);
 
     List<BookingResponse> toResponseList(List<Booking> bookings);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "petId", ignore = true)
-    @Mapping(target = "partnerId", ignore = true)
-    @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "paymentMethod", ignore = true)
-    @Mapping(target = "customerPackageId", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
-    @Mapping(target = "isFittingRequest", source = "requestFitting",
-            nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntityFromRequest(BookingRequest request, @MappingTarget Booking booking);
 }

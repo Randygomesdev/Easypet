@@ -37,5 +37,14 @@ public record BookingRequest(
     UUID customerPackageId,
 
     UUID staffId,
-    Boolean requestFitting
-) {}
+    Boolean requestFitting,
+    UUID receptionCustomerId
+) {
+    public BookingRequest(UUID petId, UUID partnerId, LocalDateTime bookingDate, BookingType type, String notes,
+                          BigDecimal price, LocalDateTime checkIn, LocalDateTime checkOut, UUID serviceId,
+                          br.com.easypet.booking.domain.enums.PaymentMethod paymentMethod, UUID customerPackageId,
+                          UUID staffId, Boolean requestFitting) {
+        this(petId, partnerId, bookingDate, type, notes, price, checkIn, checkOut, serviceId, paymentMethod,
+                customerPackageId, staffId, requestFitting, null);
+    }
+}

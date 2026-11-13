@@ -2,8 +2,13 @@ package br.com.easypet.booking.exception;
 
 import br.com.easypet.booking.dto.response.ErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.CannotCreateTransactionException;
+import org.springframework.transaction.TransactionTimedOutException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -12,6 +17,48 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(BookingConflictException.class)
+    public ResponseEntity<ErrorResponse> handleBookingConflict(BookingConflictException ex) {
+        if (ex.field() != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(HttpStatus.CONFLICT.value(),
+                    ex.getMessage(), java.time.LocalDateTime.now(), java.util.Map.of(ex.field(), ex.getMessage())));
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), "Acesso não permitido."));
+    }
+
+    @ExceptionHandler(BookingUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleBookingUnavailable(BookingUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler({PessimisticLockingFailureException.class, QueryTimeoutException.class,
+            TransactionTimedOutException.class, CannotCreateTransactionException.class})
+    public ResponseEntity<ErrorResponse> handleAgendaTimeout(RuntimeException ex) {
+        log.warn("Prazo de acesso à agenda excedido: {}", ex.getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new ErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(),
+                        "A agenda está temporariamente indisponível. Tente novamente."));
+    }
+
+    @ExceptionHandler({
+        org.springframework.web.bind.ServletRequestBindingException.class,
+        org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+        org.springframework.http.converter.HttpMessageNotReadableException.class,
+        jakarta.validation.ConstraintViolationException.class
+    })
+    public ResponseEntity<ErrorResponse> handleInvalidInput(Exception ex) {
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Parâmetros da requisição inválidos."));
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex) {

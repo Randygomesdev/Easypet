@@ -25,5 +25,10 @@ public record BookingResponse(
     br.com.easypet.booking.domain.enums.PaymentMethod paymentMethod,
     UUID customerPackageId,
     UUID staffId,
-    Boolean isFittingRequest
+    Boolean isFittingRequest,
+    LocalDateTime scheduledEnd,
+    String cancellationReason,
+    String noShowReason,
+    LocalDateTime readyAt,
+    UUID receptionCustomerId
 ) {}

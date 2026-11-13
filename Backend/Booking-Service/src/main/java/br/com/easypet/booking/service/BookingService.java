@@ -4,6 +4,29 @@ import org.springframework.beans.factory.annotation.Value;
 
 import br.com.easypet.booking.domain.entity.Booking;
 import br.com.easypet.booking.domain.enums.BookingStatus;
+import br.com.easypet.booking.domain.enums.BookingType;
+import br.com.easypet.booking.dto.request.AgendaBlockRequest;
+import br.com.easypet.booking.dto.request.BookingCheckIn;
+import br.com.easypet.booking.dto.request.RescheduleRequest;
+import br.com.easypet.booking.dto.response.AgendaBlock;
+import br.com.easypet.booking.dto.response.BookingAccessResponse;
+import br.com.easypet.booking.dto.response.BookingPartnerSummary;
+import br.com.easypet.booking.dto.response.BookingPetSummary;
+import br.com.easypet.booking.dto.response.BookingPolicyResponse;
+import br.com.easypet.booking.dto.response.TutorBookingActions;
+import br.com.easypet.booking.dto.response.BookingHistoryEntry;
+import br.com.easypet.booking.exception.BookingConflictException;
+import br.com.easypet.booking.repository.BookingAgendaStore;
+import br.com.easypet.booking.repository.BookingAgendaStore.EventType;
+import br.com.easypet.booking.repository.BookingAgendaStore.Snapshot;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.security.access.AccessDeniedException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.Objects;
+import java.util.Optional;
 import br.com.easypet.booking.dto.request.BookingRequest;
 import br.com.easypet.booking.dto.request.FittingDecisionRequest;
 import br.com.easypet.booking.dto.response.BookingResponse;
@@ -13,9 +36,6 @@ import br.com.easypet.booking.repository.BookingRepository;
 import br.com.easypet.booking.exception.ResourceNotFoundException;
 import br.com.easypet.booking.exception.BusinessException;
 import br.com.easypet.booking.dto.response.AvailabilitySlot;
-import br.com.easypet.booking.dto.response.PartnerIntegrationResponse;
-import br.com.easypet.booking.dto.response.PartnerBusinessHourIntegrationResponse;
-import br.com.easypet.booking.client.PartnerServiceClient;
 import br.com.easypet.booking.client.PaymentServiceClient;
 import br.com.easypet.booking.client.PetServiceClient;
 import br.com.easypet.booking.client.dto.CreditConsumeResponse;
@@ -24,8 +44,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,20 +55,18 @@ import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Comparator;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,252 +76,162 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
-    private final PartnerIntegrationService partnerIntegrationService;
-    private final PartnerServiceClient partnerServiceClient;
     private final PaymentServiceClient paymentServiceClient;
     private final PetServiceClient petServiceClient;
+    private final BookingSchedule schedule;
+    private final BookingAgendaStore agenda;
+    private final ObjectMapper objectMapper;
+    private final Clock bookingClock;
+    private final BookingAuthorization authorization;
+
+    @Value("${app.booking-tutor-notice-minutes:120}")
+    private long tutorNoticeMinutes = 120;
 
     @Value("${app.package-credits-enabled:false}")
-    private boolean packageCreditsEnabled = true;
+    private boolean packageCreditsEnabled;
+
+    @Transactional(readOnly = true)
+    public BookingPolicyResponse policy() {
+        return new BookingPolicyResponse(tutorNoticeMinutes, BookingSchedule.DEFAULT_DURATION_MINUTES);
+    }
+
+    @Transactional(readOnly = true)
+    public TutorBookingActions tutorActions(UUID id) {
+        authorization.requireTutor();
+        Booking booking = findBookingOrThrow(id);
+        authorization.requireBookingRead(booking);
+        boolean editable = (booking.getStatus() == BookingStatus.PENDING || booking.getStatus() == BookingStatus.CONFIRMED)
+                && meetsTutorNotice(booking);
+        boolean canReschedule = editable;
+        if (editable) {
+            try {
+                schedule.requireActivePartner(booking.getPartnerId());
+            } catch (ResourceNotFoundException unavailable) {
+                canReschedule = false;
+            }
+        }
+        return new TutorBookingActions(editable, canReschedule, tutorNoticeMinutes);
+    }
 
     public BookingResponse createBooking(BookingRequest request) {
+        return createBooking(request, null);
+    }
+
+    public BookingResponse createBooking(BookingRequest request, String key) {
+        authorization.requireCreate(request.partnerId(), request.receptionCustomerId() != null);
+        UUID actorId = getCurrentUserId();
+        agenda.lockPartner(request.partnerId());
+        String hash = key == null ? null : requestHash(request, key);
+        if (key != null) {
+            var previous = agenda.findRequest(request.partnerId(), actorId, key);
+            if (previous.isPresent()) {
+                if (!previous.get().requestHash().equals(hash)) {
+                    throw new BookingConflictException("A chave de idempotência já foi usada com outros dados.");
+                }
+                Booking existing = findBookingOrThrow(previous.get().bookingId());
+                if (authorization.tutor()) authorization.requireBookingRead(existing);
+                return bookingMapper.toResponse(existing);
+            }
+        }
+
         validatePaymentMethod(request.paymentMethod());
-        log.info("Iniciando criação de agendamento do tipo {} para o pet {}", request.type(), request.petId());
         Booking booking = bookingMapper.toEntity(request);
-        if (booking.getIsFittingRequest() == null) {
-            booking.setIsFittingRequest(false);
+        if (request.receptionCustomerId() == null) {
+            UUID owner = petServiceClient.getAccessiblePetOwner(request.petId());
+            if (authorization.tutor() && !actorId.equals(owner)) {
+                throw new ResourceNotFoundException("Pet não encontrado ou acesso negado.");
+            }
+            booking.setUserId(owner);
+        } else {
+            if (request.paymentMethod() == PaymentMethod.PACKAGE_CREDIT) {
+                throw new BusinessException("Reservas de balcão sem conta não aceitam créditos de pacote.");
+            }
+            authorization.requireActiveDesk(request.partnerId());
+            petServiceClient.requireReceptionPet(request.partnerId(), request.receptionCustomerId(), request.petId());
+            booking.setReceptionCustomerId(request.receptionCustomerId());
         }
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setPaymentMethod(request.paymentMethod() == null ? PaymentMethod.CARD : request.paymentMethod());
 
-        if (hasRole("ROLE_PARTNER")) {
-            requirePartnerAccess(request.partnerId());
+        RescheduleRequest dates = new RescheduleRequest(request.bookingDate(), request.checkIn(), request.checkOut(), request.staffId());
+        BookingSchedule.Allocation allocation = allocate(request.partnerId(), request.serviceId(), request.type(), dates,
+                null, Boolean.TRUE.equals(request.requestFitting()));
+        if (request.paymentMethod() != PaymentMethod.PACKAGE_CREDIT) {
+            BigDecimal displayedPrice = request.price().setScale(2, java.math.RoundingMode.HALF_UP);
+            if (displayedPrice.compareTo(allocation.price()) != 0) {
+                throw new BookingConflictException("O preço do serviço mudou. Atualize os dados do estabelecimento e confira o valor antes de reservar.", "price");
+            }
+            booking.setPrice(allocation.price());
         }
-        UUID petOwnerId = petServiceClient.getAccessiblePetOwner(request.petId());
-        booking.setUserId(petOwnerId);
+        applyAllocation(booking, allocation);
         UUID consumedPackageId = null;
-
-        // Interceptar se o pagamento for via crédito de pacote pré-pago
-        if (request.paymentMethod() == PaymentMethod.PACKAGE_CREDIT) {
-            UUID currentUserId = getCurrentUserId();
-            log.info("Processando pagamento via crédito de pacote para o usuário: {}", currentUserId);
-            if (request.serviceId() == null) {
-                throw new BusinessException("O ID do serviço é obrigatório para agendamento com créditos de pacote.");
-            }
-            
-            // Chamar síncronamente o payment-service para debitar 1 crédito do pacote
-            CreditConsumeResponse consumeResponse = paymentServiceClient.consumeCredit(
-                    currentUserId, request.partnerId(), request.serviceId());
-            
-            if (consumeResponse != null && consumeResponse.success()) {
-                consumedPackageId = consumeResponse.customerPackageId();
-                booking.setCustomerPackageId(consumeResponse.customerPackageId());
-                booking.setPaymentMethod(PaymentMethod.PACKAGE_CREDIT);
-                booking.setStatus(BookingStatus.CONFIRMED); // Agendamento pré-pago é CONFIRMED direto
-                booking.setPrice(java.math.BigDecimal.ZERO); // Preço final do agendamento é zero para o checkout
-                log.info("Débito realizado com sucesso. Agendamento CONFIRMED via pacote ID: {}", consumeResponse.customerPackageId());
-            } else {
-                throw new BusinessException("Não foi possível debitar os créditos do seu pacote. Verifique seu saldo.");
-            }
-        } else {
-            // Estado inicial padrão para pagamentos avulsos
-            booking.setStatus(BookingStatus.PENDING);
-            booking.setPaymentMethod(request.paymentMethod() != null ? request.paymentMethod() : PaymentMethod.CARD);
-        }
-
-        // A partir daqui qualquer falha (validação, conflito de horário, 409 do
-        // índice único, etc.) deve estornar o crédito já debitado, se houver.
         try {
-
-        if (request.type() == br.com.easypet.booking.domain.enums.BookingType.BOARDING) {
-            log.info("Validando agendamento de hospedagem/creche...");
-            if (request.checkIn() == null || request.checkOut() == null) {
-                throw new BusinessException("As datas de check-in e check-out são obrigatórias para hospedagem.");
-            }
-            if (!request.checkOut().isAfter(request.checkIn())) {
-                throw new BusinessException("A data de check-out deve ser posterior à data de check-in.");
-            }
-            if (request.serviceId() == null) {
-                throw new BusinessException("O serviço é obrigatório para hospedagem.");
-            }
-
-            // Buscar dados do parceiro e seus serviços
-            var partnerDto = partnerServiceClient.getPartnerById(request.partnerId());
-            if (partnerDto == null) {
-                throw new ResourceNotFoundException("Parceiro não encontrado.");
-            }
-
-            // Encontrar o serviço
-            var serviceDto = partnerDto.services().stream()
-                    .filter(s -> s.id().equals(request.serviceId()))
-                    .findFirst()
-                    .orElseThrow(() -> new ResourceNotFoundException("Serviço não encontrado no parceiro selecionado."));
-
-            if (serviceDto.billingUnit() != br.com.easypet.booking.domain.enums.BillingUnit.DAILY) {
-                throw new BusinessException("O serviço selecionado deve ser do tipo diário (DAILY) para hospedagem.");
-            }
-
-            // Calcular diárias e preço total
-            long nights = java.time.temporal.ChronoUnit.DAYS.between(request.checkIn().toLocalDate(), request.checkOut().toLocalDate());
-            if (nights <= 0) {
-                nights = 1; // Creches/Hospedagens de 1 dia duram pelo menos 1 dia
-            }
-            java.math.BigDecimal calculatedPrice = serviceDto.price().multiply(java.math.BigDecimal.valueOf(nights));
-            booking.setPrice(calculatedPrice);
-
-            // Definir bookingDate igual ao checkIn para compatibilidade com o banco
-            booking.setBookingDate(request.checkIn());
-
-            // Validar capacidade com base na regra de sobreposição (overlap)
-            int capacity = partnerDto.boardingCapacity() != null ? partnerDto.boardingCapacity() : 0;
-            log.info("Capacidade máxima do parceiro '{}' para hospedagem: {}", partnerDto.name(), capacity);
-
-            java.util.List<Booking> activeOverlapping = bookingRepository.findOverlappingBoardings(
-                    request.partnerId(), request.checkIn(), request.checkOut());
-
-            // Regra fina de validação de capacidade por dia
-            java.time.LocalDate startDate = request.checkIn().toLocalDate();
-            java.time.LocalDate endDate = request.checkOut().toLocalDate();
-            
-            for (java.time.LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-                final java.time.LocalDate currentDate = date;
-                long countOnCurrentDay = activeOverlapping.stream()
-                        .filter(b -> {
-                            java.time.LocalDate bIn = b.getCheckIn().toLocalDate();
-                            java.time.LocalDate bOut = b.getCheckOut().toLocalDate();
-                            return !currentDate.isBefore(bIn) && !currentDate.isAfter(bOut);
-                        })
-                        .count();
-                
-                if (countOnCurrentDay >= capacity) {
-                    log.warn("Capacidade esgotada no dia {}: {}/{} ocupados", currentDate, countOnCurrentDay, capacity);
-                    throw new BusinessException("Capacidade de hospedagem esgotada para o dia " + currentDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".");
+            if (request.paymentMethod() == PaymentMethod.PACKAGE_CREDIT) {
+                if (allocation.fitting()) {
+                    throw new BusinessException("Créditos de pacote exigem uma vaga disponível.");
                 }
-            }
-            log.info("Validação de capacidade de hospedagem concluída com sucesso.");
-        } else {
-            // Se for serviço convencional, exige bookingDate
-            if (request.bookingDate() == null) {
-                throw new BusinessException("A data do agendamento é obrigatória.");
-            }
-            if (request.serviceId() == null) {
-                throw new BusinessException("O serviço é obrigatório para agendamento convencional.");
-            }
-            
-            // Lógica de Alocação de Equipe e Capacidade
-            UUID partnerId = request.partnerId();
-            UUID serviceId = request.serviceId();
-            LocalDateTime bookingDate = request.bookingDate();
-            boolean isFitting = request.requestFitting() != null && request.requestFitting();
-            
-            // Busca todos os profissionais ativos habilitados para o serviço
-            List<br.com.easypet.booking.client.dto.StaffResponseDto> staffList = partnerServiceClient.getStaffByPartnerId(partnerId, serviceId);
-            
-            if (staffList.isEmpty()) {
-                throw new BusinessException("Nenhum profissional habilitado cadastrado para este serviço.");
-            }
-            
-            UUID allocatedStaffId = null;
-            
-            if (request.staffId() != null) {
-                // Seleção de Profissional Específico
-                UUID chosenStaffId = request.staffId();
-                var chosenStaff = staffList.stream()
-                        .filter(s -> s.id().equals(chosenStaffId))
-                        .findFirst()
-                        .orElseThrow(() -> new BusinessException("O profissional selecionado não está habilitado para este serviço."));
-                        
-                // Verificar Ausência e Escala
-                boolean absent = isStaffAbsent(chosenStaffId, bookingDate);
-                ScheduleStatus schedStatus = getStaffScheduleStatus(chosenStaffId, bookingDate);
-                boolean inSchedule = schedStatus == ScheduleStatus.AVAILABLE;
-                boolean inLunch    = schedStatus == ScheduleStatus.LUNCH_BREAK;
-                boolean conflict = inSchedule && hasStaffConflict(partnerId, chosenStaffId, bookingDate);
-
-                if (absent || !inSchedule || conflict) {
-                    if (isFitting) {
-                        allocatedStaffId = chosenStaffId;
-                        booking.setIsFittingRequest(true);
-                        booking.setStatus(BookingStatus.PENDING);
-                    } else {
-                        String msg = absent   ? "O profissional selecionado está ausente neste horário." :
-                                     inLunch  ? "O profissional está em horário de almoço. Solicite um encaixe." :
-                                     !inSchedule ? "Este horário está fora do expediente regular do profissional." :
-                                     "O profissional selecionado já possui outro agendamento neste horário.";
-                        throw new BusinessException(msg);
-                    }
-                } else {
-                    allocatedStaffId = chosenStaffId;
+                CreditConsumeResponse credit = paymentServiceClient.consumeCredit(actorId, request.partnerId(), request.serviceId());
+                if (credit == null || !credit.success()) {
+                    throw new BusinessException("Não foi possível debitar os créditos do seu pacote. Verifique seu saldo.");
                 }
-            } else {
-                // Alocação Automática - "Qualquer Profissional" (Round-Robin)
-                // 1. Filtrar profissionais que não estão ausentes e estão dentro do expediente
-                List<br.com.easypet.booking.client.dto.StaffResponseDto> availableStaff = staffList.stream()
-                        .filter(s -> !isStaffAbsent(s.id(), bookingDate) && isWithinStaffSchedule(s.id(), bookingDate))
-                        .collect(Collectors.toList());
-                        
-                if (availableStaff.isEmpty()) {
-                    if (isFitting) {
-                        // Aloca o primeiro da lista geral e marca como encaixe
-                        allocatedStaffId = staffList.get(0).id();
-                        booking.setIsFittingRequest(true);
-                        booking.setStatus(BookingStatus.PENDING);
-                    } else {
-                        throw new BusinessException("Nenhum profissional está disponível neste horário.");
-                    }
-                } else {
-                    // 2. Buscar contagem de agendamentos no dia para balanceamento Round-Robin
-                    LocalDateTime startOfDay = bookingDate.toLocalDate().atStartOfDay();
-                    LocalDateTime endOfDay = bookingDate.toLocalDate().atTime(23, 59, 59);
-                    List<Booking> dayBookings = bookingRepository.findByPartnerIdAndStatusNotAndBookingDateBetweenAndStaffIdNotNull(
-                            partnerId, BookingStatus.CANCELLED, startOfDay, endOfDay);
-                            
-                    Map<UUID, Long> bookingCounts = dayBookings.stream()
-                            .filter(b -> b.getStaffId() != null)
-                            .collect(Collectors.groupingBy(Booking::getStaffId, Collectors.counting()));
-                            
-                    // 3. Ordenar por menor carga no dia e tentar cada staff até achar um livre
-                    List<br.com.easypet.booking.client.dto.StaffResponseDto> sortedStaff = availableStaff.stream()
-                            .sorted(Comparator.comparing((br.com.easypet.booking.client.dto.StaffResponseDto s) -> bookingCounts.getOrDefault(s.id(), 0L))
-                                    .thenComparing(s -> s.id().toString()))
-                            .collect(Collectors.toList());
-
-                    br.com.easypet.booking.client.dto.StaffResponseDto freeStaff = sortedStaff.stream()
-                            .filter(s -> !hasStaffConflict(partnerId, s.id(), bookingDate))
-                            .findFirst()
-                            .orElse(null);
-
-                    if (freeStaff != null) {
-                        allocatedStaffId = freeStaff.id();
-                    } else if (isFitting) {
-                        // Nenhum staff livre — registrar como encaixe no primeiro da lista
-                        allocatedStaffId = sortedStaff.get(0).id();
-                        booking.setIsFittingRequest(true);
-                        booking.setStatus(BookingStatus.PENDING);
-                    } else {
-                        throw new BusinessException("Todos os profissionais disponíveis estão ocupados neste horário.");
-                    }
-                }
+                consumedPackageId = credit.customerPackageId();
+                booking.setCustomerPackageId(consumedPackageId);
+                booking.setStatus(BookingStatus.CONFIRMED);
+                booking.setPrice(BigDecimal.ZERO);
             }
-            
-            booking.setStaffId(allocatedStaffId);
-        }
-
-        // saveAndFlush força o INSERT imediatamente, garantindo que a violação
-        // do índice único (409) seja lançada aqui dentro do try — e não apenas
-        // no commit, fora do alcance da compensação abaixo.
-        Booking savedBooking = bookingRepository.saveAndFlush(booking);
-        log.info("Agendamento criado com sucesso! ID: {}", savedBooking.getId());
-        return bookingMapper.toResponse(savedBooking);
-
+            Booking saved = bookingRepository.saveAndFlush(booking);
+            agenda.addHistory(saved, actorId, "CREATED", new Snapshot(null, null, null, null), null);
+            if (saved.getUserId() != null) {
+                agenda.addEvent(saved, EventType.BOOKING_CREATED, null);
+            }
+            if (saved.getStatus() == BookingStatus.CONFIRMED) {
+                agenda.addEvent(saved, EventType.BOOKING_CONFIRMED, null);
+            }
+            if (key != null) {
+                agenda.saveRequest(request.partnerId(), actorId, key, hash, saved.getId());
+            }
+            return bookingMapper.toResponse(saved);
         } catch (RuntimeException ex) {
-            // Compensação: o crédito do pacote já foi debitado no payment-service
-            // (transação de outro microserviço, já commitada), mas a criação do
-            // agendamento falhou. Estorna o crédito para não deixá-lo órfão.
             if (consumedPackageId != null) {
-                log.warn("Falha ao criar agendamento após débito de crédito. Estornando crédito do pacote {}: {}",
-                        consumedPackageId, ex.getMessage());
                 paymentServiceClient.restorePackageCredit(consumedPackageId);
             }
             throw ex;
+        }
+    }
+
+    private String requestHash(BookingRequest request, String key) {
+        if (!key.matches("[!-~]{1,128}")) {
+            throw new BusinessException("Chave de idempotência inválida.");
+        }
+        try {
+            byte[] body = objectMapper.writeValueAsBytes(request);
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(body));
+        } catch (JsonProcessingException | NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Não foi possível identificar a solicitação.", e);
+        }
+    }
+
+    private BookingSchedule.Allocation allocate(UUID partnerId, UUID serviceId, BookingType type, RescheduleRequest request,
+                                                UUID excludedId, boolean fitting) {
+        return type == BookingType.BOARDING
+                ? schedule.boarding(partnerId, serviceId, request.checkIn(), request.checkOut(), excludedId)
+                : schedule.appointment(partnerId, serviceId, request.bookingDate(), request.staffId(), excludedId, fitting, false, null);
+    }
+
+    private void applyAllocation(Booking booking, BookingSchedule.Allocation allocation) {
+        booking.setBookingDate(allocation.start());
+        booking.setScheduledEnd(allocation.end());
+        booking.setStaffId(allocation.staffId());
+        booking.setIsFittingRequest(allocation.fitting());
+        if (booking.getType() == BookingType.BOARDING) {
+            booking.setCheckIn(allocation.start());
+            booking.setCheckOut(allocation.end());
+            if (booking.getPaymentMethod() != PaymentMethod.PACKAGE_CREDIT) {
+                booking.setPrice(allocation.price());
+            }
+        } else {
+            booking.setCheckIn(null);
+            booking.setCheckOut(null);
         }
     }
 
@@ -313,15 +239,49 @@ public class BookingService {
     public BookingResponse getBookingById(UUID id) {
         log.info("Buscando agendamento por ID: {}", id);
         Booking booking = findBookingOrThrow(id);
-        validateOwnership(booking);
+        authorization.requireBookingRead(booking);
         return bookingMapper.toResponse(booking);
     }
 
     @Transactional(readOnly = true)
-    public Page<BookingResponse> getBookingsByUserId(UUID userId, Pageable pageable) {
-        log.info("Buscando agendamentos do usuário {}", userId);
-        Page<Booking> bookings = bookingRepository.findByUserId(userId, pageable);
-        return bookings.map(bookingMapper::toResponse);
+    public Page<BookingResponse> getMyBookings(BookingStatus status, Pageable pageable) {
+        authorization.requireTutor();
+        UUID userId = getCurrentUserId();
+        var claims = authorization.customerClaims();
+        Specification<Booking> scope = (root, query, cb) -> {
+            List<Predicate> sources = new ArrayList<>();
+            sources.add(cb.equal(root.get("userId"), userId));
+            for (var claim : claims) {
+                sources.add(cb.and(cb.equal(root.get("receptionCustomerId"), claim.customerId()),
+                        cb.equal(root.get("partnerId"), claim.partnerId())));
+            }
+            return cb.or(sources.toArray(Predicate[]::new));
+        };
+        if (status != null) scope = scope.and((root, query, cb) -> cb.equal(root.get("status"), status));
+        return bookingRepository.findAll(scope, pageable).map(bookingMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public BookingAccessResponse getAgendaAccess() {
+        return authorization.agendaAccess(authorization.currentPartner());
+    }
+
+    @Transactional(readOnly = true)
+    public BookingAccessResponse getAgendaAccess(UUID partnerId) {
+        return authorization.agendaAccess(partnerId);
+    }
+
+    @Transactional(readOnly = true)
+    public BookingPetSummary getPetSummary(UUID id) {
+        Booking booking = findBookingOrThrow(id);
+        authorization.requireBookingRead(booking);
+        return petServiceClient.getBookingSummary(booking);
+    }
+
+    @Transactional(readOnly = true)
+    public BookingPartnerSummary getPartnerSummary(UUID partnerId) {
+        authorization.agendaAccess(partnerId);
+        return schedule.partnerSummary(partnerId);
     }
 
     @Transactional(readOnly = true)
@@ -339,7 +299,11 @@ public class BookingService {
             UUID partnerId, LocalDate date, UUID staffId,
             BookingStatus status, br.com.easypet.booking.domain.enums.BookingType type,
             LocalDate startDate, LocalDate endDate, Pageable pageable) {
-        requirePartnerAccess(partnerId);
+        UUID assigned = authorization.agendaAccess(partnerId).staffId();
+        if (assigned != null && staffId != null && !assigned.equals(staffId)) {
+            throw new ResourceNotFoundException("Profissional não encontrado.");
+        }
+        UUID effectiveStaff = assigned == null ? staffId : assigned;
         log.info("Buscando agendamentos do parceiro {}, date: {}, staffId: {}, status: {}, type: {}", partnerId, date, staffId, status, type);
 
         LocalDateTime start = startDate != null ? startDate.atStartOfDay()
@@ -353,7 +317,7 @@ public class BookingService {
         Specification<Booking> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("partnerId"), partnerId));
-            if (staffId        != null) predicates.add(cb.equal(root.get("staffId"),    staffId));
+            if (effectiveStaff != null) predicates.add(cb.equal(root.get("staffId"), effectiveStaff));
             if (status         != null) predicates.add(cb.equal(root.get("status"),     status));
             if (type           != null) predicates.add(cb.equal(root.get("type"),       type));
             if (effectiveStart != null) predicates.add(cb.greaterThanOrEqualTo(root.get("bookingDate"), effectiveStart));
@@ -367,31 +331,76 @@ public class BookingService {
     @Transactional(readOnly = true)
     public Page<BookingResponse> getBookingsByPetId(UUID petId, Pageable pageable) {
         log.info("Buscando agendamentos do pet {}", petId);
-        Page<Booking> bookings = hasRole("ROLE_ADMIN")
-                ? bookingRepository.findByPetId(petId, pageable)
-                : bookingRepository.findByPetIdAndPartnerId(petId, currentPartnerId(), pageable);
+        if (authorization.admin()) return bookingRepository.findByPetId(petId, pageable).map(bookingMapper::toResponse);
+        UUID partnerId = authorization.currentPartner();
+        UUID assigned = authorization.agendaAccess(partnerId).staffId();
+        Page<Booking> bookings = assigned == null
+                ? bookingRepository.findByPetIdAndPartnerId(petId, partnerId, pageable)
+                : bookingRepository.findByPetIdAndPartnerIdAndStaffId(petId, partnerId, assigned, pageable);
         return bookings.map(bookingMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public boolean hasPetAccess(UUID petId, UUID ownerId) {
-        return bookingRepository.existsByPetIdAndUserIdAndPartnerIdAndStatusNot(
-                petId, ownerId, currentPartnerId(), BookingStatus.CANCELLED);
+        UUID partnerId = authorization.currentPartner();
+        UUID assigned = authorization.agendaAccess(partnerId).staffId();
+        return assigned == null
+                ? bookingRepository.existsByPetIdAndUserIdAndPartnerIdAndStatusNot(petId, ownerId, partnerId, BookingStatus.CANCELLED)
+                : bookingRepository.existsByPetIdAndUserIdAndPartnerIdAndStaffIdAndStatusNot(
+                        petId, ownerId, partnerId, assigned, BookingStatus.CANCELLED);
     }
 
     public BookingResponse updateBooking(UUID id, BookingRequest request) {
         validatePaymentMethod(request.paymentMethod());
-        log.info("Atualizando dados do agendamento ID: {}", id);
-        Booking booking = findBookingOrThrow(id);
-        validateOwnership(booking);
-
+        Booking booking = findForAllocationUpdate(id);
+        requireEditable(booking);
         if (!booking.getPetId().equals(request.petId()) || !booking.getPartnerId().equals(request.partnerId())) {
             throw new BusinessException("Não é possível trocar o pet ou o estabelecimento de um agendamento.");
         }
-        bookingMapper.updateEntityFromRequest(request, booking);
-        Booking updatedBooking = bookingRepository.save(booking);
-        log.info("Agendamento ID: {} atualizado com sucesso!", id);
-        return bookingMapper.toResponse(updatedBooking);
+        if (request.receptionCustomerId() != null && !request.receptionCustomerId().equals(booking.getReceptionCustomerId())) {
+            throw new BusinessException("Não é possível trocar o cliente de balcão de um agendamento.");
+        }
+        if (booking.getType() != request.type() || !Objects.equals(booking.getServiceId(), request.serviceId())) {
+            throw new BusinessException("Não é possível trocar o serviço de um agendamento.");
+        }
+        RescheduleRequest dates = new RescheduleRequest(
+                request.type() == BookingType.BOARDING ? null : request.bookingDate(),
+                request.checkIn(), request.checkOut(), request.staffId());
+        changeAllocation(booking, dates);
+        booking.setNotes(request.notes());
+        return bookingMapper.toResponse(bookingRepository.saveAndFlush(booking));
+    }
+
+    public BookingResponse reschedule(UUID id, RescheduleRequest request) {
+        Booking booking = findForAllocationUpdate(id);
+        requireEditable(booking);
+        changeAllocation(booking, request);
+        return bookingMapper.toResponse(bookingRepository.saveAndFlush(booking));
+    }
+
+    private void changeAllocation(Booking booking, RescheduleRequest request) {
+        boolean boarding = booking.getType() == BookingType.BOARDING;
+        if ((boarding && (request.bookingDate() != null || request.staffId() != null))
+                || (!boarding && (request.checkIn() != null || request.checkOut() != null))) {
+            throw new BusinessException("As datas informadas não correspondem ao tipo de agendamento.");
+        }
+        UUID staff = request.staffId() == null ? booking.getStaffId() : request.staffId();
+        if (boarding ? Objects.equals(booking.getCheckIn(), request.checkIn()) && Objects.equals(booking.getCheckOut(), request.checkOut())
+                : Objects.equals(booking.getBookingDate(), request.bookingDate()) && Objects.equals(booking.getStaffId(), staff)) {
+            return;
+        }
+        requireTutorNotice(booking, "Reagendamentos");
+        var before = Snapshot.of(booking);
+        var dates = new RescheduleRequest(request.bookingDate(), request.checkIn(), request.checkOut(), staff);
+        applyAllocation(booking, allocate(booking.getPartnerId(), booking.getServiceId(), booking.getType(), dates,
+                booking.getId(), false));
+        recordChange(booking, "RESCHEDULED", before, null, EventType.BOOKING_RESCHEDULED);
+    }
+
+    private void requireEditable(Booking booking) {
+        if (booking.getStatus() != BookingStatus.PENDING && booking.getStatus() != BookingStatus.CONFIRMED) {
+            throw new BusinessException("Somente reservas pendentes ou confirmadas podem ser alteradas.");
+        }
     }
 
     private void validatePaymentMethod(PaymentMethod paymentMethod) {
@@ -401,35 +410,185 @@ public class BookingService {
     }
 
     public BookingResponse updateStatus(UUID id, BookingStatus status) {
-        log.info("Alterando status do agendamento ID: {} para {}", id, status);
-        Booking booking = findBookingOrThrow(id);
-        validateOwnership(booking);
+        return updateStatus(id, status, null);
+    }
 
-        if (status != BookingStatus.CANCELLED && booking.getStatus() == BookingStatus.CANCELLED) {
-            throw new BusinessException("Um agendamento cancelado não pode ser reaberto.");
+    public BookingResponse updateStatus(UUID id, BookingStatus status, String reason) {
+        Booking booking;
+        switch (status) {
+            case IN_PROGRESS, COMPLETED -> booking = findForAttendance(id);
+            case CONFIRMED -> {
+                authorization.requireManagement();
+                booking = findForAllocationUpdate(id);
+            }
+            case CANCELLED -> booking = findForWrite(id);
+            default -> {
+                authorization.requireManagement();
+                booking = findForWrite(id);
+            }
         }
-        if (status != BookingStatus.CANCELLED && !hasRole("ROLE_ADMIN") && !hasRole("ROLE_PARTNER")) {
-            throw new BusinessException("A confirmação e a conclusão dependem do estabelecimento.");
-        }
-        if (status == BookingStatus.CANCELLED && booking.getStatus() == BookingStatus.CANCELLED) {
+        if (booking.getStatus() == status) {
             return bookingMapper.toResponse(booking);
         }
-        if (status == BookingStatus.CANCELLED && !hasRole("ROLE_ADMIN") && !hasRole("ROLE_PARTNER")
-                && booking.getBookingDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new BusinessException("Cancelamentos devem ser feitos com pelo menos 2 horas de antecedência.");
+        if (status == BookingStatus.CONFIRMED && Boolean.TRUE.equals(booking.getIsFittingRequest())) {
+            approveFitting(booking);
+        } else {
+            transition(booking, status, reason);
+        }
+        return bookingMapper.toResponse(bookingRepository.saveAndFlush(booking));
+    }
+
+    public BookingResponse updateAdminStatus(UUID partnerId, UUID bookingId, BookingStatus status, String reason) {
+        requireAdminBooking(partnerId, bookingId);
+        return updateStatus(bookingId, status, reason);
+    }
+
+    private void requireAdminBooking(UUID partnerId, UUID bookingId) {
+        if (!authorization.admin()) throw new AccessDeniedException("Operação exclusiva da administração.");
+        UUID actual = bookingRepository.findPartnerIdByBookingId(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado."));
+        if (!partnerId.equals(actual)) throw new ResourceNotFoundException("Agendamento não encontrado neste estabelecimento.");
+    }
+
+    private void transition(Booking booking, BookingStatus status, String reason) {
+        BookingStatus current = booking.getStatus();
+        if (!current.canTransitionTo(status)) {
+            throw new BusinessException("Não é possível mudar o status do agendamento de " + current + " para " + status + ".");
+        }
+        var before = Snapshot.of(booking);
+        if (status == BookingStatus.CANCELLED) {
+            requireTutorNotice(booking, "Cancelamentos");
+            reason = normalizedReason(reason, "Cancelamento solicitado");
+            booking.setCancellationReason(reason);
+        }
+        if (status == BookingStatus.NO_SHOW) {
+            if (booking.getBookingDate().isAfter(LocalDateTime.now(bookingClock))) {
+                throw new BusinessException("A falta pode ser registrada a partir do horário da reserva.");
+            }
+            reason = normalizedReason(reason, "Tutor não compareceu");
+            booking.setNoShowReason(reason);
         }
         booking.setStatus(status);
-        Booking updatedBooking = bookingRepository.save(booking);
-        log.info("Status do agendamento ID: {} alterado para {}", id, status);
-        return bookingMapper.toResponse(updatedBooking);
+        EventType event = switch (status) {
+            case CONFIRMED -> EventType.BOOKING_CONFIRMED;
+            case CANCELLED -> EventType.BOOKING_CANCELLED;
+            case NO_SHOW -> EventType.BOOKING_NO_SHOW;
+            default -> null;
+        };
+        recordChange(booking, status.name(), before, reason, event);
+    }
+
+    private String normalizedReason(String reason, String fallback) {
+        return reason == null || reason.isBlank() ? fallback : reason.strip();
+    }
+
+    private void requireTutorNotice(Booking booking, String action) {
+        if (authorization.tutor() && !meetsTutorNotice(booking)) {
+            String notice = tutorNoticeMinutes == 120 ? "2 horas" : tutorNoticeMinutes + " minutos";
+            throw new BusinessException(action + " devem ser feitos com pelo menos " + notice + " de antecedência.");
+        }
+    }
+
+    private boolean meetsTutorNotice(Booking booking) {
+        return !booking.getBookingDate().isBefore(LocalDateTime.now(bookingClock).plusMinutes(tutorNoticeMinutes));
     }
 
     public void deleteBooking(UUID id) {
-        log.info("Recebida requisição para excluir agendamento ID: {}", id);
+        Booking booking = findForWrite(id);
+        if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
+            throw new BusinessException("Finalize o atendimento antes de excluir a reserva.");
+        }
+        if (booking.getStatus().canTransitionTo(BookingStatus.CANCELLED)) {
+            transition(booking, BookingStatus.CANCELLED, "Agendamento excluído");
+            bookingRepository.flush();
+        }
+        bookingRepository.delete(booking);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingHistoryEntry> history(UUID id) {
+        authorization.requireBookingRead(findBookingOrThrow(id));
+        return agenda.findHistory(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AgendaBlock> listBlocks(UUID partnerId, LocalDateTime start, LocalDateTime end) {
+        authorization.requireFullReadAt(partnerId);
+        if (start != null && end != null && !end.isAfter(start)) {
+            throw new BusinessException("O fim do período deve ser posterior ao início.");
+        }
+        return agenda.findBlocks(partnerId, start, end);
+    }
+
+    public AgendaBlock createBlock(UUID partnerId, AgendaBlockRequest input) {
+        authorization.requireManagementAt(partnerId);
+        agenda.lockPartner(partnerId);
+        schedule.verifyBlock(partnerId, input.staffId(), input.start(), input.end());
+        AgendaBlock block = new AgendaBlock(UUID.randomUUID(), partnerId, input.staffId(), input.start(),
+                input.end(), input.reason().strip());
+        agenda.saveBlock(block, getCurrentUserId());
+        return block;
+    }
+
+    public void deleteBlock(UUID partnerId, UUID blockId) {
+        authorization.requireManagementAt(partnerId);
+        agenda.lockPartner(partnerId);
+        agenda.deleteBlock(partnerId, blockId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<BookingCheckIn> getCheckIn(UUID id) {
         Booking booking = findBookingOrThrow(id);
-        validateOwnership(booking);
-        bookingRepository.deleteById(id);
-        log.info("Agendamento ID: {} excluído com sucesso (Soft Delete efetuado)", id);
+        if (authorization.tutor()) throw new AccessDeniedException("Operação exclusiva do estabelecimento.");
+        authorization.requireBookingRead(booking);
+        requireGrooming(booking);
+        return agenda.findCheckIn(id);
+    }
+
+    public BookingCheckIn saveCheckIn(UUID id, BookingCheckIn input) {
+        Booking booking = findForAttendance(id);
+        requireGrooming(booking);
+        if ((booking.getStatus() != BookingStatus.CONFIRMED && booking.getStatus() != BookingStatus.IN_PROGRESS)
+                || booking.getReadyAt() != null) {
+            throw new BusinessException("O checklist só pode ser alterado durante a entrada ou o atendimento.");
+        }
+        String savedExtras = agenda.findCheckIn(id).map(BookingCheckIn::authorizedExtras).orElse(null);
+        if (input.authorizedExtras() != null && !input.authorizedExtras().isBlank()
+                && !Objects.equals(input.authorizedExtras(), savedExtras)) {
+            throw new BusinessException("A autorização de adicionais não está disponível neste fluxo.");
+        }
+        var checkIn = new BookingCheckIn(input.petIdentified(), input.instructionsConfirmed(), input.allergies(),
+                input.behavior(), savedExtras, input.observations());
+        agenda.saveCheckIn(id, checkIn, getCurrentUserId());
+        return checkIn;
+    }
+
+    public BookingResponse markReady(UUID id) {
+        Booking booking = findForAttendance(id);
+        requireGrooming(booking);
+        if (booking.getReadyAt() != null) {
+            return bookingMapper.toResponse(booking);
+        }
+        if (booking.getStatus() != BookingStatus.IN_PROGRESS || agenda.findCheckIn(id).isEmpty()) {
+            throw new BusinessException("Registre a entrada e inicie o atendimento antes de marcar pronto para retirada.");
+        }
+        var before = Snapshot.of(booking);
+        booking.setReadyAt(LocalDateTime.now(bookingClock).truncatedTo(ChronoUnit.MICROS));
+        recordChange(booking, "READY", before, null, EventType.BOOKING_READY);
+        return bookingMapper.toResponse(bookingRepository.saveAndFlush(booking));
+    }
+
+    private void requireGrooming(Booking booking) {
+        if (booking.getType() != BookingType.GROOMING) {
+            throw new BusinessException("Este fluxo está disponível para banho e tosa.");
+        }
+    }
+
+    private void recordChange(Booking booking, String action, Snapshot before, String reason, EventType event) {
+        agenda.addHistory(booking, getCurrentUserId(), action, before, reason);
+        if (event != null && booking.getUserId() != null) {
+            agenda.addEvent(booking, event, event == EventType.BOOKING_RESCHEDULED ? before.bookingDate() : null);
+        }
     }
 
     // ─── Métodos auxiliares ───────────────────────────────────────────────────
@@ -445,435 +604,87 @@ public class BookingService {
                 });
     }
 
-    private void validateOwnership(Booking booking) {
-        if (hasRole("ROLE_ADMIN")) {
-            return;
-        }
-        if (hasRole("ROLE_PARTNER")) {
-            requirePartnerAccess(booking.getPartnerId());
-        } else if (!booking.getUserId().equals(getCurrentUserId())) {
-            throw new ResourceNotFoundException("Agendamento não encontrado.");
-        }
+    private Booking findForUpdate(UUID id) {
+        return bookingRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado com o ID: " + id));
     }
 
-    private void requirePartnerAccess(UUID partnerId) {
-        if (!hasRole("ROLE_ADMIN") && !currentPartnerId().equals(partnerId)) {
-            throw new ResourceNotFoundException("Estabelecimento não encontrado.");
-        }
+    private Booking findForWrite(UUID id) {
+        Booking booking = findForUpdate(id);
+        authorization.requireBookingWrite(booking);
+        return booking;
     }
 
-    private UUID currentPartnerId() {
-        if (!hasRole("ROLE_PARTNER")) {
-            throw new ResourceNotFoundException("Estabelecimento não encontrado.");
-        }
-        return partnerServiceClient.getCurrentPartnerId();
+    private Booking findForAttendance(UUID id) {
+        Booking booking = findForUpdate(id);
+        authorization.requireAttendance(booking);
+        return booking;
     }
 
-    private boolean hasRole(String role) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+    private Booking findForAllocationUpdate(UUID id) {
+        UUID partnerId = bookingRepository.findPartnerIdByBookingId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado."));
+        if (!authorization.tutor()) authorization.requireManagementAt(partnerId);
+        agenda.lockPartner(partnerId);
+        return findForWrite(id);
     }
 
     /**
-     * Extrai o ID do usuário autenticado do SecurityContext (injetado pelo JwtAuthenticationFilter).
+     * Usa o autor individual da sessão validada.
      */
     private UUID getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return UUID.fromString((String) authentication.getCredentials());
+        return authorization.session().userId();
     }
 
     @Transactional(readOnly = true)
-    public List<AvailabilitySlot> getAvailability(UUID partnerId, UUID serviceId, LocalDate date) {
-        log.info("Calculando slots de disponibilidade para o parceiro {} e serviço {} na data {}", partnerId, serviceId, date);
-        
-        // Se serviceId for nulo, mantemos o comportamento legado
-        if (serviceId == null) {
-            return getLegacyAvailability(partnerId, date);
-        }
-
-        // 1. Obter horários do parceiro
-        PartnerIntegrationResponse partner = partnerIntegrationService.getPartnerDetails(partnerId);
-        
-        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
-        PartnerBusinessHourIntegrationResponse todayHour = null;
-        if (partner.businessHours() != null) {
-            for (PartnerBusinessHourIntegrationResponse bh : partner.businessHours()) {
-                if (bh.dayOfWeek() == dayOfWeek) {
-                    todayHour = bh;
-                    break;
-                }
+    public List<AvailabilitySlot> getAvailability(UUID partnerId, UUID serviceId, LocalDate date, UUID excludedId) {
+        if (authorization.team()) authorization.requireManagementAt(partnerId);
+        if (excludedId != null) {
+            Booking booking = findBookingOrThrow(excludedId);
+            authorization.requireBookingRead(booking);
+            if (!booking.getPartnerId().equals(partnerId) || !Objects.equals(booking.getServiceId(), serviceId)) {
+                throw new ResourceNotFoundException("Agendamento não encontrado.");
             }
         }
-        
-        if (todayHour == null || todayHour.closed()) {
-            log.info("Parceiro {} está FECHADO na data {} ({})", partnerId, date, dayOfWeek);
-            return new ArrayList<>();
-        }
-        
-        String startHourStr = todayHour.businessStartHour() != null && !todayHour.businessStartHour().trim().isEmpty()
-            ? todayHour.businessStartHour().trim() : "08:00";
-        String endHourStr = todayHour.businessEndHour() != null && !todayHour.businessEndHour().trim().isEmpty()
-            ? todayHour.businessEndHour().trim() : "18:00";
-        
-        if (startHourStr.length() == 4 && startHourStr.contains(":")) {
-            startHourStr = "0" + startHourStr;
-        }
-        if (endHourStr.length() == 4 && endHourStr.contains(":")) {
-            endHourStr = "0" + endHourStr;
-        }
-        
-        LocalTime businessStart;
-        LocalTime businessEnd;
-        
-        try {
-            businessStart = LocalTime.parse(startHourStr, DateTimeFormatter.ofPattern("HH:mm"));
-        } catch (Exception e) {
-            log.error("Erro ao parsear businessStartHour '{}' para o dia {}, usando 08:00 como fallback: {}", startHourStr, dayOfWeek, e.getMessage());
-            businessStart = LocalTime.of(8, 0);
-        }
-        
-        try {
-            businessEnd = LocalTime.parse(endHourStr, DateTimeFormatter.ofPattern("HH:mm"));
-        } catch (Exception e) {
-            log.error("Erro ao parsear businessEndHour '{}' para o dia {}, usando 18:00 como fallback: {}", endHourStr, dayOfWeek, e.getMessage());
-            businessEnd = LocalTime.of(18, 0);
-        }
-        
-        if (businessStart.isAfter(businessEnd) || businessStart.equals(businessEnd)) {
-            log.warn("Horários de funcionamento inválidos para o dia {}, utilizando fallback de 08:00 as 18:00", dayOfWeek);
-            businessStart = LocalTime.of(8, 0);
-            businessEnd = LocalTime.of(18, 0);
-        }
-        
-        LocalTime lunchStart = null;
-        LocalTime lunchEnd = null;
-        if (todayHour.lunchStartHour() != null && !todayHour.lunchStartHour().trim().isEmpty() &&
-            todayHour.lunchEndHour() != null && !todayHour.lunchEndHour().trim().isEmpty()) {
-            try {
-                String lStartStr = todayHour.lunchStartHour().trim();
-                String lEndStr = todayHour.lunchEndHour().trim();
-                if (lStartStr.length() == 4 && lStartStr.contains(":")) lStartStr = "0" + lStartStr;
-                if (lEndStr.length() == 4 && lEndStr.contains(":")) lEndStr = "0" + lEndStr;
-                
-                lunchStart = LocalTime.parse(lStartStr, DateTimeFormatter.ofPattern("HH:mm"));
-                lunchEnd = LocalTime.parse(lEndStr, DateTimeFormatter.ofPattern("HH:mm"));
-                
-                if (lunchStart.isAfter(lunchEnd) || lunchStart.equals(lunchEnd)) {
-                    log.warn("Horário de almoço inválido para o dia {}, ignorando intervalo", dayOfWeek);
-                    lunchStart = null;
-                    lunchEnd = null;
-                }
-            } catch (Exception e) {
-                log.error("Erro ao parsear horário de almoço do parceiro para o dia {}: {}", dayOfWeek, e.getMessage());
-            }
-        }
-
-        // 2. Obter profissionais habilitados
-        List<br.com.easypet.booking.client.dto.StaffResponseDto> staffList = partnerServiceClient.getStaffByPartnerId(partnerId, serviceId);
-        if (staffList.isEmpty()) {
-            log.info("Nenhum profissional habilitado encontrado para o serviço {} no parceiro {}", serviceId, partnerId);
-            return new ArrayList<>();
-        }
-        
-        // 3. Gerar slots de 30 minutos
-        List<AvailabilitySlot> slots = new ArrayList<>();
-        LocalTime current = businessStart;
-        LocalTime nowTime = LocalTime.now();
-        LocalDate today = LocalDate.now();
-        
-        while (current.plusMinutes(30).isBefore(businessEnd) || current.plusMinutes(30).equals(businessEnd)) {
-            LocalTime slotTime = current;
-            current = current.plusMinutes(30);
-            
-            // Se cair no horário de almoço, ignoramos (omitimos o slot)
-            if (lunchStart != null && lunchEnd != null) {
-                if ((slotTime.equals(lunchStart) || slotTime.isAfter(lunchStart)) && slotTime.isBefore(lunchEnd)) {
-                    continue;
-                }
-            }
-            
-            LocalDateTime slotDateTime = LocalDateTime.of(date, slotTime);
-            String timeStr = slotTime.format(DateTimeFormatter.ofPattern("HH:mm"));
-
-            // Se for hoje, impede agendamento em horário retroativo
-            if (date.equals(today) && slotTime.isBefore(nowTime)) {
-                slots.add(new AvailabilitySlot(timeStr, false, List.of(), "OUT_OF_SCHEDULE", false));
-                continue;
-            }
-
-            List<br.com.easypet.booking.client.dto.StaffResponseDto> availableStaff = new ArrayList<>();
-            boolean anyAbsent = false;
-            boolean anyScheduleMatch = false;
-            boolean anyConflict = false;
-            boolean anyLunchBreak = false;
-
-            for (var staff : staffList) {
-                boolean absent = isStaffAbsent(staff.id(), slotDateTime);
-                ScheduleStatus schedStatus = getStaffScheduleStatus(staff.id(), slotDateTime);
-                boolean inSchedule = schedStatus == ScheduleStatus.AVAILABLE;
-                boolean inLunch    = schedStatus == ScheduleStatus.LUNCH_BREAK;
-                boolean conflict   = inSchedule && hasStaffConflict(partnerId, staff.id(), slotDateTime);
-
-                if (!absent && inSchedule && !conflict) {
-                    availableStaff.add(staff);
-                }
-                if (absent)   anyAbsent       = true;
-                if (inSchedule) anyScheduleMatch = true;
-                if (conflict) anyConflict      = true;
-                if (inLunch && !absent) anyLunchBreak = true;
-            }
-
-            if (!availableStaff.isEmpty()) {
-                slots.add(new AvailabilitySlot(timeStr, true, availableStaff, null, null));
-            } else {
-                String reason;
-                if (anyLunchBreak && !anyConflict) {
-                    reason = "LUNCH_BREAK";
-                } else if (!anyScheduleMatch) {
-                    reason = "OUT_OF_SCHEDULE";
-                } else if (anyAbsent && !anyConflict) {
-                    reason = "BLOCKED_ABSENCE";
-                } else if (anyConflict) {
-                    reason = "FULLY_BOOKED";
-                } else {
-                    reason = "UNAVAILABLE";
-                }
-                slots.add(new AvailabilitySlot(timeStr, false, staffList, reason, true));
-            }
-        }
-        
-        return slots;
-    }
-
-    @Transactional(readOnly = true)
-    private List<AvailabilitySlot> getLegacyAvailability(UUID partnerId, LocalDate date) {
-        log.info("Calculando slots de disponibilidade legada para o parceiro {} na data {}", partnerId, date);
-        
-        // 1. Obter horários do parceiro
-        PartnerIntegrationResponse partner = partnerIntegrationService.getPartnerDetails(partnerId);
-        
-        java.time.DayOfWeek dayOfWeek = date.getDayOfWeek();
-        PartnerBusinessHourIntegrationResponse todayHour = null;
-        if (partner.businessHours() != null) {
-            for (PartnerBusinessHourIntegrationResponse bh : partner.businessHours()) {
-                if (bh.dayOfWeek() == dayOfWeek) {
-                    todayHour = bh;
-                    break;
-                }
-            }
-        }
-        
-        if (todayHour == null || todayHour.closed()) {
-            log.info("Parceiro {} está FECHADO na data {} ({})", partnerId, date, dayOfWeek);
-            return new ArrayList<>();
-        }
-        
-        String startHourStr = todayHour.businessStartHour() != null && !todayHour.businessStartHour().trim().isEmpty()
-            ? todayHour.businessStartHour().trim() : "08:00";
-        String endHourStr = todayHour.businessEndHour() != null && !todayHour.businessEndHour().trim().isEmpty()
-            ? todayHour.businessEndHour().trim() : "18:00";
-        
-        if (startHourStr.length() == 4 && startHourStr.contains(":")) {
-            startHourStr = "0" + startHourStr;
-        }
-        if (endHourStr.length() == 4 && endHourStr.contains(":")) {
-            endHourStr = "0" + endHourStr;
-        }
-        
-        LocalTime businessStart;
-        LocalTime businessEnd;
-        
-        try {
-            businessStart = LocalTime.parse(startHourStr, DateTimeFormatter.ofPattern("HH:mm"));
-        } catch (Exception e) {
-            log.error("Erro ao parsear businessStartHour '{}' para o dia {}, usando 08:00 como fallback: {}", startHourStr, dayOfWeek, e.getMessage());
-            businessStart = LocalTime.of(8, 0);
-        }
-        
-        try {
-            businessEnd = LocalTime.parse(endHourStr, DateTimeFormatter.ofPattern("HH:mm"));
-        } catch (Exception e) {
-            log.error("Erro ao parsear businessEndHour '{}' para o dia {}, usando 18:00 como fallback: {}", endHourStr, dayOfWeek, e.getMessage());
-            businessEnd = LocalTime.of(18, 0);
-        }
-        
-        if (businessStart.isAfter(businessEnd) || businessStart.equals(businessEnd)) {
-            log.warn("Horários de funcionamento inválidos para o dia {}, utilizando fallback de 08:00 as 18:00", dayOfWeek);
-            businessStart = LocalTime.of(8, 0);
-            businessEnd = LocalTime.of(18, 0);
-        }
-        
-        LocalTime lunchStart = null;
-        LocalTime lunchEnd = null;
-        if (todayHour.lunchStartHour() != null && !todayHour.lunchStartHour().trim().isEmpty() &&
-            todayHour.lunchEndHour() != null && !todayHour.lunchEndHour().trim().isEmpty()) {
-            try {
-                String lStartStr = todayHour.lunchStartHour().trim();
-                String lEndStr = todayHour.lunchEndHour().trim();
-                if (lStartStr.length() == 4 && lStartStr.contains(":")) lStartStr = "0" + lStartStr;
-                if (lEndStr.length() == 4 && lEndStr.contains(":")) lEndStr = "0" + lEndStr;
-                
-                lunchStart = LocalTime.parse(lStartStr, DateTimeFormatter.ofPattern("HH:mm"));
-                lunchEnd = LocalTime.parse(lEndStr, DateTimeFormatter.ofPattern("HH:mm"));
-                
-                if (lunchStart.isAfter(lunchEnd) || lunchStart.equals(lunchEnd)) {
-                    log.warn("Horário de almoço inválido para o dia {}, ignorando intervalo", dayOfWeek);
-                    lunchStart = null;
-                    lunchEnd = null;
-                }
-            } catch (Exception e) {
-                log.error("Erro ao parsear horário de almoço do parceiro para o dia {}: {}", dayOfWeek, e.getMessage());
-            }
-        }
-        
-        // 2. Buscar agendamentos existentes (não cancelados) para o dia
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
-        List<Booking> bookings = bookingRepository.findByPartnerIdAndStatusNotAndBookingDateBetween(
-            partnerId,
-            BookingStatus.CANCELLED,
-            startOfDay,
-            endOfDay
-        );
-        
-        Set<LocalTime> bookedTimes = bookings.stream()
-            .map(b -> b.getBookingDate().toLocalTime())
-            .collect(Collectors.toSet());
-            
-        // 3. Gerar slots de 30 minutos
-        List<AvailabilitySlot> slots = new ArrayList<>();
-        LocalTime current = businessStart;
-        LocalTime nowTime = LocalTime.now();
-        LocalDate today = LocalDate.now();
-        
-        while (current.plusMinutes(30).isBefore(businessEnd) || current.plusMinutes(30).equals(businessEnd)) {
-            LocalTime slotTime = current;
-            current = current.plusMinutes(30);
-            
-            // Se cair no horário de almoço, ignoramos (omitimos o slot)
-            if (lunchStart != null && lunchEnd != null) {
-                if ((slotTime.equals(lunchStart) || slotTime.isAfter(lunchStart)) && slotTime.isBefore(lunchEnd)) {
-                    continue;
-                }
-            }
-            
-            boolean available = !bookedTimes.contains(slotTime);
-            
-            // Se for hoje, impede agendamento em horário retroativo
-            if (available && date.equals(today)) {
-                if (slotTime.isBefore(nowTime)) {
-                    available = false;
-                }
-            }
-            
-            slots.add(new AvailabilitySlot(
-                slotTime.format(DateTimeFormatter.ofPattern("HH:mm")),
-                available
-            ));
-        }
-        
-        return slots;
-    }
-
-    private boolean isStaffAbsent(UUID staffId, LocalDateTime bookingDate) {
-        try {
-            List<br.com.easypet.booking.client.dto.StaffAbsenceResponseDto> absences = partnerServiceClient.getStaffAbsences(staffId);
-            if (absences == null) return false;
-            return absences.stream().anyMatch(absence -> 
-                !bookingDate.isBefore(absence.startDate()) && !bookingDate.isAfter(absence.endDate())
-            );
-        } catch (Exception e) {
-            log.error("Erro ao verificar ausência do profissional: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    private enum ScheduleStatus { AVAILABLE, LUNCH_BREAK, OUT_OF_SCHEDULE }
-
-    private ScheduleStatus getStaffScheduleStatus(UUID staffId, LocalDateTime bookingDate) {
-        try {
-            List<br.com.easypet.booking.client.dto.StaffScheduleResponseDto> schedules = partnerServiceClient.getStaffSchedule(staffId);
-            if (schedules == null || schedules.isEmpty()) return ScheduleStatus.OUT_OF_SCHEDULE;
-
-            // Mapeia DayOfWeek Java (Seg=1…Dom=7) → padrão partner-service (Dom=1, Seg=2…)
-            int targetDay = bookingDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY ? 1 : bookingDate.getDayOfWeek().getValue() + 1;
-            LocalTime targetTime = bookingDate.toLocalTime();
-
-            for (var s : schedules) {
-                if (s.dayOfWeek() != targetDay) continue;
-                boolean withinWork = !targetTime.isBefore(s.startTime()) && targetTime.isBefore(s.endTime());
-                if (!withinWork) continue;
-                // Dentro do expediente — verificar intervalo de almoço
-                if (s.lunchStartTime() != null && s.lunchEndTime() != null &&
-                    !targetTime.isBefore(s.lunchStartTime()) && targetTime.isBefore(s.lunchEndTime())) {
-                    return ScheduleStatus.LUNCH_BREAK;
-                }
-                return ScheduleStatus.AVAILABLE;
-            }
-            return ScheduleStatus.OUT_OF_SCHEDULE;
-        } catch (Exception e) {
-            log.error("Erro ao verificar escala do profissional {}: {}", staffId, e.getMessage());
-            return ScheduleStatus.OUT_OF_SCHEDULE;
-        }
-    }
-
-    private boolean isWithinStaffSchedule(UUID staffId, LocalDateTime bookingDate) {
-        return getStaffScheduleStatus(staffId, bookingDate) == ScheduleStatus.AVAILABLE;
-    }
-
-    private boolean hasStaffConflict(UUID partnerId, UUID staffId, LocalDateTime bookingDate) {
-        try {
-            LocalDateTime startOfDay = bookingDate.toLocalDate().atStartOfDay();
-            LocalDateTime endOfDay = bookingDate.toLocalDate().atTime(23, 59, 59);
-            List<Booking> staffBookings = bookingRepository.findByPartnerIdAndStaffIdAndStatusNotAndBookingDateBetween(
-                    partnerId, staffId, BookingStatus.CANCELLED, startOfDay, endOfDay
-            );
-            if (staffBookings == null) return false;
-            return staffBookings.stream().anyMatch(b -> 
-                b.getBookingDate().equals(bookingDate) && (b.getIsFittingRequest() == null || !b.getIsFittingRequest())
-            );
-        } catch (Exception e) {
-            log.error("Erro ao verificar conflito de horário do profissional: {}", e.getMessage());
-            return false;
-        }
+        return schedule.availability(partnerId, serviceId, date, excludedId);
     }
 
     public FittingDecisionResponse processFittingDecision(UUID bookingId, FittingDecisionRequest request) {
-        log.info("Processando decisão de encaixe '{}' para o agendamento ID: {}", request.decision(), bookingId);
-        Booking booking = findBookingOrThrow(bookingId);
-        requirePartnerAccess(booking.getPartnerId());
-
-        if (booking.getIsFittingRequest() == null || !booking.getIsFittingRequest()) {
-            throw new BusinessException("Este agendamento não é uma solicitação de encaixe.");
+        authorization.requireManagement();
+        Booking booking = findForAllocationUpdate(bookingId);
+        if (!Boolean.TRUE.equals(booking.getIsFittingRequest()) || booking.getStatus() != BookingStatus.PENDING) {
+            throw new BusinessException("A solicitação de encaixe já foi processada ou não está pendente.");
         }
-
-        if (booking.getStatus() != BookingStatus.PENDING) {
-            throw new BusinessException("Este agendamento já foi processado (Status: " + booking.getStatus() + ").");
-        }
-
         if ("APPROVE".equalsIgnoreCase(request.decision())) {
-            booking.setStatus(BookingStatus.CONFIRMED);
+            approveFitting(booking);
         } else {
-            booking.setStatus(BookingStatus.CANCELLED);
+            transition(booking, BookingStatus.CANCELLED, "Solicitação de encaixe recusada");
         }
+        Booking saved = bookingRepository.saveAndFlush(booking);
+        return new FittingDecisionResponse(saved.getId(), saved.getStatus(), saved.getIsFittingRequest(),
+                saved.getStaffId(), saved.getUpdatedAt());
+    }
 
-        Booking savedBooking = bookingRepository.save(booking);
-        log.info("Decisão de encaixe processada com sucesso! Novo status: {}", savedBooking.getStatus());
+    public FittingDecisionResponse processAdminFittingDecision(UUID partnerId, UUID bookingId, FittingDecisionRequest request) {
+        requireAdminBooking(partnerId, bookingId);
+        return processFittingDecision(bookingId, request);
+    }
 
-        return new FittingDecisionResponse(
-                savedBooking.getId(),
-                savedBooking.getStatus(),
-                savedBooking.getIsFittingRequest(),
-                savedBooking.getStaffId(),
-                savedBooking.getUpdatedAt()
-        );
+    private void approveFitting(Booking booking) {
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new BusinessException("Este encaixe já foi processado.");
+        }
+        var allocation = schedule.appointment(booking.getPartnerId(), booking.getServiceId(), booking.getBookingDate(),
+                booking.getStaffId(), booking.getId(), false, true, booking.getScheduledEnd());
+        applyAllocation(booking, allocation);
+        transition(booking, BookingStatus.CONFIRMED, null);
     }
 
     // ── Analytics ─────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
     public RevenueStatsResponse getRevenueStats(UUID partnerId, YearMonth month) {
-        requirePartnerAccess(partnerId);
+        authorization.requireFullReadAt(partnerId);
         LocalDateTime start = month.atDay(1).atStartOfDay();
         LocalDateTime end   = month.plusMonths(1).atDay(1).atStartOfDay();
         BigDecimal revenue  = bookingRepository.sumRevenueByPartnerAndPeriod(partnerId, start, end);
@@ -882,7 +693,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<DailyStatsEntry> getDailyStats(UUID partnerId, int days) {
-        requirePartnerAccess(partnerId);
+        authorization.requireFullReadAt(partnerId);
         LocalDateTime startDate = LocalDate.now().minusDays(days - 1L).atStartOfDay();
         List<Object[]> rows = bookingRepository.countDailyBookings(partnerId, startDate);
 
@@ -905,7 +716,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public ClientStatsResponse getClientStats(UUID partnerId, YearMonth month) {
-        requirePartnerAccess(partnerId);
+        authorization.requireFullReadAt(partnerId);
         LocalDateTime start = month.atDay(1).atStartOfDay();
         LocalDateTime end   = month.plusMonths(1).atDay(1).atStartOfDay();
         Long newClients     = bookingRepository.countNewClientsByPartnerAndPeriod(partnerId, start, end);

@@ -1,9 +1,11 @@
 package br.com.easypet.booking.repository;
 
 import br.com.easypet.booking.domain.entity.Booking;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -11,62 +13,52 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, UUID>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<Booking> {
-    
-    Page<Booking> findByUserId(UUID userId, Pageable pageable);
-    
-    Page<Booking> findByPartnerId(UUID partnerId, Pageable pageable);
-    
-    Page<Booking> findByPartnerIdAndStaffId(UUID partnerId, UUID staffId, Pageable pageable);
-    
-    Page<Booking> findByPartnerIdAndBookingDateBetween(
-        UUID partnerId, java.time.LocalDateTime start, java.time.LocalDateTime end, Pageable pageable
-    );
-    
-    Page<Booking> findByPartnerIdAndStaffIdAndBookingDateBetween(
-        UUID partnerId, UUID staffId, java.time.LocalDateTime start, java.time.LocalDateTime end, Pageable pageable
-    );
+
+    @Query("SELECT b.partnerId FROM Booking b WHERE b.id = :id")
+    Optional<UUID> findPartnerIdByBookingId(UUID id);
+
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.partnerId = :partnerId
+              AND b.status NOT IN (br.com.easypet.booking.domain.enums.BookingStatus.CANCELLED,
+                                   br.com.easypet.booking.domain.enums.BookingStatus.NO_SHOW)
+              AND (b.isFittingRequest = false OR b.status <> br.com.easypet.booking.domain.enums.BookingStatus.PENDING)
+              AND b.bookingDate < :end
+              AND COALESCE(b.scheduledEnd, b.checkOut, :end) > :start
+            """)
+    List<Booking> findAgendaCandidates(UUID partnerId, LocalDateTime start, LocalDateTime end);
+
+    @Query("""
+            SELECT b.staffId, count(b) FROM Booking b
+            WHERE b.partnerId = :partnerId AND b.staffId IS NOT NULL
+              AND b.status NOT IN (br.com.easypet.booking.domain.enums.BookingStatus.CANCELLED,
+                                   br.com.easypet.booking.domain.enums.BookingStatus.NO_SHOW)
+              AND (b.isFittingRequest = false OR b.status <> br.com.easypet.booking.domain.enums.BookingStatus.PENDING)
+              AND b.bookingDate >= :start AND b.bookingDate < :end
+            GROUP BY b.staffId
+            """)
+    List<Object[]> countDailyStaffBookings(UUID partnerId, LocalDateTime start, LocalDateTime end);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Booking b WHERE b.id = :id")
+    Optional<Booking> findByIdForUpdate(@Param("id") UUID id);
     
     Page<Booking> findByPetId(UUID petId, Pageable pageable);
 
     Page<Booking> findByPetIdAndPartnerId(UUID petId, UUID partnerId, Pageable pageable);
 
+    Page<Booking> findByPetIdAndPartnerIdAndStaffId(UUID petId, UUID partnerId, UUID staffId, Pageable pageable);
+
     boolean existsByPetIdAndUserIdAndPartnerIdAndStatusNot(
             UUID petId, UUID userId, UUID partnerId, br.com.easypet.booking.domain.enums.BookingStatus status);
 
-    java.util.List<Booking> findByPartnerIdAndStatusNotAndBookingDateBetween(
-        UUID partnerId,
-        br.com.easypet.booking.domain.enums.BookingStatus status,
-        java.time.LocalDateTime start,
-        java.time.LocalDateTime end
-    );
-
-    java.util.List<Booking> findByPartnerIdAndStaffIdAndStatusNotAndBookingDateBetween(
-        UUID partnerId,
-        UUID staffId,
-        br.com.easypet.booking.domain.enums.BookingStatus status,
-        java.time.LocalDateTime start,
-        java.time.LocalDateTime end
-    );
-
-    java.util.List<Booking> findByPartnerIdAndStatusNotAndBookingDateBetweenAndStaffIdNotNull(
-        UUID partnerId,
-        br.com.easypet.booking.domain.enums.BookingStatus status,
-        java.time.LocalDateTime start,
-        java.time.LocalDateTime end
-    );
-
-    @org.springframework.data.jpa.repository.Query("SELECT b FROM Booking b WHERE b.partnerId = :partnerId " +
-            "AND b.type = br.com.easypet.booking.domain.enums.BookingType.BOARDING " +
-            "AND b.status != br.com.easypet.booking.domain.enums.BookingStatus.CANCELLED " +
-            "AND b.checkIn < :checkOut AND b.checkOut > :checkIn")
-    java.util.List<Booking> findOverlappingBoardings(
-            @org.springframework.data.repository.query.Param("partnerId") UUID partnerId,
-            @org.springframework.data.repository.query.Param("checkIn") java.time.LocalDateTime checkIn,
-            @org.springframework.data.repository.query.Param("checkOut") java.time.LocalDateTime checkOut);
+    boolean existsByPetIdAndUserIdAndPartnerIdAndStaffIdAndStatusNot(
+            UUID petId, UUID userId, UUID partnerId, UUID staffId, br.com.easypet.booking.domain.enums.BookingStatus status);
 
     // ── Analytics ────────────────────────────────────────────────────────────
 

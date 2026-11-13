@@ -1,7 +1,18 @@
 package br.com.easypet.booking.controller;
 
 import br.com.easypet.booking.domain.enums.BookingStatus;
+import br.com.easypet.booking.dto.request.AgendaBlockRequest;
+import br.com.easypet.booking.dto.request.BookingCheckIn;
 import br.com.easypet.booking.dto.request.BookingRequest;
+import br.com.easypet.booking.dto.request.BookingStatusRequest;
+import br.com.easypet.booking.dto.request.RescheduleRequest;
+import br.com.easypet.booking.dto.response.AgendaBlock;
+import br.com.easypet.booking.dto.response.BookingAccessResponse;
+import br.com.easypet.booking.dto.response.BookingPartnerSummary;
+import br.com.easypet.booking.dto.response.BookingPetSummary;
+import br.com.easypet.booking.dto.response.BookingPolicyResponse;
+import br.com.easypet.booking.dto.response.TutorBookingActions;
+import br.com.easypet.booking.dto.response.BookingHistoryEntry;
 import br.com.easypet.booking.dto.response.BookingResponse;
 import br.com.easypet.booking.dto.response.ClientStatsResponse;
 import br.com.easypet.booking.dto.response.DailyStatsEntry;
@@ -21,15 +32,13 @@ import br.com.easypet.booking.dto.request.FittingDecisionRequest;
 import br.com.easypet.booking.dto.response.FittingDecisionResponse;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
@@ -44,11 +53,22 @@ public class BookingController {
 
     private final BookingService bookingService;
 
+    @GetMapping("/policy")
+    public BookingPolicyResponse policy() {
+        return bookingService.policy();
+    }
+
+    @GetMapping("/{id}/tutor-actions")
+    public TutorBookingActions tutorActions(@PathVariable UUID id) {
+        return bookingService.tutorActions(id);
+    }
+
     @PostMapping
     @Operation(summary = "Criar um novo agendamento", description = "Cria uma reserva para um pet que o usuário pode acessar. Retorna a URI do novo recurso no cabeçalho 'Location'.")
-    public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request) {
+    public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String key) {
         log.info("Recebida requisição para criar agendamento do tipo {} para o pet {}", request.type(), request.petId());
-        BookingResponse response = bookingService.createBooking(request);
+        BookingResponse response = bookingService.createBooking(request, key);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(response.id())
@@ -67,17 +87,34 @@ public class BookingController {
     @GetMapping("/my-bookings")
     @Operation(summary = "Listar agendamentos do usuário autenticado", description = "Retorna uma lista paginada dos agendamentos pertencentes ao cliente autenticado via JWT.")
     public ResponseEntity<Page<BookingResponse>> getMyBookings(
+            @RequestParam(required = false) BookingStatus status,
             @org.springdoc.core.annotations.ParameterObject
             @PageableDefault(size = 10, sort = "bookingDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        String currentUserIdStr = (String) SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        log.info("Recebida requisição para buscar agendamentos do usuário autenticado: {}, Pageable: {}", currentUserIdStr, pageable);
-        Page<BookingResponse> response = bookingService.getBookingsByUserId(UUID.fromString(currentUserIdStr), pageable);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(bookingService.getMyBookings(status, pageable));
+    }
+
+    @GetMapping("/agenda-access")
+    public BookingAccessResponse agendaAccess() {
+        return bookingService.getAgendaAccess();
+    }
+
+    @GetMapping("/partner/{partnerId}/access")
+    public BookingAccessResponse agendaAccess(@PathVariable UUID partnerId) {
+        return bookingService.getAgendaAccess(partnerId);
+    }
+
+    @GetMapping("/{id}/pet-summary")
+    public BookingPetSummary petSummary(@PathVariable UUID id) {
+        return bookingService.getPetSummary(id);
+    }
+
+    @GetMapping("/partner/{partnerId}/summary")
+    public BookingPartnerSummary partnerSummary(@PathVariable UUID partnerId) {
+        return bookingService.getPartnerSummary(partnerId);
     }
 
     @GetMapping("/partner/{partnerId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Listar agendamentos de um parceiro", description = "Retorna uma lista paginada de agendamentos. Suporta filtros por data, profissional, status, tipo e período.")
     public ResponseEntity<Page<BookingResponse>> getBookingsByPartner(
             @PathVariable("partnerId") UUID partnerId,
@@ -96,7 +133,6 @@ public class BookingController {
     }
 
     @GetMapping("/pet/{petId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Listar agendamentos de um pet", description = "Retorna uma lista paginada com o histórico de agendamentos de um pet. Requer role ADMIN ou PARTNER.")
     public ResponseEntity<Page<BookingResponse>> getBookingsByPet(
             @PathVariable("petId") UUID petId,
@@ -109,7 +145,7 @@ public class BookingController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar um agendamento", description = "Atualiza os dados de data/hora, notas e valores de um agendamento existente.")
+    @Operation(summary = "Atualizar horário e notas de um agendamento")
     public ResponseEntity<BookingResponse> updateBooking(
             @PathVariable("id") UUID id,
             @Valid @RequestBody BookingRequest request
@@ -123,11 +159,71 @@ public class BookingController {
     @Operation(summary = "Alterar status do agendamento", description = "Altera apenas o estado/status de uma reserva (ex: CONFIRMED, CANCELLED, COMPLETED).")
     public ResponseEntity<BookingResponse> updateStatus(
             @PathVariable("id") UUID id,
-            @RequestParam("status") BookingStatus status
+            @RequestParam("status") BookingStatus status,
+            @Valid @RequestBody(required = false) BookingStatusRequest input
     ) {
         log.info("Recebida requisição para alterar status do agendamento ID: {} para {}", id, status);
-        BookingResponse response = bookingService.updateStatus(id, status);
+        BookingResponse response = bookingService.updateStatus(id, status, input == null ? null : input.reason());
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/reschedule")
+    public BookingResponse reschedule(@PathVariable UUID id, @Valid @RequestBody RescheduleRequest input) {
+        return bookingService.reschedule(id, input);
+    }
+
+    @PatchMapping("/partner/{partnerId}/{bookingId}/status")
+    public BookingResponse updateAdminStatus(@PathVariable UUID partnerId, @PathVariable UUID bookingId,
+            @RequestParam BookingStatus status, @Valid @RequestBody(required = false) BookingStatusRequest input) {
+        return bookingService.updateAdminStatus(partnerId, bookingId, status, input == null ? null : input.reason());
+    }
+
+    @PostMapping("/partner/{partnerId}/{bookingId}/fitting-decision")
+    public FittingDecisionResponse adminFittingDecision(@PathVariable UUID partnerId, @PathVariable UUID bookingId,
+            @Valid @RequestBody FittingDecisionRequest request) {
+        return bookingService.processAdminFittingDecision(partnerId, bookingId, request);
+    }
+
+    @GetMapping("/{id}/history")
+    public List<BookingHistoryEntry> history(@PathVariable UUID id) {
+        return bookingService.history(id);
+    }
+
+    @GetMapping("/partner/{partnerId}/blocks")
+    public List<AgendaBlock> listBlocks(@PathVariable UUID partnerId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
+        return bookingService.listBlocks(partnerId, start, end);
+    }
+
+    @PostMapping("/partner/{partnerId}/blocks")
+    public ResponseEntity<AgendaBlock> createBlock(@PathVariable UUID partnerId,
+            @Valid @RequestBody AgendaBlockRequest input) {
+        AgendaBlock block = bookingService.createBlock(partnerId, input);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(block.id()).toUri();
+        return ResponseEntity.created(uri).body(block);
+    }
+
+    @DeleteMapping("/partner/{partnerId}/blocks/{blockId}")
+    public ResponseEntity<Void> deleteBlock(@PathVariable UUID partnerId, @PathVariable UUID blockId) {
+        bookingService.deleteBlock(partnerId, blockId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/check-in")
+    public ResponseEntity<BookingCheckIn> getCheckIn(@PathVariable UUID id) {
+        return bookingService.getCheckIn(id).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    @PutMapping("/{id}/check-in")
+    public BookingCheckIn saveCheckIn(@PathVariable UUID id, @Valid @RequestBody BookingCheckIn input) {
+        return bookingService.saveCheckIn(id, input);
+    }
+
+    @PostMapping("/{id}/ready")
+    public BookingResponse markReady(@PathVariable UUID id) {
+        return bookingService.markReady(id);
     }
 
     @DeleteMapping("/{id}")
@@ -139,7 +235,6 @@ public class BookingController {
     }
 
     @PostMapping("/{bookingId}/fitting-decision")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Aprovar ou rejeitar uma solicitação de encaixe pendente", description = "Endpoint de moderação para parceiros aprovarem (APPROVE) ou rejeitarem (REJECT) uma solicitação de encaixe pendente.")
     public ResponseEntity<FittingDecisionResponse> processFittingDecision(
             @PathVariable("bookingId") UUID bookingId,
@@ -153,7 +248,6 @@ public class BookingController {
     // ── Analytics ─────────────────────────────────────────────────────────────
 
     @GetMapping("/partner/{partnerId}/stats/revenue")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Receita mensal do parceiro", description = "Retorna a soma de preço dos agendamentos com status COMPLETED no mês informado (formato YYYY-MM).")
     public ResponseEntity<RevenueStatsResponse> getRevenueStats(
             @PathVariable("partnerId") UUID partnerId,
@@ -164,7 +258,6 @@ public class BookingController {
     }
 
     @GetMapping("/partner/{partnerId}/stats/daily")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Agendamentos por dia (últimos N dias)", description = "Retorna a contagem de agendamentos por dia para os últimos N dias (default 7). Preenche com 0 dias sem agendamentos.")
     public ResponseEntity<List<DailyStatsEntry>> getDailyStats(
             @PathVariable("partnerId") UUID partnerId,
@@ -175,7 +268,6 @@ public class BookingController {
     }
 
     @GetMapping("/partner/{partnerId}/stats/clients")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PARTNER')")
     @Operation(summary = "Novos clientes no mês", description = "Retorna a contagem de clientes que fizeram o primeiro agendamento com este parceiro no mês informado (formato YYYY-MM).")
     public ResponseEntity<ClientStatsResponse> getClientStats(
             @PathVariable("partnerId") UUID partnerId,
@@ -190,10 +282,11 @@ public class BookingController {
     public ResponseEntity<List<AvailabilitySlot>> getAvailability(
             @RequestParam("partnerId") UUID partnerId,
             @RequestParam(value = "serviceId", required = false) UUID serviceId,
-            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) UUID excludeBookingId
     ) {
         log.info("Recebida requisição de disponibilidade para o parceiro {}, serviço {} na data {}", partnerId, serviceId, date);
-        List<AvailabilitySlot> slots = bookingService.getAvailability(partnerId, serviceId, date);
+        List<AvailabilitySlot> slots = bookingService.getAvailability(partnerId, serviceId, date, excludeBookingId);
         return ResponseEntity.ok(slots);
     }
 }

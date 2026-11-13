@@ -32,11 +32,29 @@ public class Booking {
     @Column(name = "partner_id", nullable = false)
     private UUID partnerId;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private UUID userId;
+
+    @Column(name = "reception_customer_id")
+    private UUID receptionCustomerId;
 
     @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
+
+    @Column(name = "scheduled_end")
+    private LocalDateTime scheduledEnd;
+
+    @Column(name = "cancellation_reason")
+    private String cancellationReason;
+
+    @Column(name = "no_show_reason")
+    private String noShowReason;
+
+    @Column(name = "ready_at")
+    private LocalDateTime readyAt;
+
+    @Column(name = "event_version", nullable = false)
+    private long eventVersion;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
@@ -66,6 +84,7 @@ public class Booking {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)
+    @Builder.Default
     private PaymentMethod paymentMethod = PaymentMethod.CARD;
 
     @Column(name = "created_at", nullable = false, updatable = false)

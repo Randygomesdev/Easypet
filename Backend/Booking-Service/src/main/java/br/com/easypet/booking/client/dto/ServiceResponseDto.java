@@ -7,7 +7,6 @@ import java.util.UUID;
 public record ServiceResponseDto(
     UUID id,
     String name,
-    String description,
     BigDecimal price,
     Integer durationMinutes,
     BillingUnit billingUnit

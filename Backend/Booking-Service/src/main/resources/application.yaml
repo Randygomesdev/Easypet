@@ -1,5 +1,13 @@
 app:
   package-credits-enabled: ${APP_PACKAGE_CREDITS_ENABLED:false}
+  booking-outbox-token: ${BOOKING_OUTBOX_TOKEN:}
+  booking-pet-summary-token: ${BOOKING_PET_SUMMARY_TOKEN:}
+  booking-tutor-notice-minutes: ${BOOKING_TUTOR_NOTICE_MINUTES:120}
+  booking-zone: ${BOOKING_ZONE:America/Sao_Paulo}
+  booking-agenda-lock-timeout: ${BOOKING_AGENDA_LOCK_TIMEOUT:4s}
+  http:
+    connect-timeout: ${BOOKING_HTTP_CONNECT_TIMEOUT:750ms}
+    read-timeout: ${BOOKING_HTTP_READ_TIMEOUT:2s}
 
 server:
   port: 8084
@@ -23,6 +31,11 @@ spring:
     username: ${BOOKING_DB_USERNAME}
     password: ${BOOKING_DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: ${BOOKING_DB_POOL_TIMEOUT_MS:4000}
+
+  transaction:
+    default-timeout: ${BOOKING_TRANSACTION_TIMEOUT:12s}
 
   jpa:
     hibernate:
@@ -36,10 +49,9 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-jwt:
-  secret: ${JWT_SECRET}
-
 services:
+  auth-service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1}
   partner-service:
     url: ${PARTNER_SERVICE_URL:http://localhost:8083/api/v1}
   payment-service:
