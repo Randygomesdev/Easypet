@@ -1,5 +1,23 @@
 # Contratos S02
 
+## Google OAuth — 13/11/2026
+
+Auth usa `GOOGLE_AUTH_ENABLED=true` (`app.google-auth.enabled`), padrão `false`. Quando habilitado, informar `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`, `FRONTEND_URL` e `GOOGLE_ALLOWED_EMAILS` (lista explícita de e-mails separados por vírgula). Em homologação publicada, `FRONTEND_URL=https://easypet.innker.com.br` e `GOOGLE_REDIRECT_URI=https://easypet.innker.com.br/api/v1/login/oauth2/code/google`. O callback cadastrado no Google é a rota do Auth. A opção no frontend usa `VITE_GOOGLE_AUTH_ENABLED=true` e `env.googleAuthUrl=/api/v1/oauth2/authorization/google`, sempre na mesma origem.
+
+| Método e caminho | Contrato |
+| --- | --- |
+| GET `/api/v1/oauth2/authorization/google` | Navegação de nível superior. Inicia OIDC com state, nonce e PKCE. Cookie de sessão transitória `EASYPET_OAUTH`, com Path=/api/v1, HttpOnly, SameSite=Lax e Secure em HTTPS. |
+| GET `/api/v1/login/oauth2/code/google` | Callback do provedor com state e cookie. Em sucesso, redireciona para `/login-success#code=<código descartável>`. Cancelamento ou falha redireciona para `/login?error=google_cancelled` ou `/login?error=google_failed`. |
+| POST `/api/v1/auth/oauth2/exchange` | `Content-Type: application/json`, corpo `{"code":"<código>"}`, cookie original e header `Origin` igual a `FRONTEND_URL`. Retorna 200 com `{token,id,name,email,role,pictureUrl}` no corpo e `Cache-Control: no-store`. 400 para corpo inválido, 401 para código vencido, reutilizado ou de outro navegador, 403 para origem recusada e 415 para formato diferente de JSON. |
+
+A troca vence em dois minutos. O Auth conserva a sessão OAuth apenas até o fim da troca ou expiração. A sessão OAuth depende da mesma instância do Auth durante a navegação; reinício encerra a tentativa. Gateway/Nginx devem preservar `Set-Cookie`, `Cookie`, `Origin` e redirects e manter as três rotas fora da autenticação JWT. Proteger callback e retorno contra cache e referrer, manter query e corpo fora dos logs e preservar limitação nas operações aplicáveis.
+
+Login Google exige uma conta EasyPet previamente provisionada, ativa, com e-mail presente na lista de ambiente e confirmado por Google como Gmail ou Google Workspace. A primeira autorização associa o `sub` validado por OIDC à conta existente e logins seguintes exigem a mesma identidade. Contas duplicadas por capitalização, desativadas e de equipe são recusadas. O fluxo preserva o papel existente e a versão da sessão. Login com senha, cadastro e restrições do piloto seguem suas regras próprias. A migração aditiva V5 cria o vínculo de identidade.
+
+Para o smoke real, um operador autorizado provisiona uma conta `CUSTOMER` ou `PARTNER` com o e-mail Google confirmado e inclui esse e-mail em `GOOGLE_ALLOWED_EMAILS`. O CLI de `ADMIN` continua restrito a `@example.test`. Os testes de preservação de `ADMIN` usam conta fictícia de banco descartável. A recuperação SMTP de homologação continua restrita a `@example.test`.
+
+Para testes descartáveis, os endpoints do provedor podem ser substituídos usando `SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_GOOGLE_AUTHORIZATION_URI`, `..._TOKEN_URI`, `..._JWK_SET_URI` e `..._ISSUER_URI` no Auth. O caminho de teste usa autorização/callback reais do Spring e um provedor local que emite ID token assinado. Em homologação publicada, usar os endpoints padrão do Google.
+
 ## H1-02 — homologação interna, 13/11/2026
 
 ### Conta de teste pelo console

@@ -2,6 +2,24 @@
 
 Em 13/11/2026, a S07 concluiu o aceite integrado da R01 e da onda B em stack descartável, incluindo a restauração dos seis bancos PostgreSQL. A H1 valida os arquivos de publicação com as mudanças posteriores.
 
+## Login Google — 13/11/2026
+
+- O Compose real usa `GOOGLE_AUTH_ENABLED` (padrão `false`) para o Auth, o ingresso e o build do frontend. O Nginx e o Gateway liberam somente autorização, callback e troca pelos métodos do [contrato S07](contracts.md#google-oauth). Os valores de credenciais e a lista de contas passam somente ao Auth. O ingresso não aceita cabeçalhos externos de encaminhamento para definir o callback.
+- Maven offline aprovou 6 testes Gateway. O Playwright aprovou o cenário com a flag desligada na imagem real, com saída `0`, botão oculto, retorno do SPA ao login e `404` nos três endpoints. Projeto `easypet-e2e-914f23fdfa`, log em `%TEMP%/easypet-google-oauth-disabled.log`.
+- A primeira tentativa com Google ligado, projeto `easypet-e2e-69c0617165`, compilou as imagens e parou antes das jornadas porque `payment-db` ficou `unhealthy`. A causa permanece indeterminada. Também houve mudanças de fontes durante a rodada. O runner removeu os recursos e preservou os [snapshots](google-oauth-run1-before.json). A rodada seguinte usa os arquivos finais e inicia os bancos antes do restante da stack.
+- A segunda tentativa, `easypet-e2e-35adf1c140`, passou no diagnóstico, nos 22 cenários H1, no login CUSTOMER e no cancelamento pelo navegador. As quatro verificações de callback restantes pararam na duplicação do header `Referrer-Policy` entre Auth e Nginx. O Nginx passou a emitir um único valor `no-referrer`. Os contratos de sessão e o cenário de expiração real foram preservados.
+- O callback HTTPS foi salvo no console Google e a R01 registrou nova credencial ativa preparada localmente. A instalação da configuração e das contas no ambiente, DNS, TLS e a jornada Google no endereço publicado ainda estão pendentes. O aceite local usa provedor simulado e nenhuma credencial Google real.
+
+### Aceite integrado OAuth
+
+`E2E_WAVE_B=1 E2E_H1=1 E2E_GOOGLE_OAUTH=1 node e2e/run-local.mjs` saiu com código `0` no projeto `easypet-e2e-69c2502629`. Foram **28 cenários aprovados em 4,8 minutos**: 22 regressões H1 e seis OAuth. O cenário exclusivo da flag desligada ficou condicionalmente pulado e passou em execução separada. O diagnóstico confirmou saúde, portas de loopback, cinco sondas HTTP e polling de Notification.
+
+O Chromium usou HTTPS em loopback e o mesmo frontend, Nginx, Gateway e Auth do artefato de homologação. O provedor simulado assinou o ID token e verificou PKCE. Passaram login CUSTOMER, acesso administrativo com papel ADMIN preservado, cancelamento, state adulterado, callback/troca em navegador alheio, origem forjada, replay, expiração real de dois minutos, revogação depois do callback e recusa de contas inativa, de equipe e sem cadastro.
+
+O backup restaurou seis bancos, **55 tabelas e 14 consultas de referência** após a simulação de migration incompatível. As duas consultas novas conferiram os vínculos Google fictícios, papéis e versões de sessão do Auth. O projeto de restauração foi `easypet-restore-9e2af5097c12be27`. O inventário por projeto confirmou zero containers, volumes, redes e imagens nos quatro ensaios e na restauração. O diretório temporário de dumps foi removido.
+
+O mesmo HEAD `67d8db9175fe7cced3806ba81d8a883728f1eace` e as mesmas 641 entradas coincidiram nos snapshots [antes](google-oauth-run3-before.json), [depois](google-oauth-run3-after.json) e no checkout conferido. São 638 arquivos presentes e três exclusões. [Evidência estruturada](google-oauth-acceptance.json).
+
 ## H1 — artefato de homologação interna
 
 - O Compose de publicação constrói `Frontend/Dockerfile`, com as flags da onda B e URL de suporte opcional. O Nginx real libera sessão, recuperação, equipe e Notification por caminhos e métodos explícitos. O coletor SMTP aceita somente `example.test`; a captura HTTP fica no loopback do container e o Compose real publica apenas o frontend. A fixture de SMTP acrescenta porta efêmera e simulação de falhas no projeto descartável.

@@ -9,6 +9,7 @@ Consulta em 13/11/2026, pela sessão do usuário no Google Cloud. Domínio infor
 - Origens autorizadas: `http://localhost:8081`, `http://localhost:8080` e `http://localhost:5173`.
 - Redirecionamentos autorizados: `http://localhost:8081/api/v1/login/oauth2/code/google` e `http://localhost:5173/login-success`. O domínio de homologação não está cadastrado.
 - Público externo, status **Testando**, sem usuários de teste. A tela informa publicação indisponível enquanto a configuração de branding estiver incompleta.
+- Complemento da revisão: para os escopos básicos de nome/e-mail/perfil usados no login, a [política Google](https://support.google.com/cloud/answer/15549945?hl=en) dispensa a inclusão na lista de teste. Assim, a lista vazia não prova bloqueio do login nem restringe o piloto; o Auth precisa controlar os convidados.
 - Branding: nome e contatos preenchidos; página inicial, política de privacidade, termos e domínios autorizados vazios.
 - Nenhuma configuração foi salva, chave revelada, criada ou rotacionada. Não foi executado login nem aceite OAuth integrado.
 
@@ -31,4 +32,4 @@ O aceite H1 existente permanece válido para seu recorte, que exclui login socia
 4. S07: injetar configuração por ambiente, ajustar ingresso com rotas estritas, validar HTTPS e executar aceite integrado com S02. Cobrir login/retorno, recusa/cancelamento, estado inválido, código expirado/reutilizado, conta desativada, equipe e preservação das negativas H1. Distinguir provedor simulado do login real Google.
 5. Repetir smoke no domínio publicado e registrar evidência antes de marcar login social como entregue/validado.
 
-Responsáveis acima indicam ownership proposto para a próxima entrega; esta consulta não despachou nova missão aos workers.
+Responsáveis acima indicam ownership proposto na consulta inicial. Após autorização humana, S02/S01/S07 foram acionadas; acompanhar o [despacho da reativação](google-oauth-dispatch.md).

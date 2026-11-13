@@ -1,5 +1,11 @@
 # Contratos S01
 
+## Google OAuth — frontend, 13/11/2026
+
+`env.googleAuthEnabled` é `true` somente com `VITE_GOOGLE_AUTH_ENABLED=true`. `env.googleAuthUrl` é o caminho fixo `/api/v1/oauth2/authorization/google` na mesma origem da aplicação. O build não lê `VITE_GOOGLE_AUTH_URL` e não recebe credenciais do provedor. No piloto interno, a flag liga a entrada Google e permite que `/login-success` monte a página de retorno da S02. Com a flag desligada, `/login-success` redireciona a `/login` sem troca de código. A navegação existente do piloto, inclusive os bloqueios de cadastro público, checkout e créditos, continua regida pelas flags atuais.
+
+No domínio de homologação, o navegador inicia em `https://easypet.innker.com.br/api/v1/oauth2/authorization/google`. O Auth trata o callback do provedor em `/api/v1/login/oauth2/code/google`. O retorno da aplicação usa `/login-success#code=…`. A página S02 envia o código no corpo de `POST /api/v1/auth/oauth2/exchange`, com cookie da mesma origem. Os erros, a expiração e o consumo do código seguem o [contrato Auth](../S02-identidade/contracts.md#google-oauth--13112026).
+
 ## H1 — frontend de homologação, 13/11/2026
 
 O artefato de publicação da S07 deve compilar com `VITE_API_URL=/api/v1`, `VITE_INTERNAL_PILOT=true`, `VITE_WAVE_B_ENABLED=true` e `VITE_AUTH_RECOVERY_ENABLED=true`. As duas últimas flags ligam as rotas documentadas na onda B. O piloto interno mantém os bloqueios existentes de checkout e créditos. O build pode receber `VITE_INTERNAL_SUPPORT_URL`, uma URL HTTPS de suporte interno aprovada pelo operador, sem credenciais ou segredo. Quando ausente ou inválida, a tela exibe **Canal de suporte interno ainda não configurado**. Exemplo fictício `https://suporte.example.test/`.

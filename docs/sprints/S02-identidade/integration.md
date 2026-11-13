@@ -1,5 +1,11 @@
 # Integrações S02
 
+## Google OAuth — 13/11/2026
+
+- S01 monta o retorno `/login-success` apenas com `env.googleAuthEnabled` e publica a URL de entrada de mesma origem. S02 implementa botão no login, estado de cancelamento e retorno com troca via corpo JSON e cookie.
+- S07 injeta as flags e variáveis do [contrato OAuth](contracts.md#google-oauth--13112026). Manter as três rotas exatas com seus métodos, sem obrigar JWT no Gateway. Não reaproveitar uma rota de cadastro público. Simular provedor somente no ensaio isolado. Se houver mais de uma instância Auth, manter a mesma instância durante autorização, callback e troca.
+- R01 confirma o callback e as contas de teste no console Google. Provisionar previamente as contas EasyPet que usarão o Google. Lista vazia ou credenciais incompletas impedem iniciar com a flag habilitada.
+
 ## H1-02 — 13/11/2026
 
 - S07 usa a [matriz do Auth](contracts.md#h1-02--homologação-interna-13112026) no artefato real de homologação e instala o coletor em rede interna. O frontend recebe a origem web no `FRONTEND_URL` de Auth. A configuração deve permitir recuperação e convites sem abrir `/auth/register`, `/auth/register/partner` ou caminhos OAuth no perfil de publicação.

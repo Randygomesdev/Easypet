@@ -44,6 +44,12 @@ O contrato de [projeção de estabelecimento da S04](../S04-balcao/contracts.md#
 
 ## H1 — Perfil de publicação interna
 
+### Google OAuth
+
+`GOOGLE_AUTH_ENABLED=true` habilita o Auth, as três rotas de ingresso e o argumento de build `VITE_GOOGLE_AUTH_ENABLED`. O padrão é `false`. O Compose passa `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_ALLOWED_EMAILS` e `GOOGLE_REDIRECT_URI` exclusivamente ao Auth. A origem `HOMOLOG_ORIGIN` alimenta `FRONTEND_URL`. Para homologação publicada, use `https://easypet.innker.com.br` e o callback exato `https://easypet.innker.com.br/api/v1/login/oauth2/code/google`.
+
+As únicas rotas Google no ingresso são `GET /api/v1/oauth2/authorization/google`, `GET /api/v1/login/oauth2/code/google` e `POST /api/v1/auth/oauth2/exchange`. Métodos distintos, outros provedores e caminhos alternativos ficam fechados. O Nginx descarta cabeçalhos externos de encaminhamento e o Auth usa origem e callback explícitos. Cookies e redirecionamentos do Auth passam pelo proxy. Callback, troca e retorno da aplicação têm `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. O proxy HTTPS externo deve omitir queries e cookies dos logs.
+
 - **S01.** `compose.homolog.yml` constrói `Frontend/Dockerfile` com `VITE_INTERNAL_PILOT=true`, `VITE_WAVE_B_ENABLED=true`, `VITE_AUTH_RECOVERY_ENABLED=true` e `VITE_API_URL=/api/v1`. O build aceita `VITE_INTERNAL_SUPPORT_URL` opcional via `HOMOLOG_SUPPORT_URL` (vazio por padrão). Publicamos `GET /api/v1/auth/session`; páginas com token recebem `Referrer-Policy: no-referrer`.
 - **S02.** Auth roda em `prod,homolog` com `AUTH_S02_ENABLED=true`, `AUTH_MAIL_ENABLED=true`, `FRONTEND_URL=${HOMOLOG_ORIGIN}` e `PARTNER_SERVICE_URL=http://partner-service:8083/api/v1`. SMTP interno em `smtp-capture:1025`, remetente `auth@example.test`, sem autenticação SMTP ou STARTTLS. `AUTH_TEAM_JWT_SECRET` exclusivo do Auth. Cadastro público e OAuth ficam fora do ingresso. Recuperação e aceite de convite usam os caminhos e métodos explícitos da S02.
 - **S06.** Notification roda no Compose real com `NOTIFICATION_TRANSPORT=SMTP`, `NOTIFICATION_MAIL_HOST=smtp-capture`, porta `1025`, remetente `notifications@example.test`, `NOTIFICATION_MAIL_SMTP_AUTH=false` e `NOTIFICATION_MAIL_STARTTLS_REQUIRED=false`. Coletor sem relay e sem porta publicada, em rede interna de e-mail com Auth e Notification. Capturas acessíveis ao operador autorizado via `docker compose exec`. A API de simulação SMTP só é ativada no projeto descartável.

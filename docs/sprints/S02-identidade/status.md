@@ -1,5 +1,16 @@
 # Status S02
 
+## Google OAuth — 13/11/2026
+
+Implementação S02 validada localmente e disponível para o aceite integrado S07.
+
+- Auth habilita Google por `GOOGLE_AUTH_ENABLED` e exige credenciais, origem, callback explícito e lista de e-mails elegíveis. Usa OIDC com state, nonce e PKCE. O cookie transitório é HttpOnly/SameSite=Lax, Secure em HTTPS, e seu ID muda após o callback. O código de troca fica no fragmento e vence em dois minutos, é associado à sessão que iniciou o fluxo e é consumido uma vez. JWT sai apenas no corpo JSON.
+- V5 acrescenta `google_subject` e sua restrição de unicidade. Login requer conta prévia e elegível, associa o identificador estável do Google e revalida estado, papel e versão no exchange. Não cria contas Google no piloto nem promove papéis. O login por senha e as permissões de recuperação e equipe preservam os contratos anteriores.
+- `LoginPage.tsx`, `LoginSuccessPage.tsx` e `auth.service.ts` usam a flag e a entrada de mesma origem da S01, apresentam recusa/cancelamento e limpam o fragmento antes de enviar a troca por JSON. O contexto verifica a sessão resultante normalmente.
+- `mvn -o -B test` com Java 21 e PostgreSQL descartável passou com **26 testes**, incluindo seis OAuth com MockMvc, persistência real e um provedor OIDC local com token RSA assinado. Cobriu callback configurado, state/nonce/PKCE, assinatura/emissor/audiência inválidos, cancelamento, origem, corpo inválido, cookie/sessão ausente, expiração, replay, papéis, revogação entre callback e troca, conta não elegível e colisões de identidade. As 20 regressões Auth passaram no mesmo comando.
+- ESLint S02 e TypeScript passaram. `node src/routes/google-oauth.browser.mjs` com Chrome passou nas duas builds do piloto, com APIs simuladas. Confirmou botão, fragmento, troca e navegação com flag ligada e bloqueios do piloto com flag desligada. O Vite manteve o aviso de tamanho do bundle.
+- [Contrato](contracts.md#google-oauth--13112026) e [integrações](integration.md#google-oauth--13112026) registram o callback público, a operação de contas pré-provisionadas e a fixture local. O aceite pelo Gateway/Nginx fica com S07. O teste real no domínio exige DNS/HTTPS, credencial ativa, cadastro do callback e contas autorizadas.
+
 ## H1-02 — 13/11/2026
 
 Implementação H1-02 validada localmente. Aceite do artefato de homologação em coordenação com S07.

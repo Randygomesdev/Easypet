@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-13",
+  "result": "passed-locally",
+  "provider": "local OIDC fixture with signed RS256 ID tokens and PKCE validation",
+  "ingress": "real homologation frontend, Nginx, Gateway and Auth behind an isolated HTTPS loopback proxy",
+  "enabled": {
+    "project": "easypet-e2e-69c2502629",
+    "runnerExit": 0,
+    "passed": 28,
+    "h1Regressions": 22,
+    "oauthScenarios": 6,
+    "skipped": 1,
+    "skipReason": "Google disabled-only scenario",
+    "durationMinutes": 4.8,
+    "diagnoseExit": 0
+  },
+  "disabled": {
+    "project": "easypet-e2e-914f23fdfa",
+    "runnerExit": 0,
+    "passed": 1,
+    "oauthEndpoints": { "authorize": 404, "callback": 404, "exchange": 404 }
+  },
+  "restore": {
+    "project": "easypet-restore-9e2af5097c12be27",
+    "tables": { "auth": 4, "pet": 8, "partner": 17, "booking": 8, "payment": 11, "notification": 7 },
+    "referenceQueries": 14,
+    "preservedGoogleBindings": 2,
+    "simulatedIncompatibleMigration": "booking"
+  },
+  "snapshot": {
+    "head": "67d8db9175fe7cced3806ba81d8a883728f1eace",
+    "before": "google-oauth-run3-before.json",
+    "after": "google-oauth-run3-after.json",
+    "entries": 641,
+    "present": 638,
+    "deletions": 3,
+    "differences": 0
+  },
+  "cleanup": {
+    "projects": [
+      "easypet-e2e-69c0617165",
+      "easypet-e2e-914f23fdfa",
+      "easypet-e2e-35adf1c140",
+      "easypet-e2e-69c2502629",
+      "easypet-restore-9e2af5097c12be27"
+    ],
+    "remainingPerProject": { "containers": 0, "volumes": 0, "networks": 0, "images": 0 },
+    "temporaryBackupRemoved": true
+  },
+  "logs": {
+    "directory": "%TEMP%",
+    "sha256": {
+      "easypet-google-oauth-run3.log": "f4f7c91ee32258dc0518101c079fa2b37175d2dcfd930add9e99924e48308dc9",
+      "easypet-google-oauth-disabled.log": "b5c9b3aa5c33dca172669c6d3dbf9534115a506186c4835beb74375fcd7f1fd0"
+    }
+  },
+  "pending": ["install-google-configuration-and-provision-accounts", "dns", "tls", "deploy", "real-google-smoke"]
+}

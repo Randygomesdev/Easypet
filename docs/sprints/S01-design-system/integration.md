@@ -1,5 +1,10 @@
 # Integrações S01
 
+## Google OAuth — 13/11/2026
+
+- S02 consome `env.googleAuthEnabled` e `env.googleAuthUrl` no login. A flag é independente de `internalPilot`, e a URL de início é relativa à origem do frontend. S02 mantém as páginas de login e retorno, a sessão e o tratamento de erro e cancelamento.
+- S07 injeta `VITE_GOOGLE_AUTH_ENABLED=true` no build que tiver o Auth Google e o ingresso correspondente habilitados. O padrão é desligado. Encaminhar início, callback e troca nos caminhos e métodos do contrato S02, mantendo o retorno `/login-success` no SPA.
+
 ## H1 — 13/11/2026
 
 | Dono | Ponto de integração |

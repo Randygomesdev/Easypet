@@ -1,5 +1,13 @@
 # Status S01
 
+## Google OAuth — 13/11/2026
+
+Implementação S01 pronta para o aceite integrado da S07. [Contrato frontend](contracts.md#google-oauth--frontend-13112026) e [dependências](integration.md#google-oauth--13112026) publicados.
+
+- `Frontend/src/config/env.ts` fornece flag padrão desligada e URL relativa fixa de início. `Frontend/src/App.tsx` libera o retorno somente com a flag. `Frontend/docs/architecture.md` documenta a configuração de build.
+- Typecheck completo, `npm run build -- --outDir <temporário>` com `VITE_INTERNAL_PILOT=true`, `VITE_GOOGLE_AUTH_ENABLED=true` e `VITE_API_URL=/api/v1`, e ESLint dos caminhos S01 passaram. O Vite emitiu o aviso de tamanho do bundle principal.
+- `EASYPET_S01_BROWSER_CHANNEL=chrome` e `node src/routes/google-oauth.browser.mjs` aprovaram dois builds de produção. Com a flag ausente, o login oculta o botão e o retorno redireciona a `/login` sem troca. Com a flag ligada, o botão inicia o caminho da mesma origem, o retorno usa `POST` JSON com `Origin`, remove o código do endereço, mostra falha em `401` e entra no painel em sucesso. Ambos preservaram cadastro público fechado e redirecionamentos de carrinho e retorno de pagamento. O ensaio usa APIs simuladas em loopback e bloqueia destinos externos. Login no provedor real e smoke no domínio publicado continuam no aceite coordenado.
+
 ## H1 — 13/11/2026
 
 Implementação S01 pronta para o aceite local da S07 com o artefato real de homologação. [Contrato](contracts.md#h1--frontend-de-homologação-13112026), [integrações](integration.md#h1--13112026) e [roteiro móvel](h1-mobile-acceptance.md).
