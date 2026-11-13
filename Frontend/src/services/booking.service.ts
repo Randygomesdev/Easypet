@@ -1,6 +1,6 @@
 import { api } from '../lib/api'
 
-export type BookingStatus  = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+export type BookingStatus  = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED'
 export type BookingType    = 'CONSULTATION' | 'VACCINATION' | 'GROOMING' | 'BOARDING' | 'OTHER'
 
 export interface BookingResponse {
@@ -53,10 +53,11 @@ export const BOOKING_TYPE_LABEL: Record<BookingType, string> = {
 }
 
 export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
-  PENDING:   'Pendente',
-  CONFIRMED: 'Em Andamento',
-  CANCELLED: 'Cancelado',
-  COMPLETED: 'Finalizado',
+  PENDING:     'Pendente',
+  CONFIRMED:   'Confirmado',
+  IN_PROGRESS: 'Em Andamento',
+  CANCELLED:   'Cancelado',
+  COMPLETED:   'Finalizado',
 }
 
 // ── Stats types ────────────────────────────────────────────────────────────
@@ -80,7 +81,48 @@ export interface ClientStatsResponse {
 
 // ── Service ────────────────────────────────────────────────────────────────
 
+export interface StaffSlot {
+  id:        string
+  name:      string
+  photoUrl?: string
+}
+
+export interface AvailabilitySlot {
+  time:                 string   // "14:00"
+  available:            boolean
+  staff?:               StaffSlot[]
+  reason?:              string
+  allowFittingRequest?: boolean
+}
+
+export interface BookingRequest {
+  petId:              string
+  partnerId:          string
+  serviceId?:         string
+  bookingDate?:       string   // "YYYY-MM-DDTHH:mm:ss"
+  checkIn?:           string
+  checkOut?:          string
+  type:               BookingType
+  notes?:             string
+  price?:             number
+  paymentMethod?:     'CARD' | 'PIX' | 'PACKAGE_CREDIT'
+  staffId?:           string
+  requestFitting?:    boolean
+  customerPackageId?: string
+}
+
 export const bookingService = {
+  create: (data: BookingRequest): Promise<BookingResponse> =>
+    api.post('/bookings', data).then(r => r.data),
+
+  myBookings: (page = 0, size = 10): Promise<PageResponse<BookingResponse>> =>
+    api.get('/bookings/my-bookings', { params: { page, size, sort: 'bookingDate,desc' } }).then(r => r.data),
+
+  getAvailability: (partnerId: string, date: string, serviceId?: string): Promise<AvailabilitySlot[]> =>
+    api.get('/bookings/availability', {
+      params: { partnerId, date, ...(serviceId ? { serviceId } : {}) },
+    }).then(r => r.data),
+
   getByPartner: (partnerId: string, params: BookingQueryParams = {}): Promise<PageResponse<BookingResponse>> => {
     const q = new URLSearchParams()
     if (params.date)      q.set('date',      params.date)

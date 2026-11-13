@@ -3,6 +3,7 @@ package br.com.easypet.pet.service;
 import br.com.easypet.pet.domain.entity.Appointment;
 import br.com.easypet.pet.domain.entity.Medication;
 import br.com.easypet.pet.domain.entity.Pet;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.dto.request.MedicationRequest;
 import br.com.easypet.pet.dto.response.MedicationResponse;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
@@ -40,7 +41,7 @@ public class MedicationService {
                     .filter(record -> record.getPet().getId().equals(petId))
                     .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
         }
-        Medication medication = medicationMapper.toEntity(request, pet, appointment);
+        Medication medication = medicationMapper.toEntity(request, pet, appointment, petAccessService.historySource());
         return medicationMapper.toResponse(medicationRepository.save(medication));
     }
     @Transactional(readOnly = true)
@@ -60,6 +61,7 @@ public class MedicationService {
         Medication medication = medicationRepository.findById(medicationId)
                 .filter(m -> m.getPet().getId().equals(petId))
                 .orElseThrow(() -> new ResourceNotFoundException("Medicamento não encontrado"));
+        petAccessService.requireEditableSource(medication.getSource());
         updateMedicationFromRequest(medication, request);
         return medicationMapper.toResponse(medicationRepository.save(medication));
     }
@@ -69,7 +71,10 @@ public class MedicationService {
         petAccessService.requireOwnerOrAdmin(petId);
         medicationRepository.findById(medicationId)
                 .filter(record -> record.getPet().getId().equals(petId))
-                .ifPresentOrElse(medicationRepository::delete, () -> {
+                .ifPresentOrElse(record -> {
+                    petAccessService.requireEditableSource(record.getSource());
+                    medicationRepository.delete(record);
+                }, () -> {
                     throw new ResourceNotFoundException("Medicamento não encontrado para este pet");
                 });
     }
@@ -84,5 +89,4 @@ public class MedicationService {
         medication.setObservations(request.observations());
         medication.setActive(request.active());
     }
-
 }

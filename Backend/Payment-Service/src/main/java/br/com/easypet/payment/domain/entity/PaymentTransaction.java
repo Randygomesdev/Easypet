@@ -36,14 +36,27 @@ public class PaymentTransaction {
     @Column(name = "external_transaction_id")
     private String externalTransactionId;
 
+    @Column(name = "preference_id")
+    private String preferenceId;
+
+    @Column(name = "items_json", columnDefinition = "TEXT")
+    private String itemsJson;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
-        if (id == null) {
-            id = UUID.randomUUID();
-        }
+        if (id == null) id = UUID.randomUUID();
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

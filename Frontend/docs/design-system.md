@@ -56,12 +56,12 @@ Definido em `src/index.css` via `@theme` do Tailwind CSS v4.
 
 ### Card Base
 ```tsx
-<div className="bg-(--color-surface) border border-(--color-border) rounded-2xl p-5 shadow-sm">
+<div className="bg-surface border border-(--color-border) rounded-2xl p-5 shadow-sm">
 ```
 
 ### Card com Header
 ```tsx
-<div className="bg-(--color-surface) border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">
+<div className="bg-surface border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">
   <div className="px-5 py-4 border-b border-(--color-border)">
     <h2 className="text-sm font-bold text-(--color-text-heading)">Título</h2>
     <p className="text-xs text-(--color-text-muted) mt-0.5">Subtítulo</p>
@@ -72,7 +72,7 @@ Definido em `src/index.css` via `@theme` do Tailwind CSS v4.
 
 ### KPI Card
 ```tsx
-<div className="bg-(--color-surface) border border-(--color-border) rounded-2xl p-4 shadow-sm
+<div className="bg-surface border border-(--color-border) rounded-2xl p-4 shadow-sm
                 hover:shadow-md transition-shadow flex flex-col gap-3">
   <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-violet-100">
     <span className="text-violet-600"><Icon size={20} /></span>

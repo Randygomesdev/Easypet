@@ -2,6 +2,7 @@ package br.com.easypet.pet.service;
 
 import br.com.easypet.pet.domain.entity.Pet;
 import br.com.easypet.pet.domain.entity.WeightRecord;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.dto.request.WeightRecordRequest;
 import br.com.easypet.pet.dto.response.WeightRecordResponse;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
@@ -33,7 +34,7 @@ public class WeightRecordService {
     public WeightRecordResponse create(UUID petId, WeightRecordRequest request) {
         log.info("Registrando nova pesagem para o pet ID: {}", petId);
         Pet pet = petAccessService.requireOwnerOrAdmin(petId);
-        WeightRecord record = weightRecordMapper.toEntity(request, pet);
+        WeightRecord record = weightRecordMapper.toEntity(request, pet, petAccessService.historySource());
 
         pet.setWeight(request.weight());
         petRepository.save(pet);
@@ -53,7 +54,10 @@ public class WeightRecordService {
         petAccessService.requireOwnerOrAdmin(petId);
         weightRecordRepository.findById(recordId)
                 .filter(record -> record.getPet().getId().equals(petId))
-                .ifPresentOrElse(weightRecordRepository::delete, () -> {
+                .ifPresentOrElse(record -> {
+                    petAccessService.requireEditableSource(record.getSource());
+                    weightRecordRepository.delete(record);
+                }, () -> {
                     throw new ResourceNotFoundException("Pesagem não encontrada para este pet");
                 });
     }

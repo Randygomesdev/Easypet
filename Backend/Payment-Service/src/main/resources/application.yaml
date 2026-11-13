@@ -1,5 +1,7 @@
 app:
-  package-credits-enabled: ${APP_PACKAGE_CREDITS_ENABLED:true}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  checkout-enabled: ${APP_CHECKOUT_ENABLED:false}
+  package-credits-enabled: ${APP_PACKAGE_CREDITS_ENABLED:false}
 
 server:
   port: 8085
@@ -42,3 +44,6 @@ jwt:
 services:
   partner-service:
     url: ${PARTNER_SERVICE_URL:http://localhost:8083/api/v1}
+
+mercadopago:
+  access-token: ${MERCADOPAGO_ACCESS_TOKEN:TEST-ACCESS-TOKEN}

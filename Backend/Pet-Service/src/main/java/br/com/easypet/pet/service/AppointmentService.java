@@ -36,7 +36,7 @@ public class AppointmentService {
     public AppointmentResponse create(UUID petId, AppointmentRequest request) {
         log.info("Registrando consulta para o pet ID: {} | Motivo: {}", petId, request.reason());
         Pet pet = petAccessService.requireAccess(petId);
-        Appointment appointment = appointmentMapper.toEntity(request, pet);
+        Appointment appointment = appointmentMapper.toEntity(request, pet, petAccessService.historySource());
 
         if (request.weightAtTime() != null) {
             pet.setWeight(request.weightAtTime());
@@ -62,6 +62,7 @@ public class AppointmentService {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .filter(a -> a.getPet().getId().equals(petId))
                 .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada para este pet"));
+        petAccessService.requireEditableSource(appointment.getSource());
         updateAppointmentFromRequest(appointment, request);
         return appointmentMapper.toResponse(appointmentRepository.save(appointment));
     }
@@ -72,7 +73,10 @@ public class AppointmentService {
         petAccessService.requireOwnerOrAdmin(petId);
         appointmentRepository.findById(appointmentId)
                 .filter(record -> record.getPet().getId().equals(petId))
-                .ifPresentOrElse(appointmentRepository::delete, () -> {
+                .ifPresentOrElse(record -> {
+                    petAccessService.requireEditableSource(record.getSource());
+                    appointmentRepository.delete(record);
+                }, () -> {
                     throw new ResourceNotFoundException("Consulta não encontrada para este pet");
                 });
     }

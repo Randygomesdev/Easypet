@@ -1,5 +1,6 @@
 package br.com.easypet.pet.domain.entity;
 
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.domain.model.VaccineStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,6 +43,16 @@ public class Vaccine {
     private String manufacturer;
     private String lot;
     private String observations;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", length = 10)
+    private HistorySource source;
+
+    @Column(name = "partner_name")
+    private String partnerName;
+
+    @Column(name = "booking_id")
+    private UUID bookingId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

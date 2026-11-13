@@ -16,6 +16,7 @@ public record ExamRequest(
     String veterinarianName,
 
     String resultsSummary,
-    
-    String fileUrl
+    String fileUrl,
+    String partnerName,
+    java.util.UUID bookingId
 ) {}

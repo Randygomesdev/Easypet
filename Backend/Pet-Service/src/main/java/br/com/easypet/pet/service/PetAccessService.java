@@ -2,6 +2,7 @@ package br.com.easypet.pet.service;
 
 import br.com.easypet.pet.client.BookingAccessClient;
 import br.com.easypet.pet.domain.entity.Pet;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
 import br.com.easypet.pet.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,19 @@ public class PetAccessService {
 
     public Pet requireOwnerOrAdmin(UUID petId) {
         return findActivePet(petId, false);
+    }
+
+    public void requireEditableSource(HistorySource source) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (source == HistorySource.PLATFORM && (auth == null || !hasRole(auth, "ROLE_ADMIN"))) {
+            throw new ResourceNotFoundException("Registro da plataforma indisponível para alteração");
+        }
+    }
+
+    public HistorySource historySource() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && (hasRole(auth, "ROLE_ADMIN") || hasRole(auth, "ROLE_PARTNER"))
+                ? HistorySource.PLATFORM : HistorySource.OWNER;
     }
 
     private Pet findActivePet(UUID petId, boolean allowPartner) {

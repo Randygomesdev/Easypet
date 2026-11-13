@@ -21,5 +21,7 @@ public record VaccineRequest(
         String vetName,
         String manufacturer,
         String lot,
-        String observations
+        String observations,
+        String partnerName,
+        java.util.UUID bookingId
 ) {}

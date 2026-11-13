@@ -2,6 +2,7 @@ package br.com.easypet.pet.mapper;
 
 import br.com.easypet.pet.domain.entity.Exam;
 import br.com.easypet.pet.domain.entity.Pet;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.dto.request.ExamRequest;
 import br.com.easypet.pet.dto.response.ExamResponse;
 import org.springframework.stereotype.Component;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExamMapper {
 
-    public Exam toEntity(ExamRequest request, Pet pet) {
+    public Exam toEntity(ExamRequest request, Pet pet, HistorySource source) {
         return Exam.builder()
                 .pet(pet)
                 .examName(request.examName())
@@ -19,6 +20,9 @@ public class ExamMapper {
                 .resultsSummary(request.resultsSummary())
                 .fileUrl(request.fileUrl())
                 .certified(false)
+                .source(source)
+                .partnerName(request.partnerName())
+                .bookingId(request.bookingId())
                 .build();
     }
 
@@ -31,7 +35,10 @@ public class ExamMapper {
                 entity.getVetName(),
                 entity.getResultsSummary(),
                 entity.getFileUrl(),
-                entity.getCertified()
+                entity.getCertified(),
+                entity.getSource(),
+                entity.getPartnerName(),
+                entity.getBookingId()
         );
     }
 }

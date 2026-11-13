@@ -2,6 +2,7 @@ package br.com.easypet.pet.service;
 
 import br.com.easypet.pet.domain.entity.Exam;
 import br.com.easypet.pet.domain.entity.Pet;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.dto.request.ExamRequest;
 import br.com.easypet.pet.dto.response.ExamResponse;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
@@ -31,7 +32,7 @@ public class ExamService {
     public ExamResponse create(UUID petId, ExamRequest request) {
         log.info("Registrando exame '{}' para o pet ID: {}", request.examName(), petId);
         Pet pet = petAccessService.requireAccess(petId);
-        Exam exam = examMapper.toEntity(request, pet);
+        Exam exam = examMapper.toEntity(request, pet, petAccessService.historySource());
         return examMapper.toResponse(examRepository.save(exam));
     }
 
@@ -50,6 +51,7 @@ public class ExamService {
         Exam exam = examRepository.findById(examId)
                 .filter(e -> e.getPet().getId().equals(petId))
                 .orElseThrow(() -> new ResourceNotFoundException("Exame não encontrado"));
+        petAccessService.requireEditableSource(exam.getSource());
         updateExamFromRequest(exam, request);
         return examMapper.toResponse(examRepository.save(exam));
     }
@@ -59,7 +61,10 @@ public class ExamService {
         petAccessService.requireOwnerOrAdmin(petId);
         examRepository.findById(examId)
                 .filter(record -> record.getPet().getId().equals(petId))
-                .ifPresentOrElse(examRepository::delete, () -> {
+                .ifPresentOrElse(record -> {
+                    petAccessService.requireEditableSource(record.getSource());
+                    examRepository.delete(record);
+                }, () -> {
                     throw new ResourceNotFoundException("Exame não encontrado para este pet");
                 });
     }

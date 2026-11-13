@@ -32,6 +32,7 @@ src/
 ├── assets/           # Imagens e SVGs
 ├── components/
 │   ├── layout/       # Layout.tsx, Header.tsx, Sidebar.tsx
+
 │   └── ui/           # Componentes reutilizáveis (TimePicker, UserAvatar…)
 ├── config/           # env.ts (VITE_API_URL)
 ├── contexts/         # AuthContext.tsx, ThemeContext.tsx

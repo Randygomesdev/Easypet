@@ -10,7 +10,7 @@ export interface PackageRequest {
   validityDays: number
 }
 
-export interface PackageResponse {
+export interface PackageTemplateResponse {
   id:           string
   partnerId:    string
   name:         string
@@ -22,14 +22,33 @@ export interface PackageResponse {
   isActive:     boolean
 }
 
+export type PackageResponse = PackageTemplateResponse
+
+export type PaymentMethod = 'CARD' | 'PIX'
+
+export interface CustomerPackageResponse {
+  id:               string
+  packageTemplate:  PackageTemplateResponse
+  totalCredits:     number
+  remainingCredits: number
+  expirationDate:   string
+  status:           'ACTIVE' | 'EXPIRED' | 'EXHAUSTED' | 'CANCELLED'
+}
+
 export const packageService = {
-  getByPartner: (partnerId: string): Promise<PackageResponse[]> =>
+  getByPartner: (partnerId: string): Promise<PackageTemplateResponse[]> =>
     api.get(`/payments/packages/templates/partner/${partnerId}`).then(r => r.data),
 
-  create: (data: PackageRequest): Promise<PackageResponse> =>
+  purchase: (templateId: string, paymentMethod: PaymentMethod): Promise<CustomerPackageResponse> =>
+    api.post(`/payments/packages/purchase/${templateId}`, { paymentMethod }).then(r => r.data),
+
+  myBalances: (): Promise<CustomerPackageResponse[]> =>
+    api.get('/payments/packages/my-balances').then(r => r.data),
+
+  create: (data: PackageRequest): Promise<PackageTemplateResponse> =>
     api.post('/payments/packages/templates', data).then(r => r.data),
 
-  update: (templateId: string, data: PackageRequest): Promise<PackageResponse> =>
+  update: (templateId: string, data: PackageRequest): Promise<PackageTemplateResponse> =>
     api.put(`/payments/packages/templates/${templateId}`, data).then(r => r.data),
 
   remove: (templateId: string): Promise<void> =>

@@ -1,0 +1,434 @@
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Save, Loader2, Camera } from 'lucide-react'
+import EnderecoTab from '../partner/tabs/EnderecoTab'
+import HorarioTab from '../partner/tabs/HorarioTab'
+import ServicosTab from './tabs/ServicosTab'
+import PacotesTab from './tabs/PacotesTab'
+import ColaboradoresTab from './tabs/ColaboradoresTab'
+import AgendamentosTab from './tabs/AgendamentosTab'
+import {
+  partnerService,
+  buildPayload,
+  type PartnerPayload,
+  type PartnerResponse,
+} from '../../services/partner.service'
+import { formatCnpj, formatPhone, type FormErrors } from '../partner/CadastroPage'
+
+type Tab = 'dados' | 'endereco' | 'horario' | 'servicos' | 'pacotes' | 'colaboradores' | 'agendamentos'
+
+const DADOS_FIELDS:    (keyof PartnerPayload)[] = ['legalName', 'name', 'cnpj', 'email', 'contactPhone', 'description']
+const ENDERECO_FIELDS: (keyof PartnerPayload)[] = ['zipCode', 'address', 'neighborhood', 'city', 'state']
+
+export default function ParceiroDetailPage() {
+  const { id }   = useParams<{ id: string }>()
+  const navigate = useNavigate()
+
+  const [partner,    setPartner]    = useState<PartnerResponse | null>(null)
+  const [loading,    setLoading]    = useState(true)
+  const [saving,     setSaving]     = useState(false)
+  const [success,    setSuccess]    = useState(false)
+  const [error,      setError]      = useState('')
+  const [errors,     setErrors]     = useState<FormErrors>({})
+  const [activeTab,  setActiveTab]  = useState<Tab>('dados')
+  const [active,     setActive]     = useState(true)
+
+  const [form, setForm] = useState<PartnerPayload>({
+    name: '', legalName: '', cnpj: '',
+    email: '', contactPhone: '', description: '',
+    stateRegistration: '', stateRegistrationExempt: false,
+    municipalRegistration: '', municipalRegistrationExempt: false,
+    zipCode: '', address: '', number: '', neighborhood: '', complement: '', city: '', state: '',
+    businessHours: [],
+  })
+
+  useEffect(() => {
+    if (!id) return
+    partnerService.getById(id)
+      .then(data => {
+        setPartner(data)
+        setActive(data.active)
+        setForm({
+          name:                        data.name                        ?? '',
+          legalName:                   data.legalName                   ?? '',
+          cnpj:                        data.cnpj                        ?? '',
+          email:                       data.email                       ?? '',
+          contactPhone:                data.contactPhone                ?? '',
+          description:                 data.description                 ?? '',
+          stateRegistration:           data.stateRegistration           ?? '',
+          stateRegistrationExempt:     data.stateRegistrationExempt     ?? false,
+          municipalRegistration:       data.municipalRegistration       ?? '',
+          municipalRegistrationExempt: data.municipalRegistrationExempt ?? false,
+          zipCode:                     data.zipCode                     ?? '',
+          address:                     data.address                     ?? '',
+          number:                      data.number                      ?? '',
+          neighborhood:                data.neighborhood                ?? '',
+          complement:                  data.complement                  ?? '',
+          city:                        data.city                        ?? '',
+          state:                       data.state                       ?? '',
+          latitude:                    data.latitude,
+          longitude:                   data.longitude,
+          businessHours:               data.businessHours               ?? [],
+        })
+      })
+      .catch(() => setError('Não foi possível carregar os dados do parceiro.'))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  function handleChange(field: keyof PartnerPayload, value: string | boolean) {
+    setForm(prev => ({ ...prev, [field]: value }))
+    setErrors(prev => ({ ...prev, [field]: undefined }))
+  }
+
+  function validate(): FormErrors {
+    const e: FormErrors = {}
+    if (!form.legalName?.trim())   e.legalName    = 'Campo obrigatório'
+    if (!form.name?.trim())        e.name         = 'Campo obrigatório'
+    const cnpjD = (form.cnpj ?? '').replace(/\D/g, '')
+    if (cnpjD.length === 0)        e.cnpj         = 'Campo obrigatório'
+    else if (cnpjD.length !== 14)  e.cnpj         = 'CNPJ inválido'
+    if (!form.email?.trim())       e.email        = 'Campo obrigatório'
+    const phoneD = (form.contactPhone ?? '').replace(/\D/g, '')
+    if (phoneD.length === 0)       e.contactPhone = 'Campo obrigatório'
+    else if (phoneD.length < 10)   e.contactPhone = 'Telefone inválido'
+    if (!form.description?.trim()) e.description  = 'Campo obrigatório'
+    const zipD = (form.zipCode ?? '').replace(/\D/g, '')
+    if (zipD.length === 0)         e.zipCode      = 'Campo obrigatório'
+    else if (zipD.length !== 8)    e.zipCode      = 'CEP inválido'
+    if (!form.address?.trim())     e.address      = 'Campo obrigatório'
+    if (!form.neighborhood?.trim()) e.neighborhood = 'Campo obrigatório'
+    if (!form.city?.trim())        e.city         = 'Campo obrigatório'
+    if (!form.state?.trim())       e.state        = 'Campo obrigatório'
+    return e
+  }
+
+  async function handleSave() {
+    const errs = validate()
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs)
+      setError('Corrija os campos destacados antes de salvar.')
+      if (DADOS_FIELDS.some(f => errs[f]))         setActiveTab('dados')
+      else if (ENDERECO_FIELDS.some(f => errs[f])) setActiveTab('endereco')
+      return
+    }
+    if (!partner || !id) return
+    setSaving(true)
+    setError('')
+    setSuccess(false)
+    try {
+      const payload = buildPayload(partner, form)
+      const updated = await partnerService.updateById(id, { ...payload, active })
+      setPartner(updated)
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
+    } catch {
+      setError('Erro ao salvar. Verifique os dados e tente novamente.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'dados',          label: 'Dados Cadastrais'  },
+    { id: 'endereco',       label: 'Endereço'          },
+    { id: 'horario',        label: 'Horário'           },
+    { id: 'servicos',       label: 'Serviços'          },
+    { id: 'pacotes',        label: 'Pacotes'           },
+    { id: 'colaboradores',  label: 'Colaboradores'     },
+    { id: 'agendamentos',   label: 'Agendamentos'      },
+  ]
+
+  function tabHasError(id: Tab) {
+    if (id === 'dados')    return DADOS_FIELDS.some(f => !!errors[f])
+    if (id === 'endereco') return ENDERECO_FIELDS.some(f => !!errors[f])
+    return false
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+
+      {/* Cabeçalho */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/admin/parceiros')}
+            className="p-2 rounded-xl border border-(--color-border) text-(--color-text-muted)
+                       hover:text-(--color-text-heading) hover:border-(--color-primary-700)/50 transition-colors"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-(--color-text-heading)">
+              {partner?.name ?? 'Parceiro'}
+            </h1>
+            <p className="text-sm text-(--color-text-muted) mt-0.5">
+              Edição completa do cadastro do parceiro
+            </p>
+          </div>
+        </div>
+
+        {/* Toggle ativo */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-(--color-text-muted)">Status:</span>
+          <button
+            onClick={() => setActive(v => !v)}
+            className={`relative w-11 h-6 rounded-full transition-colors ${
+              active ? 'bg-(--color-primary-700)' : 'bg-(--color-border)'
+            }`}
+          >
+            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${
+              active ? 'left-6' : 'left-1'
+            }`} />
+          </button>
+          <span className={`text-sm font-semibold ${active ? 'text-emerald-600' : 'text-pink-500'}`}>
+            {active ? 'Ativo' : 'Inativo'}
+          </span>
+        </div>
+      </div>
+
+      {/* Form */}
+      <div className="bg-(--color-surface) rounded-xl shadow-md border border-(--color-border)">
+
+        {/* Tabs */}
+        <div className="flex border-b border-(--color-border) overflow-x-auto">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 min-w-max px-4 py-4 text-xs lg:text-sm font-medium transition-colors relative whitespace-nowrap
+                ${activeTab === tab.id
+                  ? 'text-(--color-text-heading)'
+                  : 'text-(--color-text-muted) hover:text-(--color-text-body)'
+                }`}
+            >
+              <span className="flex items-center justify-center gap-1.5">
+                {tab.label}
+                {tabHasError(tab.id) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                )}
+              </span>
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-(--color-secondary-500)" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Conteúdo das tabs */}
+        <div className="p-4 lg:p-8">
+          {activeTab === 'dados' && (
+            <DadosCadastrais form={form} onChange={handleChange} errors={errors} />
+          )}
+          {activeTab === 'endereco' && (
+            <EnderecoTab
+              form={form}
+              onChange={handleChange}
+              errors={errors}
+              onLatChange={v => setForm(prev => ({ ...prev, latitude: v }))}
+              onLngChange={v => setForm(prev => ({ ...prev, longitude: v }))}
+            />
+          )}
+          {activeTab === 'horario' && (
+            <HorarioTab
+              value={form.businessHours ?? []}
+              onChange={hours => setForm(prev => ({ ...prev, businessHours: hours }))}
+            />
+          )}
+          {activeTab === 'servicos'      && id && <ServicosTab      partnerId={id} />}
+          {activeTab === 'pacotes'       && id && <PacotesTab       partnerId={id} />}
+          {activeTab === 'colaboradores' && id && <ColaboradoresTab partnerId={id} />}
+          {activeTab === 'agendamentos'  && id && <AgendamentosTab  partnerId={id} />}
+        </div>
+
+        {/* Botão Salvar — apenas nos tabs de cadastro */}
+        {(['dados', 'endereco', 'horario'] as Tab[]).includes(activeTab) && (
+          <div className="px-4 lg:px-8 pt-4 pb-6 lg:pb-8 flex flex-col items-center gap-3">
+            {error && (
+              <p className="text-sm text-red-500 bg-red-50 px-4 py-2 rounded-lg w-full text-center">
+                {error}
+              </p>
+            )}
+            {success && (
+              <p className="text-sm text-green-600 bg-green-50 px-4 py-2 rounded-lg w-full text-center">
+                Dados salvos com sucesso!
+              </p>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full lg:w-auto flex items-center justify-center gap-2
+                         bg-(--color-secondary-500) hover:opacity-90
+                         text-white font-semibold px-16 py-3 rounded-full
+                         transition-opacity cursor-pointer disabled:opacity-60"
+            >
+              {saving
+                ? <><Loader2 size={16} className="animate-spin" /> Salvando...</>
+                : <><Save size={16} /> Salvar Alterações</>
+              }
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/* ─── Dados Cadastrais ─── */
+function DadosCadastrais({ form, onChange, errors }: {
+  form: PartnerPayload
+  onChange: (field: keyof PartnerPayload, value: string | boolean) => void
+  errors: FormErrors
+}) {
+  return (
+    <div className="flex flex-col xl:flex-row xl:items-start gap-6 xl:gap-8">
+
+      {/* Avatar */}
+      <div className="flex flex-col items-center gap-3 xl:shrink-0 xl:w-40 xl:pt-1">
+        <div className="w-24 h-24 xl:w-32 xl:h-32 rounded-full bg-(--color-bg) flex items-center justify-center border-2 border-dashed border-(--color-border)">
+          <Camera size={28} className="text-(--color-icon-default)" />
+        </div>
+        <button className="text-sm text-(--color-primary-600) hover:text-(--color-primary-500) transition-colors">
+          Carregar Foto
+        </button>
+      </div>
+
+      {/* Colunas */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-8">
+
+        {/* Esquerda */}
+        <div className="flex-1 flex flex-col gap-4">
+          <Field label="Razão Social"  required error={errors.legalName} value={form.legalName ?? ''} onChange={v => onChange('legalName', v)} placeholder="Razão Social" />
+          <Field label="Nome Fantasia" required error={errors.name}      value={form.name      ?? ''} onChange={v => onChange('name',      v)} placeholder="Nome Fantasia" />
+          <Field
+            label="CNPJ" required error={errors.cnpj}
+            value={formatCnpj(form.cnpj ?? '')}
+            onChange={v => onChange('cnpj', v.replace(/\D/g, '').slice(0, 14))}
+            placeholder="00.000.000/0000-00"
+          />
+          <InscricaoField
+            label="Inscrição Estadual"
+            value={form.stateRegistration ?? ''}
+            isento={form.stateRegistrationExempt ?? false}
+            onChange={v => onChange('stateRegistration', v)}
+            setIsento={v => onChange('stateRegistrationExempt', v)}
+            placeholder="Inscrição Estadual"
+          />
+          <InscricaoField
+            label="Inscrição Municipal"
+            value={form.municipalRegistration ?? ''}
+            isento={form.municipalRegistrationExempt ?? false}
+            onChange={v => onChange('municipalRegistration', v)}
+            setIsento={v => onChange('municipalRegistrationExempt', v)}
+            placeholder="Inscrição Municipal"
+          />
+        </div>
+
+        {/* Direita */}
+        <div className="flex-1 flex flex-col gap-4">
+          <Field label="E-mail"          required error={errors.email}        value={form.email        ?? ''} onChange={v => onChange('email',        v)} placeholder="e-mail" />
+          <Field
+            label="Telefone de contato" required error={errors.contactPhone}
+            value={formatPhone(form.contactPhone ?? '')}
+            onChange={v => onChange('contactPhone', v.replace(/\D/g, '').slice(0, 11))}
+            placeholder="(00) 00000-0000"
+          />
+          <Field
+            label="WhatsApp" optional
+            value={formatPhone(form.phone ?? '')}
+            onChange={v => onChange('phone', v.replace(/\D/g, '').slice(0, 11))}
+            placeholder="(00) 00000-0000"
+          />
+          <div className="flex flex-col flex-1">
+            <label className="flex items-center gap-1 text-sm font-medium text-(--color-text-heading) mb-1.5">
+              Descrição da Loja <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              value={form.description ?? ''}
+              onChange={e => onChange('description', e.target.value)}
+              placeholder="Descreva o estabelecimento"
+              className={`flex-1 w-full border rounded-lg px-3 py-2 text-sm
+                         text-(--color-text-body) placeholder:text-(--color-text-placeholder)
+                         bg-(--color-bg) focus:outline-none focus:ring-2 resize-none min-h-32 lg:min-h-36
+                         ${errors.description
+                           ? 'border-red-400 focus:ring-red-200'
+                           : 'border-(--color-border) focus:ring-(--color-primary-300)'}`}
+            />
+            {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+/* ─── Helpers de input ─── */
+function Field({ label, placeholder, required, optional, value, onChange, error }: {
+  label: string; placeholder?: string; required?: boolean; optional?: boolean
+  value: string; onChange: (v: string) => void; error?: string
+}) {
+  return (
+    <div>
+      <label className="flex items-center gap-1 text-sm font-medium text-(--color-text-heading) mb-1.5">
+        {label}
+        {required && <span className="text-red-400">*</span>}
+        {optional && <span className="text-(--color-text-muted) text-xs font-normal">Opcional</span>}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`w-full border rounded-lg px-3 py-2.5 text-sm
+                   text-(--color-text-body) placeholder:text-(--color-text-placeholder)
+                   bg-(--color-bg) focus:outline-none focus:ring-2 transition-shadow
+                   ${error
+                     ? 'border-red-400 focus:ring-red-200'
+                     : 'border-(--color-border) focus:ring-(--color-primary-300)'}`}
+      />
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+    </div>
+  )
+}
+
+function InscricaoField({ label, value, isento, onChange, setIsento, placeholder }: {
+  label: string; value: string; isento: boolean; placeholder: string
+  onChange: (v: string) => void; setIsento: (v: boolean) => void
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-sm font-medium text-(--color-text-heading)">{label}</span>
+        <label className="flex items-center gap-1.5 text-xs text-(--color-text-muted) cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={isento}
+            onChange={e => setIsento(e.target.checked)}
+            className="accent-(--color-primary-700) w-3.5 h-3.5"
+          />
+          Isento
+        </label>
+      </div>
+      <input
+        type="text"
+        disabled={isento}
+        value={isento ? '' : value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={isento ? 'Isento' : placeholder}
+        className="w-full border border-(--color-border) rounded-lg px-3 py-2.5 text-sm
+                   text-(--color-text-body) placeholder:text-(--color-text-placeholder)
+                   bg-(--color-bg) focus:outline-none focus:ring-2
+                   focus:ring-(--color-primary-300) transition-shadow
+                   disabled:opacity-60 disabled:cursor-not-allowed"
+      />
+    </div>
+  )
+}

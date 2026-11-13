@@ -22,6 +22,7 @@ public record MedicationRequest(
     String observations,
 
     Boolean active,
-    
-    UUID appointmentId
+    UUID appointmentId,
+    String partnerName,
+    UUID bookingId
 ) {}

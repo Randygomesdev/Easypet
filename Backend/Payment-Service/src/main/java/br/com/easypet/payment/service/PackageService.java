@@ -183,6 +183,19 @@ public class PackageService {
                 .collect(Collectors.toList());
     }
 
+    public void restoreCredit(UUID customerPackageId) {
+        requirePackageCredits();
+        CustomerPackage pkg = customerPackageRepository.findById(customerPackageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pacote não encontrado."));
+        if (pkg.getRemainingCredits() < pkg.getTotalCredits()) {
+            pkg.setRemainingCredits(pkg.getRemainingCredits() + 1);
+            if (pkg.getStatus() == CustomerPackageStatus.EXHAUSTED && !pkg.isExpired()) {
+                pkg.setStatus(CustomerPackageStatus.ACTIVE);
+            }
+            customerPackageRepository.save(pkg);
+        }
+    }
+
     public CreditConsumeResponse consumeCredit(CreditConsumeRequest request) {
         requirePackageCredits();
         log.info("Requisição síncrona para consumir 1 crédito. Usuário: {}, Parceiro: {}, Serviço: {}", 

@@ -13,4 +13,5 @@ public interface StaffRepository extends JpaRepository<Staff, UUID> {
     List<Staff> findByPartnerId(UUID partnerId);
     List<Staff> findByPartnerIdAndStatus(UUID partnerId, StaffStatus status);
     List<Staff> findByPartnerIdAndServicesIdAndStatus(UUID partnerId, UUID serviceId, StaffStatus status);
+    List<Staff> findByServicesId(UUID serviceId);
 }

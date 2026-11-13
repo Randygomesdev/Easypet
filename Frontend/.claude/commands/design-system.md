@@ -26,7 +26,7 @@
 ```tsx
 // CORRETO — Tailwind v4 com CSS var
 className="text-(--color-text-heading)"
-className="bg-(--color-surface)"
+className="bg-surface"
 className="border-(--color-border)"
 
 // ERRADO — não funciona em SVG (recharts)
@@ -39,20 +39,20 @@ className="border-(--color-border)"
 
 ### Card padrão
 ```tsx
-<div className="bg-(--color-surface) border border-(--color-border) rounded-2xl p-5 shadow-sm">
+<div className="bg-surface border border-(--color-border) rounded-2xl p-5 shadow-sm">
   {/* conteúdo */}
 </div>
 ```
 
 ### Card com header separado
 ```tsx
-<div className="bg-(--color-surface) border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">
+<div className="bg-surface border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">
   <div className="px-5 py-4 border-b border-(--color-border) flex items-center justify-between">
     <div>
       <h2 className="text-sm font-bold text-(--color-text-heading)">Título</h2>
       <p className="text-xs text-(--color-text-muted) mt-0.5">Subtítulo</p>
     </div>
-    <button className="text-xs font-semibold text-(--color-primary-700) hover:text-(--color-secondary-500) transition-colors">
+    <button className="text-xs font-semibold text-(--color-primary-700) hover:text-secondary-500 transition-colors">
       Ação
     </button>
   </div>
@@ -98,7 +98,7 @@ if (loading) {
 ### Botão primário
 ```tsx
 <button className="px-4 py-2 rounded-xl bg-(--color-primary-700) text-white text-sm font-semibold
-                   hover:bg-(--color-primary-600) transition-colors">
+                   hover:bg-primary-600 transition-colors">
   Ação
 </button>
 ```
@@ -123,8 +123,8 @@ if (loading) {
 ```tsx
 <input
   className="w-full border border-(--color-border) rounded-xl px-3 py-2 text-sm
-             bg-(--color-surface) text-(--color-text-body) placeholder-(--color-text-placeholder)
-             focus:outline-none focus:ring-2 focus:ring-(--color-primary-500)/30 transition"
+             bg-surface text-(--color-text-body) placeholder-(--color-text-placeholder)
+             focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition"
   placeholder="Buscar..."
 />
 ```
@@ -132,8 +132,8 @@ if (loading) {
 ### Select
 ```tsx
 <select className="border border-(--color-border) rounded-xl px-3 py-2 text-sm
-                   bg-(--color-surface) text-(--color-text-body)
-                   focus:outline-none focus:ring-2 focus:ring-(--color-primary-500)/30">
+                   bg-surface text-(--color-text-body)
+                   focus:outline-none focus:ring-2 focus:ring--primary-500/30">
   <option value="">Todos</option>
 </select>
 ```
@@ -169,7 +169,7 @@ const STATUS_STYLE = {
 ```tsx
 {showModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="bg-(--color-surface) rounded-2xl p-6 shadow-xl w-full max-w-sm mx-4">
+    <div className="bg-surface rounded-2xl p-6 shadow-xl w-full max-w-sm mx-4">
       <h3 className="text-base font-bold text-(--color-text-heading) mb-2">Confirmar ação</h3>
       <p className="text-sm text-(--color-text-muted) mb-5">Texto explicativo da ação.</p>
       <div className="flex gap-3 justify-end">

@@ -31,5 +31,8 @@ public interface PartnerMapper {
     void updateEntityFromRequest(PartnerRequest request, @MappingTarget Partner partner);
 
     // Mapeamento individual de serviço (usado automaticamente para a lista no PartnerResponse)
+    @Mapping(source = "category.id",          target = "categoryId")
+    @Mapping(source = "category.name",        target = "categoryName")
+    @Mapping(source = "category.bookingType", target = "bookingType")
     ServiceResponse toServiceResponse(ServiceOffer service);
 }

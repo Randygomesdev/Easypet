@@ -27,8 +27,8 @@ export default function LoginSuccessPage() {
           role:       payload.role,
           pictureUrl: payload.pictureUrl,
         })
-        if (payload.role === 'PARTNER') navigate('/partner/dashboard', { replace: true })
-        else if (payload.role === 'ADMIN')     navigate('/admin/dashboard',   { replace: true })
+        if (payload.role === 'PARTNER')        navigate('/partner/dashboard', { replace: true })
+        else if (payload.role === 'ADMIN')     navigate('/admin/parceiros',   { replace: true })
         else if (payload.role === 'CUSTOMER')  navigate('/app/home',          { replace: true })
         else                                   navigate('/',                  { replace: true })
       })

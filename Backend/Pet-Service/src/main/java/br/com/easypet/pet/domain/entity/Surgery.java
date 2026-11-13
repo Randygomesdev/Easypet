@@ -1,6 +1,7 @@
 package br.com.easypet.pet.domain.entity;
 
-import br.com.easypet.pet.domain.model.AppointmentStatus; // Podemos reaproveitar o enum
+import br.com.easypet.pet.domain.model.AppointmentStatus;
+import br.com.easypet.pet.domain.model.HistorySource;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -41,6 +42,16 @@ public class Surgery {
     private AppointmentStatus status;
 
     private Boolean certified;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", length = 10)
+    private HistorySource source;
+
+    @Column(name = "partner_name")
+    private String partnerName;
+
+    @Column(name = "booking_id")
+    private UUID bookingId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

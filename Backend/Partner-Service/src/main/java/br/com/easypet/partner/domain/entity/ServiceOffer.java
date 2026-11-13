@@ -2,6 +2,8 @@ package br.com.easypet.partner.domain.entity;
 
 import br.com.easypet.partner.domain.model.BillingUnit;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -40,6 +42,11 @@ public class ServiceOffer {
     @Column(name = "billing_unit", nullable = false)
     @Builder.Default
     private BillingUnit billingUnit = BillingUnit.HOURLY;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private ServiceCategory category;
 
     @Builder.Default
     private Boolean active = true;

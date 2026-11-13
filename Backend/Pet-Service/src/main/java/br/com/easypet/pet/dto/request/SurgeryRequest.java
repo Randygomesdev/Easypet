@@ -22,6 +22,10 @@ public record SurgeryRequest(
 
     String postOperativeInstructions,
 
-    @NotNull 
-    AppointmentStatus status
+    @NotNull
+    AppointmentStatus status,
+
+    String partnerName,
+
+    UUID bookingId
 ) {}

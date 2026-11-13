@@ -1,8 +1,10 @@
+import { env } from '../../config/env'
 import { useRef, useState, useEffect } from 'react'
-import { Bell, BellOff, ChevronDown, LogOut, Menu, Moon, Sun, UserPen } from 'lucide-react'
+import { Bell, BellOff, ChevronDown, LogOut, Menu, Moon, ShoppingCart, Sun, UserPen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useCart } from '../../contexts/CartContext'
 import UserAvatar from '../ui/UserAvatar'
 
 type Panel = 'notif' | 'user' | null
@@ -16,6 +18,7 @@ const UNREAD_COUNT = 0
 export default function Header({ onMenuClick }: Props) {
   const { user, logout }       = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { itemCount }          = useCart()
   const navigate               = useNavigate()
   const [panel, setPanel]      = useState<Panel>(null)
   const notifRef               = useRef<HTMLDivElement>(null)
@@ -57,6 +60,25 @@ export default function Header({ onMenuClick }: Props) {
       </button>
 
       <div className="flex-1" />
+
+      {/* ── Carrinho (só CUSTOMER) ── */}
+      {!env.internalPilot && user?.role === 'CUSTOMER' && (
+        <button
+          onClick={() => navigate('/app/carrinho')}
+          className="relative p-2 rounded-lg text-(--color-icon-default) hover:text-(--color-icon-active)
+                     hover:bg-(--color-bg) transition-colors"
+          title="Meu carrinho"
+        >
+          <ShoppingCart size={20} />
+          {itemCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center
+                             justify-center text-[10px] font-bold bg-(--color-secondary-500) text-white
+                             rounded-full px-1 leading-none">
+              {itemCount > 9 ? '9+' : itemCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* ── Notificações ── */}
       <div className="relative" ref={notifRef}>

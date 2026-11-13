@@ -18,14 +18,15 @@ A primeira versão é para testes internos. A base do P0 já passou pelos testes
 
 ### Unificação — recuperar o trabalho dos repositórios separados
 
-**Estado:** auditoria concluída e integração iniciada. Auth, Gateway e Infra não têm mudanças funcionais adicionais nas branches remotas atuais.
+**Estado:** código recuperado na branch `codex/unificar-develop`. A validação da versão combinada em localhost está em andamento. Auth, Gateway e Infra não têm mudanças funcionais adicionais nas branches remotas atuais.
 
 - [x] Identificar as revisões de origem: Partner `bcaaa44` e `cf16577`, Pet `37b63f5`, Booking `8373d26`, Payment `c58c482` e Frontend `7e51ce9`.
-- [ ] Preservar a base local do P0 em um commit e trabalhar em uma branch de integração.
-- [ ] Integrar categorias, edição de serviços e vínculo com equipe no Partner. Integrar a origem dos registros no Pet com as regras de acesso do P0.
-- [ ] Integrar os estados e as regras de agenda do Booking. Revisar a migration V6 para preservar reservas existentes durante a criação do índice.
-- [ ] Integrar checkout, carteira e estornos no Payment, protegendo as operações internas e mantendo pagamentos e créditos desativados no piloto.
-- [ ] Integrar as telas do Frontend e alinhar as chamadas ao backend. Validar tutor, parceiro e administração localmente.
+- [x] Preservar a base local do P0 em um commit e trabalhar em uma branch de integração.
+- [x] Integrar categorias, edição de serviços e vínculo com equipe no Partner. Integrar a origem dos registros no Pet com as regras de acesso do P0.
+- [x] Integrar os estados e as regras de agenda do Booking. A migration V6 cria o índice sem apagar registros. Se houver duplicidades ativas, será preciso resolvê-las antes de aplicar a migration.
+- [x] Recuperar checkout e carteira no Payment. O checkout fica desligado por padrão, e as rotas de concessão e estorno de crédito ficam bloqueadas até receberem autenticação entre serviços e proteção contra repetição.
+- [x] Integrar as telas do Frontend. No piloto, o tutor pode consultar a vitrine, criar um pet e solicitar uma reserva sem passar pelo checkout.
+- [ ] Validar a jornada do tutor e do parceiro no navegador e mapear as permissões e rotas necessárias para testar a área administrativa.
 - [ ] Compilar os serviços e o frontend, aplicar migrations em banco de teste e validar agenda, atendimento e isolamento entre parceiros.
 
 ### P0 — Aceite da primeira versão em localhost
@@ -36,7 +37,7 @@ A primeira versão é para testes internos. A base do P0 já passou pelos testes
 - [x] Criar uma conta `PARTNER` pelo comando interativo e validar seu login pela API.
 - [x] Criar e confirmar uma reserva pela API e verificar que outro parceiro não acessa a reserva, o prontuário ou a escala.
 - [ ] No navegador, cadastrar um estabelecimento, criar um serviço e vincular um colaborador com escala.
-- [ ] Criar um pet e uma reserva fictícios pela API. Confirmar a reserva na agenda, registrar o atendimento e conferir o prontuário e o status final no painel.
+- [ ] Criar um pet e solicitar uma reserva pela área do tutor. Confirmar a reserva na agenda do parceiro, registrar o atendimento e conferir o prontuário e o status final.
 - [ ] Corrigir os bloqueadores encontrados, repetir o roteiro e registrar o aceite local.
 
 ### Deploy de teste — publicação manual na HOMOLOG

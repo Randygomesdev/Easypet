@@ -1,5 +1,5 @@
 app:
-  package-credits-enabled: ${APP_PACKAGE_CREDITS_ENABLED:true}
+  package-credits-enabled: ${APP_PACKAGE_CREDITS_ENABLED:false}
 
 server:
   port: 8084

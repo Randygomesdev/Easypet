@@ -21,6 +21,10 @@ public record AppointmentRequest(
 
     Double weightAtTime,
 
-    @NotNull 
-    AppointmentStatus status
+    @NotNull
+    AppointmentStatus status,
+
+    String partnerName,
+
+    UUID bookingId
 ) {}

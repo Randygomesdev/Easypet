@@ -65,7 +65,7 @@ public class BookingService {
     private final PaymentServiceClient paymentServiceClient;
     private final PetServiceClient petServiceClient;
 
-    @Value("${app.package-credits-enabled:true}")
+    @Value("${app.package-credits-enabled:false}")
     private boolean packageCreditsEnabled = true;
 
     public BookingResponse createBooking(BookingRequest request) {
@@ -81,6 +81,7 @@ public class BookingService {
         }
         UUID petOwnerId = petServiceClient.getAccessiblePetOwner(request.petId());
         booking.setUserId(petOwnerId);
+        UUID consumedPackageId = null;
 
         // Interceptar se o pagamento for via crédito de pacote pré-pago
         if (request.paymentMethod() == PaymentMethod.PACKAGE_CREDIT) {
@@ -95,6 +96,7 @@ public class BookingService {
                     currentUserId, request.partnerId(), request.serviceId());
             
             if (consumeResponse != null && consumeResponse.success()) {
+                consumedPackageId = consumeResponse.customerPackageId();
                 booking.setCustomerPackageId(consumeResponse.customerPackageId());
                 booking.setPaymentMethod(PaymentMethod.PACKAGE_CREDIT);
                 booking.setStatus(BookingStatus.CONFIRMED); // Agendamento pré-pago é CONFIRMED direto
@@ -106,8 +108,12 @@ public class BookingService {
         } else {
             // Estado inicial padrão para pagamentos avulsos
             booking.setStatus(BookingStatus.PENDING);
-            booking.setPaymentMethod(PaymentMethod.CARD);
+            booking.setPaymentMethod(request.paymentMethod() != null ? request.paymentMethod() : PaymentMethod.CARD);
         }
+
+        // A partir daqui qualquer falha (validação, conflito de horário, 409 do
+        // índice único, etc.) deve estornar o crédito já debitado, se houver.
+        try {
 
         if (request.type() == br.com.easypet.booking.domain.enums.BookingType.BOARDING) {
             log.info("Validando agendamento de hospedagem/creche...");
@@ -209,16 +215,19 @@ public class BookingService {
                         
                 // Verificar Ausência e Escala
                 boolean absent = isStaffAbsent(chosenStaffId, bookingDate);
-                boolean inSchedule = isWithinStaffSchedule(chosenStaffId, bookingDate);
-                boolean conflict = hasStaffConflict(partnerId, chosenStaffId, bookingDate);
-                
+                ScheduleStatus schedStatus = getStaffScheduleStatus(chosenStaffId, bookingDate);
+                boolean inSchedule = schedStatus == ScheduleStatus.AVAILABLE;
+                boolean inLunch    = schedStatus == ScheduleStatus.LUNCH_BREAK;
+                boolean conflict = inSchedule && hasStaffConflict(partnerId, chosenStaffId, bookingDate);
+
                 if (absent || !inSchedule || conflict) {
                     if (isFitting) {
                         allocatedStaffId = chosenStaffId;
                         booking.setIsFittingRequest(true);
                         booking.setStatus(BookingStatus.PENDING);
                     } else {
-                        String msg = absent ? "O profissional selecionado está ausente neste horário." :
+                        String msg = absent   ? "O profissional selecionado está ausente neste horário." :
+                                     inLunch  ? "O profissional está em horário de almoço. Solicite um encaixe." :
                                      !inSchedule ? "Este horário está fora do expediente regular do profissional." :
                                      "O profissional selecionado já possui outro agendamento neste horário.";
                         throw new BusinessException(msg);
@@ -253,23 +262,26 @@ public class BookingService {
                             .filter(b -> b.getStaffId() != null)
                             .collect(Collectors.groupingBy(Booking::getStaffId, Collectors.counting()));
                             
-                    // 3. Escolher o profissional com a menor contagem de agendamentos no dia
-                    br.com.easypet.booking.client.dto.StaffResponseDto selectedStaff = availableStaff.stream()
-                            .min(Comparator.comparing((br.com.easypet.booking.client.dto.StaffResponseDto s) -> bookingCounts.getOrDefault(s.id(), 0L))
+                    // 3. Ordenar por menor carga no dia e tentar cada staff até achar um livre
+                    List<br.com.easypet.booking.client.dto.StaffResponseDto> sortedStaff = availableStaff.stream()
+                            .sorted(Comparator.comparing((br.com.easypet.booking.client.dto.StaffResponseDto s) -> bookingCounts.getOrDefault(s.id(), 0L))
                                     .thenComparing(s -> s.id().toString()))
-                            .orElse(availableStaff.get(0));
-                            
-                    // 4. Verificar conflito de horário para o profissional selecionado
-                    if (hasStaffConflict(partnerId, selectedStaff.id(), bookingDate)) {
-                        if (isFitting) {
-                            allocatedStaffId = selectedStaff.id();
-                            booking.setIsFittingRequest(true);
-                            booking.setStatus(BookingStatus.PENDING);
-                        } else {
-                            throw new BusinessException("Todos os profissionais disponíveis estão ocupados neste horário.");
-                        }
+                            .collect(Collectors.toList());
+
+                    br.com.easypet.booking.client.dto.StaffResponseDto freeStaff = sortedStaff.stream()
+                            .filter(s -> !hasStaffConflict(partnerId, s.id(), bookingDate))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (freeStaff != null) {
+                        allocatedStaffId = freeStaff.id();
+                    } else if (isFitting) {
+                        // Nenhum staff livre — registrar como encaixe no primeiro da lista
+                        allocatedStaffId = sortedStaff.get(0).id();
+                        booking.setIsFittingRequest(true);
+                        booking.setStatus(BookingStatus.PENDING);
                     } else {
-                        allocatedStaffId = selectedStaff.id();
+                        throw new BusinessException("Todos os profissionais disponíveis estão ocupados neste horário.");
                     }
                 }
             }
@@ -277,9 +289,24 @@ public class BookingService {
             booking.setStaffId(allocatedStaffId);
         }
 
-        Booking savedBooking = bookingRepository.save(booking);
+        // saveAndFlush força o INSERT imediatamente, garantindo que a violação
+        // do índice único (409) seja lançada aqui dentro do try — e não apenas
+        // no commit, fora do alcance da compensação abaixo.
+        Booking savedBooking = bookingRepository.saveAndFlush(booking);
         log.info("Agendamento criado com sucesso! ID: {}", savedBooking.getId());
         return bookingMapper.toResponse(savedBooking);
+
+        } catch (RuntimeException ex) {
+            // Compensação: o crédito do pacote já foi debitado no payment-service
+            // (transação de outro microserviço, já commitada), mas a criação do
+            // agendamento falhou. Estorna o crédito para não deixá-lo órfão.
+            if (consumedPackageId != null) {
+                log.warn("Falha ao criar agendamento após débito de crédito. Estornando crédito do pacote {}: {}",
+                        consumedPackageId, ex.getMessage());
+                paymentServiceClient.restorePackageCredit(consumedPackageId);
+            }
+            throw ex;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -383,6 +410,13 @@ public class BookingService {
         }
         if (status != BookingStatus.CANCELLED && !hasRole("ROLE_ADMIN") && !hasRole("ROLE_PARTNER")) {
             throw new BusinessException("A confirmação e a conclusão dependem do estabelecimento.");
+        }
+        if (status == BookingStatus.CANCELLED && booking.getStatus() == BookingStatus.CANCELLED) {
+            return bookingMapper.toResponse(booking);
+        }
+        if (status == BookingStatus.CANCELLED && !hasRole("ROLE_ADMIN") && !hasRole("ROLE_PARTNER")
+                && booking.getBookingDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new BusinessException("Cancelamentos devem ser feitos com pelo menos 2 horas de antecedência.");
         }
         booking.setStatus(status);
         Booking updatedBooking = bookingRepository.save(booking);
@@ -571,28 +605,31 @@ public class BookingService {
             boolean anyAbsent = false;
             boolean anyScheduleMatch = false;
             boolean anyConflict = false;
+            boolean anyLunchBreak = false;
 
             for (var staff : staffList) {
                 boolean absent = isStaffAbsent(staff.id(), slotDateTime);
-                boolean inSchedule = isWithinStaffSchedule(staff.id(), slotDateTime);
-                boolean conflict = hasStaffConflict(partnerId, staff.id(), slotDateTime);
-
-                log.info("DIAGNOSTICO: Profissional '{}' (ID: {}), absent: {}, inSchedule: {}, conflict: {}, slotTime: {}", 
-                         staff.name(), staff.id(), absent, inSchedule, conflict, slotDateTime);
+                ScheduleStatus schedStatus = getStaffScheduleStatus(staff.id(), slotDateTime);
+                boolean inSchedule = schedStatus == ScheduleStatus.AVAILABLE;
+                boolean inLunch    = schedStatus == ScheduleStatus.LUNCH_BREAK;
+                boolean conflict   = inSchedule && hasStaffConflict(partnerId, staff.id(), slotDateTime);
 
                 if (!absent && inSchedule && !conflict) {
                     availableStaff.add(staff);
                 }
-                if (absent) anyAbsent = true;
+                if (absent)   anyAbsent       = true;
                 if (inSchedule) anyScheduleMatch = true;
-                if (conflict) anyConflict = true;
+                if (conflict) anyConflict      = true;
+                if (inLunch && !absent) anyLunchBreak = true;
             }
 
             if (!availableStaff.isEmpty()) {
                 slots.add(new AvailabilitySlot(timeStr, true, availableStaff, null, null));
             } else {
                 String reason;
-                if (!anyScheduleMatch) {
+                if (anyLunchBreak && !anyConflict) {
+                    reason = "LUNCH_BREAK";
+                } else if (!anyScheduleMatch) {
                     reason = "OUT_OF_SCHEDULE";
                 } else if (anyAbsent && !anyConflict) {
                     reason = "BLOCKED_ABSENCE";
@@ -751,29 +788,37 @@ public class BookingService {
         }
     }
 
-    private boolean isWithinStaffSchedule(UUID staffId, LocalDateTime bookingDate) {
+    private enum ScheduleStatus { AVAILABLE, LUNCH_BREAK, OUT_OF_SCHEDULE }
+
+    private ScheduleStatus getStaffScheduleStatus(UUID staffId, LocalDateTime bookingDate) {
         try {
             List<br.com.easypet.booking.client.dto.StaffScheduleResponseDto> schedules = partnerServiceClient.getStaffSchedule(staffId);
-            if (schedules == null) return false;
-            
-            // Mapeia o DayOfWeek do Java (Segunda=1 ... Domingo=7) para o padrão do partner-service (Domingo=1, Segunda=2 ...)
+            if (schedules == null || schedules.isEmpty()) return ScheduleStatus.OUT_OF_SCHEDULE;
+
+            // Mapeia DayOfWeek Java (Seg=1…Dom=7) → padrão partner-service (Dom=1, Seg=2…)
             int targetDay = bookingDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY ? 1 : bookingDate.getDayOfWeek().getValue() + 1;
-            
             LocalTime targetTime = bookingDate.toLocalTime();
 
-            log.info("DIAGNOSTICO: Profissional {} tem {} escala(s). targetDay: {}, targetTime: {}", 
-                     staffId, schedules.size(), targetDay, targetTime);
             for (var s : schedules) {
-                log.info("  DIAGNOSTICO: Escala diaOfWeek: {}, startTime: {}, endTime: {}", s.dayOfWeek(), s.startTime(), s.endTime());
+                if (s.dayOfWeek() != targetDay) continue;
+                boolean withinWork = !targetTime.isBefore(s.startTime()) && targetTime.isBefore(s.endTime());
+                if (!withinWork) continue;
+                // Dentro do expediente — verificar intervalo de almoço
+                if (s.lunchStartTime() != null && s.lunchEndTime() != null &&
+                    !targetTime.isBefore(s.lunchStartTime()) && targetTime.isBefore(s.lunchEndTime())) {
+                    return ScheduleStatus.LUNCH_BREAK;
+                }
+                return ScheduleStatus.AVAILABLE;
             }
-
-            return schedules.stream()
-                    .filter(schedule -> schedule.dayOfWeek() == targetDay)
-                    .anyMatch(schedule -> !targetTime.isBefore(schedule.startTime()) && targetTime.isBefore(schedule.endTime()));
+            return ScheduleStatus.OUT_OF_SCHEDULE;
         } catch (Exception e) {
-            log.error("Erro ao verificar escala de trabalho do profissional: {}", e.getMessage());
-            return false;
+            log.error("Erro ao verificar escala do profissional {}: {}", staffId, e.getMessage());
+            return ScheduleStatus.OUT_OF_SCHEDULE;
         }
+    }
+
+    private boolean isWithinStaffSchedule(UUID staffId, LocalDateTime bookingDate) {
+        return getStaffScheduleStatus(staffId, bookingDate) == ScheduleStatus.AVAILABLE;
     }
 
     private boolean hasStaffConflict(UUID partnerId, UUID staffId, LocalDateTime bookingDate) {

@@ -2,6 +2,7 @@ package br.com.easypet.pet.service;
 
 import br.com.easypet.pet.domain.entity.Pet;
 import br.com.easypet.pet.domain.entity.Surgery;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.dto.request.SurgeryRequest;
 import br.com.easypet.pet.dto.response.SurgeryResponse;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
@@ -31,7 +32,7 @@ public class SurgeryService {
     public SurgeryResponse create(UUID petId, SurgeryRequest request) {
         log.info("Registrando cirurgia '{}' para o pet ID: {}", request.description(), petId);
         Pet pet = petAccessService.requireOwnerOrAdmin(petId);
-        Surgery surgery = surgeryMapper.toEntity(request, pet);
+        Surgery surgery = surgeryMapper.toEntity(request, pet, petAccessService.historySource());
         return surgeryMapper.toResponse(surgeryRepository.save(surgery));
     }
 
@@ -50,6 +51,7 @@ public class SurgeryService {
         Surgery surgery = surgeryRepository.findById(surgeryId)
                 .filter(s -> s.getPet().getId().equals(petId))
                 .orElseThrow(() -> new ResourceNotFoundException("Cirurgia não encontrada"));
+        petAccessService.requireEditableSource(surgery.getSource());
         updateSurgeryFromRequest(surgery, request);
         return surgeryMapper.toResponse(surgeryRepository.save(surgery));
     }
@@ -59,7 +61,10 @@ public class SurgeryService {
         petAccessService.requireOwnerOrAdmin(petId);
         surgeryRepository.findById(surgeryId)
                 .filter(record -> record.getPet().getId().equals(petId))
-                .ifPresentOrElse(surgeryRepository::delete, () -> {
+                .ifPresentOrElse(record -> {
+                    petAccessService.requireEditableSource(record.getSource());
+                    surgeryRepository.delete(record);
+                }, () -> {
                     throw new ResourceNotFoundException("Cirurgia não encontrada para este pet");
                 });
     }

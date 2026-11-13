@@ -2,6 +2,7 @@ package br.com.easypet.pet.service;
 
 import br.com.easypet.pet.domain.entity.Pet;
 import br.com.easypet.pet.domain.entity.Vaccine;
+import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.dto.request.VaccineRequest;
 import br.com.easypet.pet.dto.response.VaccineResponse;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
@@ -32,7 +33,7 @@ public class VaccineService {
         log.info("Iniciando cadastro de vacina '{}' para o pet ID: {}", request.name(), petId);
 
         Pet pet = petAccessService.requireAccess(petId);
-        Vaccine vaccine = vaccineMapper.toEntity(request, pet);
+        Vaccine vaccine = vaccineMapper.toEntity(request, pet, petAccessService.historySource());
         Vaccine saved =  vaccineRepository.save(vaccine);
         log.info("Vacina cadastrada com sucesso! ID da vacina: {}", saved.getId());
         return vaccineMapper.toResponse(saved);
@@ -56,6 +57,8 @@ public class VaccineService {
                 .filter(v-> v.getPet().getId().equals(petId))
                 .orElseThrow(()-> new ResourceNotFoundException("Vacina não encontrada para este pet"));
 
+        petAccessService.requireEditableSource(vaccine.getSource());
+
         updateVaccineFromRequest(vaccine, request);
 
         return vaccineMapper.toResponse(vaccineRepository.save(vaccine));
@@ -68,7 +71,10 @@ public class VaccineService {
         petAccessService.requireOwnerOrAdmin(petId);
         vaccineRepository.findById(vaccineId)
                 .filter(record -> record.getPet().getId().equals(petId))
-                .ifPresentOrElse(vaccineRepository::delete, () -> {
+                .ifPresentOrElse(record -> {
+                    petAccessService.requireEditableSource(record.getSource());
+                    vaccineRepository.delete(record);
+                }, () -> {
                     throw new ResourceNotFoundException("Vacina não encontrada para este pet");
                 });
         log.info("Vacina excluída com sucesso!");

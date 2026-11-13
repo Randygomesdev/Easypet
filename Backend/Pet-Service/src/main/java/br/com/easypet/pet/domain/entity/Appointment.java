@@ -1,6 +1,7 @@
 package br.com.easypet.pet.domain.entity;
 
 import br.com.easypet.pet.domain.model.AppointmentStatus;
+import br.com.easypet.pet.domain.model.HistorySource;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,6 +47,16 @@ public class Appointment {
 
     @Builder.Default
     private Boolean certified = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", length = 10)
+    private HistorySource source;
+
+    @Column(name = "partner_name")
+    private String partnerName;
+
+    @Column(name = "booking_id")
+    private UUID bookingId;
 
     @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL)
     private List<Medication> prescribedMedications;

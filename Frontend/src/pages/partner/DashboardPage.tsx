@@ -26,17 +26,19 @@ import {
 const C_PRIMARY = '#16426b'
 
 const STATUS_COLORS: Record<BookingStatus, string> = {
-  PENDING:   '#f59e0b',
-  CONFIRMED: '#7c3aed',
-  COMPLETED: '#059669',
-  CANCELLED: '#db2777',
+  PENDING:     '#f59e0b',
+  CONFIRMED:   '#7c3aed',
+  IN_PROGRESS: '#2563eb',
+  COMPLETED:   '#059669',
+  CANCELLED:   '#db2777',
 }
 
 const STATUS_STYLE: Record<BookingStatus, string> = {
-  COMPLETED: 'bg-emerald-100 text-emerald-700',
-  CONFIRMED: 'bg-violet-100  text-violet-700',
-  PENDING:   'bg-amber-100   text-amber-700',
-  CANCELLED: 'bg-pink-100    text-pink-600',
+  COMPLETED:   'bg-emerald-100 text-emerald-700',
+  CONFIRMED:   'bg-violet-100  text-violet-700',
+  IN_PROGRESS: 'bg-blue-100    text-blue-700',
+  PENDING:     'bg-amber-100   text-amber-700',
+  CANCELLED:   'bg-pink-100    text-pink-600',
 }
 
 /* ─────────────────────────────────────────────
@@ -310,7 +312,7 @@ export default function DashboardPage() {
               <Tooltip
                 contentStyle={{ borderRadius: '12px', border: '1px solid #ebebef', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,.06)' }}
                 cursor={{ fill: '#f6f6f8', radius: 6 }}
-                formatter={value => [value, 'Agendamentos']}
+                formatter={(v) => [v, 'Agendamentos']}
               />
               <Bar dataKey="total" fill={C_PRIMARY} radius={[6, 6, 0, 0]} name="Agendamentos" />
             </BarChart>
@@ -349,7 +351,7 @@ export default function DashboardPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{ borderRadius: '12px', border: '1px solid #ebebef', fontSize: 12 }}
-                    formatter={(value, name) => [value, name]}
+                    formatter={(v, _name, item) => [v, item.payload.name]}
                   />
                 </PieChart>
               </ResponsiveContainer>

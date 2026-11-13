@@ -80,6 +80,10 @@ public class StaffService {
         List<Staff> staffList;
         if (serviceId != null) {
             staffList = staffRepository.findByPartnerIdAndServicesIdAndStatus(partnerId, serviceId, status != null ? status : StaffStatus.ACTIVE);
+            if (staffList.isEmpty()) {
+                // Nenhum staff vinculado ao serviço: retorna todos os ativos do parceiro
+                staffList = staffRepository.findByPartnerIdAndStatus(partnerId, status != null ? status : StaffStatus.ACTIVE);
+            }
         } else if (status != null) {
             staffList = staffRepository.findByPartnerIdAndStatus(partnerId, status);
         } else {
@@ -99,6 +103,7 @@ public class StaffService {
         return staffMapper.toResponse(staff);
     }
 
+    @Transactional
     public StaffResponse updateStaff(UUID staffId, StaffRequest request) {
         log.info("Atualizando profissional ID: {}", staffId);
         Staff staff = staffRepository.findById(staffId)

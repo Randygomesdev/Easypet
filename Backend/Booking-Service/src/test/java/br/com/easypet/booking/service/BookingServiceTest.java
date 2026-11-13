@@ -186,7 +186,7 @@ class BookingServiceTest {
 
         int targetDay = bookingDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY ? 1 : bookingDate.getDayOfWeek().getValue() + 1;
         br.com.easypet.booking.client.dto.StaffScheduleResponseDto scheduleDto = new br.com.easypet.booking.client.dto.StaffScheduleResponseDto(
-                UUID.randomUUID(), staffId, targetDay, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0)
+                UUID.randomUUID(), staffId, targetDay, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0), null, null
         );
 
         BookingResponse expectedResponse = new BookingResponse(
@@ -199,7 +199,7 @@ class BookingServiceTest {
         when(partnerServiceClient.getStaffByPartnerId(partnerId, serviceId)).thenReturn(List.of(staffDto));
         when(partnerServiceClient.getStaffAbsences(staffId)).thenReturn(List.of());
         when(partnerServiceClient.getStaffSchedule(staffId)).thenReturn(List.of(scheduleDto));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(bookingRepository.saveAndFlush(any(Booking.class))).thenReturn(booking);
         when(bookingMapper.toResponse(any(Booking.class))).thenReturn(expectedResponse);
 
         // Act
@@ -209,7 +209,7 @@ class BookingServiceTest {
         assertNotNull(actualResponse);
         assertEquals(BookingType.GROOMING, actualResponse.type());
         assertEquals(BigDecimal.valueOf(80.00), actualResponse.price());
-        verify(bookingRepository, times(1)).save(booking);
+        verify(bookingRepository, times(1)).saveAndFlush(booking);
     }
 
     @Test
@@ -253,7 +253,7 @@ class BookingServiceTest {
         when(bookingMapper.toEntity(request)).thenReturn(booking);
         when(partnerServiceClient.getPartnerById(partnerId)).thenReturn(partnerDto);
         when(bookingRepository.findOverlappingBoardings(partnerId, checkIn, checkOut)).thenReturn(new ArrayList<>());
-        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(bookingRepository.saveAndFlush(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
         
         BookingResponse expectedResponse = new BookingResponse(
                 UUID.randomUUID(), petId, partnerId, userId, checkIn, BookingType.BOARDING,
@@ -269,7 +269,7 @@ class BookingServiceTest {
         assertNotNull(actualResponse);
         assertEquals(BigDecimal.valueOf(150.00), actualResponse.price()); // 3 * 50 = 150
         assertEquals(checkIn, booking.getBookingDate()); // Compatibilidade com banco
-        verify(bookingRepository, times(1)).save(booking);
+        verify(bookingRepository, times(1)).saveAndFlush(booking);
     }
 
     @Test
@@ -372,7 +372,7 @@ class BookingServiceTest {
 
         int targetDay = bookingDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY ? 1 : bookingDate.getDayOfWeek().getValue() + 1;
         br.com.easypet.booking.client.dto.StaffScheduleResponseDto scheduleDto = new br.com.easypet.booking.client.dto.StaffScheduleResponseDto(
-                UUID.randomUUID(), staffId, targetDay, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0)
+                UUID.randomUUID(), staffId, targetDay, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0), null, null
         );
 
         Booking legacyBooking = new Booking();
@@ -397,7 +397,7 @@ class BookingServiceTest {
         when(bookingRepository.findByPartnerIdAndStatusNotAndBookingDateBetweenAndStaffIdNotNull(
                 partnerId, BookingStatus.CANCELLED, startOfDay, endOfDay)).thenReturn(List.of(legacyBooking, ordinaryBooking));
 
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(bookingRepository.saveAndFlush(any(Booking.class))).thenReturn(booking);
         when(bookingMapper.toResponse(any(Booking.class))).thenReturn(expectedResponse);
 
         // Act
@@ -406,7 +406,7 @@ class BookingServiceTest {
         // Assert
         assertNotNull(actualResponse);
         assertEquals(staffId, actualResponse.staffId());
-        verify(bookingRepository, times(1)).save(booking);
+        verify(bookingRepository, times(1)).saveAndFlush(booking);
     }
 
     @Test
@@ -434,7 +434,7 @@ class BookingServiceTest {
 
         int targetDay = bookingDate.getDayOfWeek() == java.time.DayOfWeek.SUNDAY ? 1 : bookingDate.getDayOfWeek().getValue() + 1;
         br.com.easypet.booking.client.dto.StaffScheduleResponseDto scheduleDto = new br.com.easypet.booking.client.dto.StaffScheduleResponseDto(
-                UUID.randomUUID(), staffId, targetDay, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0)
+                UUID.randomUUID(), staffId, targetDay, java.time.LocalTime.of(8, 0), java.time.LocalTime.of(18, 0), null, null
         );
 
         BookingResponse expectedResponse = new BookingResponse(
@@ -448,7 +448,7 @@ class BookingServiceTest {
         when(partnerServiceClient.getStaffAbsences(staffId)).thenReturn(List.of());
         when(partnerServiceClient.getStaffSchedule(staffId)).thenReturn(List.of(scheduleDto));
         
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(bookingRepository.saveAndFlush(any(Booking.class))).thenReturn(booking);
         when(bookingMapper.toResponse(any(Booking.class))).thenReturn(expectedResponse);
 
         // Act
@@ -457,6 +457,6 @@ class BookingServiceTest {
         // Assert
         assertNotNull(actualResponse);
         assertFalse(booking.getIsFittingRequest(), "O isFittingRequest deveria ter sido definido como false na lógica de fallback.");
-        verify(bookingRepository, times(1)).save(booking);
+        verify(bookingRepository, times(1)).saveAndFlush(booking);
     }
 }

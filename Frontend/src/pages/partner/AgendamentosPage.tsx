@@ -79,10 +79,11 @@ function buildChips(): ChipDef[] {
    Status badge
 ───────────────────────────────────────────── */
 const STATUS_STYLE: Record<BookingStatus, string> = {
-  COMPLETED: 'bg-emerald-100 text-emerald-700',
-  CONFIRMED: 'bg-violet-100  text-violet-700',
-  PENDING:   'bg-amber-100   text-amber-700',
-  CANCELLED: 'bg-pink-100    text-pink-600',
+  COMPLETED:   'bg-emerald-100 text-emerald-700',
+  CONFIRMED:   'bg-violet-100  text-violet-700',
+  IN_PROGRESS: 'bg-blue-100    text-blue-700',
+  PENDING:     'bg-amber-100   text-amber-700',
+  CANCELLED:   'bg-pink-100    text-pink-600',
 }
 
 function StatusBadge({ status }: { status: BookingStatus }) {
@@ -238,10 +239,16 @@ export default function AgendamentosPage() {
       </div>
     )
     if (b.status === 'CONFIRMED') return (
-      <button onClick={() => navigate(`/partner/atendimento?bookingId=${b.id}`)}
-        className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-(--color-secondary-500) text-white hover:opacity-90 transition-opacity">
-        Iniciar Atendimento
-      </button>
+      <div className="flex gap-1.5">
+        <button onClick={() => navigate(`/partner/atendimento?bookingId=${b.id}`)}
+          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-(--color-secondary-500) text-white hover:opacity-90 transition-opacity">
+          Iniciar Atendimento
+        </button>
+        <button onClick={() => handleStatusChange(b.id, 'CANCELLED')}
+          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors">
+          Cancelar
+        </button>
+      </div>
     )
     return null
   }

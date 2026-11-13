@@ -1,6 +1,7 @@
 package br.com.easypet.pet.dto.response;
 
 import br.com.easypet.pet.domain.model.AppointmentStatus;
+import br.com.easypet.pet.domain.model.HistorySource;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -14,5 +15,8 @@ public record AppointmentResponse(
     Double weightAtTime,
     AppointmentStatus status,
     Boolean certified,
-    LocalDateTime createdAt
+    LocalDateTime createdAt,
+    HistorySource source,
+    String partnerName,
+    UUID bookingId
 ) {}

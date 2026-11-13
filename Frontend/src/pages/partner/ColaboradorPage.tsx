@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Camera, Loader2, Save, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import TimePicker from '../../components/ui/TimePicker'
-import { partnerService } from '../../services/partner.service'
+import { partnerService, type ServiceOffer } from '../../services/partner.service'
 import { formatPhone } from './CadastroPage'
 import {
   staffService,
@@ -98,15 +98,19 @@ const DEFAULT_ESCALA: DiaEscala[] = SCHEDULE_CONFIG.map(c => ({
 ════════════════════════════════════════ */
 type Tab = 'dados' | 'escala' | 'afastamentos'
 
-export default function ColaboradorPage() {
+type Props = { adminPartnerId?: string }
+
+export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
   const { staffId } = useParams<{ staffId: string }>()
   const navigate    = useNavigate()
   const isNew       = !staffId
 
-  const [partnerId, setPartnerId] = useState<string | null>(null)
-  const [staff, setStaff]         = useState<StaffResponse | null>(null)
-  const [activeTab, setActiveTab] = useState<Tab>('dados')
-  const [loading, setLoading]     = useState(true)
+  const [partnerId, setPartnerId]     = useState<string | null>(null)
+  const [staff, setStaff]             = useState<StaffResponse | null>(null)
+  const [activeTab, setActiveTab]     = useState<Tab>('dados')
+  const [loading, setLoading]         = useState(true)
+  const [availableServices, setAvailableServices] = useState<ServiceOffer[]>([])
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
   // Dados form
   const [name, setName]             = useState('')
@@ -132,9 +136,16 @@ export default function ColaboradorPage() {
   const [showModal, setShowModal]   = useState(false)
 
   useEffect(() => {
-    partnerService.getMe()
-      .then(async p => {
-        setPartnerId(p.id)
+    const resolveId = adminPartnerId
+      ? Promise.resolve(adminPartnerId)
+      : partnerService.getMe().then(p => p.id)
+
+    resolveId
+      .then(async pid => {
+        setPartnerId(pid)
+        const partnerData = await partnerService.getById(pid).catch(() => null)
+        if (partnerData?.services) setAvailableServices(partnerData.services)
+
         if (!isNew && staffId) {
           const [s, sched, abs] = await Promise.all([
             staffService.getById(staffId),
@@ -149,6 +160,7 @@ export default function ColaboradorPage() {
           setPhone(s.phone          ?? '')
           setEmail(s.email          ?? '')
           setWhatsapp(s.whatsapp    ?? '')
+          setSelectedServiceIds(s.serviceIds ?? [])
           setEscala(fromScheduleApi(sched))
           scheduleInitialized.current = true
           setAbsences(abs)
@@ -171,10 +183,14 @@ export default function ColaboradorPage() {
         phone:      phone.trim()      || undefined,
         email:      email.trim()      || undefined,
         whatsapp:   whatsapp.trim()   || undefined,
+        serviceIds: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
       }
       if (isNew && partnerId) {
         const created = await staffService.create(partnerId, payload)
-        navigate(`/partner/colaboradores/${created.id}`, { replace: true })
+        const dest = adminPartnerId
+          ? `/admin/parceiros/${adminPartnerId}/colaboradores/${created.id}`
+          : `/partner/colaboradores/${created.id}`
+        navigate(dest, { replace: true })
       } else if (staffId) {
         const updated = await staffService.update(staffId, payload)
         setStaff(updated)
@@ -264,6 +280,9 @@ export default function ColaboradorPage() {
               phone={phone}         setPhone={setPhone}
               email={email}         setEmail={setEmail}
               whatsapp={whatsapp}   setWhatsapp={setWhatsapp}
+              availableServices={availableServices}
+              selectedServiceIds={selectedServiceIds}
+              setSelectedServiceIds={setSelectedServiceIds}
               error={error}
             />
           )}
@@ -319,7 +338,8 @@ export default function ColaboradorPage() {
 ════════════════════════════════════════ */
 function DadosTab({ name, setName, photoUrl, jobTitle, setJobTitle,
                     speciality, setSpeciality, phone, setPhone, email, setEmail,
-                    whatsapp, setWhatsapp, error }: {
+                    whatsapp, setWhatsapp, availableServices, selectedServiceIds,
+                    setSelectedServiceIds, error }: {
   name: string; setName: (v: string) => void
   photoUrl: string
   jobTitle: string; setJobTitle: (v: string) => void
@@ -327,8 +347,19 @@ function DadosTab({ name, setName, photoUrl, jobTitle, setJobTitle,
   phone: string; setPhone: (v: string) => void
   email: string; setEmail: (v: string) => void
   whatsapp: string; setWhatsapp: (v: string) => void
+  availableServices: ServiceOffer[]
+  selectedServiceIds: string[]
+  setSelectedServiceIds: (ids: string[]) => void
   error: string
 }) {
+  function toggleService(id: string) {
+    setSelectedServiceIds(
+      selectedServiceIds.includes(id)
+        ? selectedServiceIds.filter(s => s !== id)
+        : [...selectedServiceIds, id]
+    )
+  }
+
   return (
     <div className="flex flex-col xl:flex-row xl:items-start gap-6 xl:gap-8">
 
@@ -347,35 +378,71 @@ function DadosTab({ name, setName, photoUrl, jobTitle, setJobTitle,
       </div>
 
       {/* Colunas */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-8">
-        {/* Esquerda */}
-        <div className="flex-1 flex flex-col gap-4">
-          <Field
-            label="Nome Completo" required
-            value={name} onChange={setName}
-            placeholder="Digite o Nome Completo"
-            error={error && !name.trim() ? error : ''}
-          />
-          <Field label="Cargo"        optional value={jobTitle}   onChange={setJobTitle}   placeholder="Ex: Médico Veterinário" />
-          <Field label="Especialidade" optional value={speciality} onChange={setSpeciality} placeholder="Ex: Cirurgia, Dermatologia" />
-          <Field label="Email"         optional value={email}      onChange={setEmail}      placeholder="Digite o Email" />
+      <div className="flex-1 flex flex-col gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+          {/* Esquerda */}
+          <div className="flex-1 flex flex-col gap-4">
+            <Field
+              label="Nome Completo" required
+              value={name} onChange={setName}
+              placeholder="Digite o Nome Completo"
+              error={error && !name.trim() ? error : ''}
+            />
+            <Field label="Cargo"        optional value={jobTitle}   onChange={setJobTitle}   placeholder="Ex: Médico Veterinário" />
+            <Field label="Especialidade" optional value={speciality} onChange={setSpeciality} placeholder="Ex: Cirurgia, Dermatologia" />
+            <Field label="Email"         optional value={email}      onChange={setEmail}      placeholder="Digite o Email" />
+          </div>
+
+          {/* Direita */}
+          <div className="flex-1 flex flex-col gap-4">
+            <Field
+              label="Telefone Contato" optional
+              value={formatPhone(phone)}
+              onChange={v => setPhone(v.replace(/\D/g, '').slice(0, 11))}
+              placeholder="(00) 00000-0000"
+            />
+            <Field
+              label="WhatsApp" optional
+              value={formatPhone(whatsapp)}
+              onChange={v => setWhatsapp(v.replace(/\D/g, '').slice(0, 11))}
+              placeholder="(00) 00000-0000"
+            />
+          </div>
         </div>
 
-        {/* Direita */}
-        <div className="flex-1 flex flex-col gap-4">
-          <Field
-            label="Telefone Contato" optional
-            value={formatPhone(phone)}
-            onChange={v => setPhone(v.replace(/\D/g, '').slice(0, 11))}
-            placeholder="(00) 00000-0000"
-          />
-          <Field
-            label="WhatsApp" optional
-            value={formatPhone(whatsapp)}
-            onChange={v => setWhatsapp(v.replace(/\D/g, '').slice(0, 11))}
-            placeholder="(00) 00000-0000"
-          />
-        </div>
+        {/* Serviços atendidos */}
+        {availableServices.length > 0 && (
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-(--color-text-muted) uppercase tracking-wide">
+              Serviços que este colaborador atende
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {availableServices.map(s => {
+                const active = selectedServiceIds.includes(s.id!)
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => toggleService(s.id!)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border-2 transition-colors
+                      ${active
+                        ? 'border-(--color-secondary-500) bg-(--color-secondary-500)/10 text-(--color-secondary-500) font-medium'
+                        : 'border-(--color-border) text-(--color-text-muted) hover:border-(--color-secondary-400)'
+                      }`}
+                  >
+                    {active && <span className="text-[10px]">✓</span>}
+                    {s.name}
+                  </button>
+                )
+              })}
+            </div>
+            {selectedServiceIds.length === 0 && (
+              <p className="text-xs text-amber-600">
+                Nenhum serviço selecionado — este colaborador não aparecerá na agenda de agendamentos.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
     </div>

@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
       <div className="flex flex-col flex-1 min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 lg:p-8">
           {children}
         </main>
       </div>

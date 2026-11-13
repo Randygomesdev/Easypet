@@ -36,6 +36,7 @@ public interface StaffMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "partner", ignore = true)
     @Mapping(target = "services", ignore = true)
+    @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     void updateEntityFromRequest(StaffRequest request, @MappingTarget Staff staff);
 
