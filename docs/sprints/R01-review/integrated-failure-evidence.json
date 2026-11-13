@@ -1,0 +1,7 @@
+{
+  "path": "C:\\Projects\\Easypet\\Frontend\\test-results\\pilot-agenda-disputa-a-últ-6eb89-a-baixa-parcial-idempotente\\error-context.md",
+  "sha256": "C51DCEE673C9442C38ABB7C400D5BF16975C1A818D9FE8503F437447F0F388DD",
+  "updatedAtUtc": "2026-11-13T15:23:28.2776227Z",
+  "expected": 403,
+  "received": 401
+}

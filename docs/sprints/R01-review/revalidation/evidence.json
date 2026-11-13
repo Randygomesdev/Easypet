@@ -1,0 +1,57 @@
+{
+  "capturedAtUtc": "2026-11-13T17:22:41.0746529Z",
+  "reviewer": "R01",
+  "integratedExecutor": "S07",
+  "head": "ceba61cc4ae325ddd8ff5012020508c6e55e5966",
+  "logs": [
+    {
+      "path": "C:/Users/randy/AppData/Local/Temp/easypet-r01-f0051313.log",
+      "sha256": "1C5BAF6CB624B9705049EAA1F29A4AEEB277E27FC99D07633B514EF1730C0AF0",
+      "selectedResults": [
+        {
+          "line": 651,
+          "text": "#85 41.39 > tsc -b && vite build"
+        },
+        {
+          "line": 791,
+          "text": "#85 90.86 ✓ built in 8.61s"
+        }
+      ]
+    },
+    {
+      "path": "C:/Users/randy/AppData/Local/Temp/easypet-r01-reteste-frontend.log",
+      "sha256": "5EB38D685011B18CA29D0E9CC0A37EA03589C1591A2532CD2B938024444380FF",
+      "selectedResults": [
+        {
+          "line": 872,
+          "text": "Running 12 tests using 1 worker"
+        },
+        {
+          "line": 887,
+          "text": "Pet sem resposta: Booking retornou 503 em 2252 ms."
+        },
+        {
+          "line": 890,
+          "text": "12 passed (28.2s)"
+        },
+        {
+          "line": 891,
+          "text": "Confirmações verificadas no transporte local: 2."
+        }
+      ]
+    }
+  ],
+  "playwrightLastRun": {
+    "status": "passed",
+    "failedTests": []
+  },
+  "independentTypecheck": {
+    "command": "node Frontend/node_modules/typescript/bin/tsc --project Frontend/tsconfig.app.json --noEmit --incremental false",
+    "diagnostics": [],
+    "exitCode": 0,
+    "executionDate": "2026-11-13",
+    "note": "Executado nesta revalidação, antes da atualização documental; sem emissão de build.",
+    "executor": "R01"
+  },
+  "scope": "R01 inspecionou código, fontes dos testes, relatórios e logs; não executou Compose ou suíte integrada."
+}

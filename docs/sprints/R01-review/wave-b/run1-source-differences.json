@@ -1,0 +1,17 @@
+[
+  {
+    "path": "Backend/Partner-Service/src/main/java/br/com/easypet/partner/domain/entity/Staff.java",
+    "expected": "9b87349ff32831935e100eb55c7d2501e1778120cb31f0f7fad82d4cb1c22f01",
+    "actual": "30338f49652c00416d14e450ef52b0c56f667039402b234ccea7162d2785408b"
+  },
+  {
+    "path": "Backend/Partner-Service/src/main/java/br/com/easypet/partner/repository/ReceptionCustomerRepository.java",
+    "expected": "7efc2dd546fc5843272b2083de3e6877490f5099c4db637c26201396cd611688",
+    "actual": "1b63b866df1901cec8e0c5e34dbddb99e613e99b8909e8080463d9d1206fcd05"
+  },
+  {
+    "path": "Backend/Partner-Service/src/main/java/br/com/easypet/partner/service/CustomerClaimService.java",
+    "expected": "64339812489a5cbf005cea13a58eeae0389aabc75111a1d22fb5cc89ab7cbee7",
+    "actual": "b93c3d1e97fabc33a166a19ac7affc38c030cf7a1a6014308dd5d24980ee2589"
+  }
+]

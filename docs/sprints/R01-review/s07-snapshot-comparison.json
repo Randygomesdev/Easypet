@@ -1,0 +1,110 @@
+[
+  {
+    "path": "C:\\Projects\\Easypet\\compose.homolog.yml",
+    "expected": "A45D28BF492BB0BB62DAE159F3E00FA5362283C7BEF593EC4D0EB004DCF85FED",
+    "actual": "A45D28BF492BB0BB62DAE159F3E00FA5362283C7BEF593EC4D0EB004DCF85FED",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\e2e\\admin-partners.spec.ts",
+    "expected": "CFB210039D6D7245F33C90998298847064B5178CDAECB650C65CC0A874C4D00E",
+    "actual": "CFB210039D6D7245F33C90998298847064B5178CDAECB650C65CC0A874C4D00E",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\tabs\\AgendamentosTab.tsx",
+    "expected": "FF71D5152454247E4E58504F312A752E13B45A724B851C8664AF9886597C5AA9",
+    "actual": "FF71D5152454247E4E58504F312A752E13B45A724B851C8664AF9886597C5AA9",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\e2e\\pet-fault.mjs",
+    "expected": "B34340E7EC5CA94B3124F4F1B0A05C8C84044E4F4DFC57371857FCB7AB651821",
+    "actual": "B34340E7EC5CA94B3124F4F1B0A05C8C84044E4F4DFC57371857FCB7AB651821",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\client\\PartnerServiceClient.java",
+    "expected": "7CA1E8D46E6338515187EBCF8C4C62F392EE808D080FAC3CC7D87AE32EF6C929",
+    "actual": "7CA1E8D46E6338515187EBCF8C4C62F392EE808D080FAC3CC7D87AE32EF6C929",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\InternalPartnerController.java",
+    "expected": "E1EEDDE6D83D69B95A156F76C83AB35CB73C5E52CF9F23EBA4EF563C0ED19605",
+    "actual": "E1EEDDE6D83D69B95A156F76C83AB35CB73C5E52CF9F23EBA4EF563C0ED19605",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\application.yaml",
+    "expected": "7895E5709CA12293D4233C9E06FC2517375B5055076071DBBED298629EB8CC89",
+    "actual": "7895E5709CA12293D4233C9E06FC2517375B5055076071DBBED298629EB8CC89",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\e2e\\run-local.mjs",
+    "expected": "EF234D98C0C2483827382F130F90F5E1B926FAB89AA53E923A17E817660EB81B",
+    "actual": "EF234D98C0C2483827382F130F90F5E1B926FAB89AA53E923A17E817660EB81B",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\scripts\\production\\diagnose.mjs",
+    "expected": "3816AA167EBC28FC79609823597393D48D21271647C688D452FEC80D175AB541",
+    "actual": "3816AA167EBC28FC79609823597393D48D21271647C688D452FEC80D175AB541",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\nginx.homolog.conf",
+    "expected": "7B9843AB8ACF8DE119E3AE4267C8C6CD5B11B5BA97BCE52CA663DC1937350F1B",
+    "actual": "7B9843AB8ACF8DE119E3AE4267C8C6CD5B11B5BA97BCE52CA663DC1937350F1B",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\config\\SecurityConfig.java",
+    "expected": "C217269034A754D7AC50A1AD067F36143A715A0F3B274C937776727E6A75C68C",
+    "actual": "C217269034A754D7AC50A1AD067F36143A715A0F3B274C937776727E6A75C68C",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\PartnerServiceClient.java",
+    "expected": "796E693315B87D5941B491352D5A5465872C0431A65CAFFA8F6B0C945D3E5496",
+    "actual": "796E693315B87D5941B491352D5A5465872C0431A65CAFFA8F6B0C945D3E5496",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\e2e\\compose.r01.yml",
+    "expected": "A46575869ECAA376585401345C7C966C7C1E4F7D1BC3E038A6418AEE5B8C547C",
+    "actual": "A46575869ECAA376585401345C7C966C7C1E4F7D1BC3E038A6418AEE5B8C547C",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\DashboardPage.tsx",
+    "expected": "EEB53D91D0D2C51F79337FF09143A7492A0D8D44F09ABDE96C59FEC04C4DF74A",
+    "actual": "EEB53D91D0D2C51F79337FF09143A7492A0D8D44F09ABDE96C59FEC04C4DF74A",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\config\\SecurityConfig.java",
+    "expected": "36DC010D638B29CA49DB070556EAD39A7E940EBD9C6A7885A382B1E177C546CD",
+    "actual": "36DC010D638B29CA49DB070556EAD39A7E940EBD9C6A7885A382B1E177C546CD",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\config\\RestTemplateConfig.java",
+    "expected": "B6740A969AB36C76D87BEA135A32C03B896D866CB1E3303CE7B05A9B7BDA8AEF",
+    "actual": "B6740A969AB36C76D87BEA135A32C03B896D866CB1E3303CE7B05A9B7BDA8AEF",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\e2e\\authenticate.ts",
+    "expected": "98EA6B7A339046A57136CF844D7F719050C850123920D5E14A45A7C752816FC2",
+    "actual": "98EA6B7A339046A57136CF844D7F719050C850123920D5E14A45A7C752816FC2",
+    "matches": true
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\e2e\\pilot.spec.ts",
+    "expected": "4D9079B5BC8DCD3BB743C2B73F2ED1701DD03E27843539F213DDEA2AD97ECA76",
+    "actual": "4D9079B5BC8DCD3BB743C2B73F2ED1701DD03E27843539F213DDEA2AD97ECA76",
+    "matches": true
+  }
+]

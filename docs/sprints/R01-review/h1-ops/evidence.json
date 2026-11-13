@@ -1,0 +1,72 @@
+{
+  "verifiedAt": "2026-11-13T21:19:03.020524+00:00",
+  "gate": "H1-01",
+  "decision": "aprovado localmente",
+  "workerEvidence": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\h1-operational-acceptance.json",
+  "workerEvidenceSha256": "342bb17bf34aa08e6ba57570d6149454abe9ec0b947d88bd5282be79539466f7",
+  "logsVerified": [
+    {
+      "path": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-h1-ops-resume-49d24eb7\\up.log",
+      "sha256": "4d40badd40e2d6afc4ce45590ff156e808b446c0119d2bc8bdc5c81fabff01b2",
+      "bytes": 38669
+    },
+    {
+      "path": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-h1-ops-resume-49d24eb7\\checks.log",
+      "sha256": "344e00aafd2f85558e9193c104790a4904338eedcc0e97ffedac9033ae7d233b",
+      "bytes": 6544
+    },
+    {
+      "path": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-h1-ops-resume-49d24eb7\\cleanup.log",
+      "sha256": "40bd1381d83a932b215be619c0372fbe5f2d8614e1a483be69a4c76f6428eed8",
+      "bytes": 6991
+    }
+  ],
+  "fixtureCredentialsFileRemoved": true,
+  "snapshotVerification": "snapshot-verification.json",
+  "cleanupVerification": "cleanup-verification.json",
+  "workerObservation": "worker-observation.json",
+  "diagnoseExitCodes": [
+    0,
+    1,
+    0
+  ],
+  "alertExitCodes": [
+    0,
+    2,
+    0,
+    1,
+    0
+  ],
+  "admin": {
+    "command": "docker compose -p <project> --env-file <fixture> -f compose.homolog.yml exec auth-service java -Dloader.main=br.com.innkercode.auth.ProvisionPilotUser -cp /app/app.jar org.springframework.boot.loader.launch.PropertiesLauncher ADMIN admin-ops@example.test <name>",
+    "interactiveProvisionExit": 0,
+    "duplicateDifferentCaseRolePasswordExit": 1,
+    "withoutTerminalExit": 1,
+    "outsideHomologProfileExit": 1,
+    "outsideFixtureDomainExit": 1,
+    "login": 200,
+    "session": 200,
+    "sessionRole": "ADMIN",
+    "administrativeRead": 200,
+    "anonymousRead": 401,
+    "loginWithRefusedPassword": 401,
+    "originalAccountPreserved": true
+  },
+  "functionalAcceptancePreserved": {
+    "scenariosPassed": 22,
+    "scenariosTotal": 22,
+    "databasesRestored": 6,
+    "tablesRestored": 55,
+    "referenceQueries": 12,
+    "javaReportsTests": 162,
+    "rerunThisRound": false,
+    "reason": "fontes/configuração sem mudanças; complemento operacional focado executado pela S07"
+  },
+  "priorTimeoutRootCause": "indeterminada; falha não se reproduziu na retomada",
+  "publicationExecuted": false,
+  "remainingPublicationGates": [
+    "versioned-release",
+    "vps-preflight",
+    "published-https-smoke"
+  ]
+}

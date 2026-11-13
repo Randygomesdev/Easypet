@@ -1,0 +1,7 @@
+UTC 2026-11-13T15:17:25.622Z
+TypeScript 6.0.3; no emit, no build outputs.
+src/pages/admin/tabs/AgendamentosTab.tsx(54,7): error TS2741: Property 'NO_SHOW' is missing in type '{ COMPLETED: string; CONFIRMED: string; IN_PROGRESS: string; PENDING: string; CANCELLED: string; }' but required in type 'Record<BookingStatus, string>'.
+src/pages/partner/DashboardPage.tsx(28,7): error TS2741: Property 'NO_SHOW' is missing in type '{ PENDING: string; CONFIRMED: string; IN_PROGRESS: string; COMPLETED: string; CANCELLED: string; }' but required in type 'Record<BookingStatus, string>'.
+src/pages/partner/DashboardPage.tsx(36,7): error TS2741: Property 'NO_SHOW' is missing in type '{ COMPLETED: string; CONFIRMED: string; IN_PROGRESS: string; PENDING: string; CANCELLED: string; }' but required in type 'Record<BookingStatus, string>'.
+
+Diagnostics: 3

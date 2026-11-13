@@ -1,0 +1,4 @@
+# Preserve the exact bytes of historical acceptance evidence across checkouts.
+docs/sprints/**/*.json -text -whitespace
+docs/sprints/**/*.log -text -whitespace
+docs/sprints/R01-review/isolated/** -text -whitespace

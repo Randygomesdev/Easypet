@@ -1,0 +1,49 @@
+{
+  "project": "easypet-e2e-309716e13e",
+  "logPath": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-wave-b-run1.log",
+  "logSha256": "47dcbcf4530756919226f65c13cbe56cc0f8e9735a4e5af0d9a1d262cca05633",
+  "passed": 11,
+  "failed": 7,
+  "duration": "2.6m",
+  "recovery": "not executed successfully",
+  "failures": [
+    {
+      "test": "gallery",
+      "observed": "Auth session 429 after three 200 responses; unavailable screen",
+      "owner": "S07",
+      "action": "preserve limiter and retry/appropriate route policy"
+    },
+    {
+      "test": "partner onboarding",
+      "observed": "Schedule load overwrote toggle after creating staff",
+      "finding": "R01-B02",
+      "owner": "S04"
+    },
+    {
+      "test": "catalog booking",
+      "observed": "Service fixture expected201, API returned200",
+      "owner": "S07"
+    },
+    {
+      "test": "password reset",
+      "observed": "Expiration fixture used wrong zone for local column",
+      "owner": "S07"
+    },
+    {
+      "test": "Auth unavailable direct Booking",
+      "observed": "500 expected503",
+      "finding": "R01-B01",
+      "owner": "S03"
+    },
+    {
+      "test": "Notification",
+      "observed": "Service fixture expected201, API returned200",
+      "owner": "S07"
+    },
+    {
+      "test": "team/desk/cashier/claim",
+      "observed": "Service fixture expected201, API returned200",
+      "owner": "S07"
+    }
+  ]
+}

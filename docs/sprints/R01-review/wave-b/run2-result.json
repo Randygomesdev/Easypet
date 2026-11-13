@@ -1,0 +1,16 @@
+{
+  "project": "easypet-e2e-3d02748b29",
+  "passed": 16,
+  "failed": 2,
+  "duration": "4.2m",
+  "snapshotEntries": 619,
+  "beforeAfterEqual": true,
+  "headEqual": true,
+  "logPath": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-wave-b-run2.log",
+  "logSha256": "f395679f7eb01db066352f5640cdf2937b82a42cbbcdcdb0921d9235dec5c354",
+  "recovery": "Reference charge absent after team test stopped at invitation rate limit",
+  "failures": [
+    "reset password exact label selector",
+    "team invitation accept HTTP429; later desk/cashier/claim not reached"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "capturedAt": "2026-11-13T20:04:44.184Z",
+  "command": "node Frontend/node_modules/typescript/bin/tsc --project Frontend/tsconfig.app.json --noEmit --incremental false",
+  "result": {
+    "chunk_id": "21785c",
+    "wall_time_seconds": 7.9720157,
+    "exit_code": 0,
+    "original_token_count": 0,
+    "output": ""
+  }
+}

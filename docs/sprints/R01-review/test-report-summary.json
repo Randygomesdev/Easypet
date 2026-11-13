@@ -1,0 +1,152 @@
+[
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\target\\surefire-reports\\TEST-br.com.innkercode.auth.AuthApiIntegrationTest.xml",
+    "sha256": "D2C4A4BA30C380A6F11A4045FCFDF9F1BB48FA6195470A62D04A74D050F82067",
+    "updatedAtUtc": "2026-11-13T15:05:55.3917996Z",
+    "name": "br.com.innkercode.auth.AuthApiIntegrationTest",
+    "tests": "6",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\target\\surefire-reports\\TEST-br.com.innkercode.auth.security.JwtServiceTest.xml",
+    "sha256": "1C2750E5AEDC84D396A63B7244C1D053850818C6A1DBCE1E64640D1F8B495B6A",
+    "updatedAtUtc": "2026-11-13T15:05:55.4033191Z",
+    "name": "br.com.innkercode.auth.security.JwtServiceTest",
+    "tests": "2",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\build\\test-results\\test\\TEST-br.com.easypet.booking.service.BookingAgendaPostgresTest.xml",
+    "sha256": "63662B1BE7C6CB1C4E4E7ACDE94F5EFF32652833A11B92777801E05C60EE344B",
+    "updatedAtUtc": "2026-11-13T15:08:36.0104997Z",
+    "name": "br.com.easypet.booking.service.BookingAgendaPostgresTest",
+    "tests": "10",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\build\\test-results\\test\\TEST-br.com.easypet.booking.service.BookingServiceTest.xml",
+    "sha256": "2F9E79C26513066DC7DC55834BD47929BFB223D8336D16B5A29012962B2D31DD",
+    "updatedAtUtc": "2026-11-13T15:08:36.0064983Z",
+    "name": "br.com.easypet.booking.service.BookingServiceTest",
+    "tests": "26",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\target\\surefire-reports\\TEST-br.com.easypet.notification.NotificationAuthorizationTest.xml",
+    "sha256": "D3489E9E6D83664EE6DEDC723076B893D9819F0BFADEEE8AD262BBE2E3E310ED",
+    "updatedAtUtc": "2026-11-13T14:55:47.3683681Z",
+    "name": "br.com.easypet.notification.NotificationAuthorizationTest",
+    "tests": "5",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\target\\surefire-reports\\TEST-br.com.easypet.notification.NotificationFlowTest.xml",
+    "sha256": "B5C7B384122457D268B19C92584FED5FD62963165ADA3608699B9B9732867504",
+    "updatedAtUtc": "2026-11-13T14:55:55.9417029Z",
+    "name": "br.com.easypet.notification.NotificationFlowTest",
+    "tests": "8",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\target\\surefire-reports\\TEST-br.com.easypet.notification.SmtpEmailTransportTest.xml",
+    "sha256": "530F8FC2FFB7DCB6D2D444D0878B47C2BB506F0042D96B5ECD9AB42368290375",
+    "updatedAtUtc": "2026-11-13T14:55:56.0860939Z",
+    "name": "br.com.easypet.notification.SmtpEmailTransportTest",
+    "tests": "3",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\build\\test-results\\test\\TEST-br.com.easypet.partner.controller.AdminPartnerControllerTest.xml",
+    "sha256": "0052F2F5553CA430DC589C15EA903D578E31A69B0FDB8B807BB0D21BD3283239",
+    "updatedAtUtc": "2026-11-13T14:51:21.5425863Z",
+    "name": "br.com.easypet.partner.controller.AdminPartnerControllerTest",
+    "tests": "6",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\build\\test-results\\test\\TEST-br.com.easypet.partner.controller.ReceptionCustomerControllerTest.xml",
+    "sha256": "F3D32E8DD9862A963D31B0A99E2E8212C7642BB0BFA323E04F55C36CB51A35EC",
+    "updatedAtUtc": "2026-11-13T14:51:21.5435879Z",
+    "name": "br.com.easypet.partner.controller.ReceptionCustomerControllerTest",
+    "tests": "5",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\build\\test-results\\test\\TEST-br.com.easypet.partner.PartnerServiceApplicationTests.xml",
+    "sha256": "4763DA5D24833F894B065157594797A29E2F3DB5E606F03E0BCADCB154184EB9",
+    "updatedAtUtc": "2026-11-13T14:51:21.5445870Z",
+    "name": "br.com.easypet.partner.PartnerServiceApplicationTests",
+    "tests": "1",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\build\\test-results\\test\\TEST-br.com.easypet.partner.service.StaffServiceTest.xml",
+    "sha256": "3ECACF0286060486EA8C4CC669EE2DEEE9BA9FBD9BB6DC726155DD112050E371",
+    "updatedAtUtc": "2026-11-13T14:51:21.5405871Z",
+    "name": "br.com.easypet.partner.service.StaffServiceTest",
+    "tests": "2",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\build\\test-results\\test\\TEST-br.com.easypet.payment.cashier.CashierLedgerPostgresTest.xml",
+    "sha256": "57140B3BBFB7A2EE0FD9E059116B1CAC0B43061F68E579E05EE1AA284E1012DB",
+    "updatedAtUtc": "2026-11-13T15:05:41.3238122Z",
+    "name": "br.com.easypet.payment.cashier.CashierLedgerPostgresTest",
+    "tests": "4",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\build\\test-results\\test\\TEST-br.com.easypet.payment.service.PackageServiceTest.xml",
+    "sha256": "C8082342406C9A21155BC0CF12D4F1DAF97A882DF4EF893095D772CC337C9391",
+    "updatedAtUtc": "2026-11-13T15:05:41.3218111Z",
+    "name": "br.com.easypet.payment.service.PackageServiceTest",
+    "tests": "5",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\build\\test-results\\test\\TEST-br.com.easypet.pet.controller.ReceptionPetControllerTest.xml",
+    "sha256": "884687C032206975F5E6F7A2FF8B48191FA7E552F14F3A3FB306140055CBB395",
+    "updatedAtUtc": "2026-11-13T14:51:06.6272846Z",
+    "name": "br.com.easypet.pet.controller.ReceptionPetControllerTest",
+    "tests": "5",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\build\\test-results\\test\\TEST-br.com.easypet.pet.service.PetAccessServiceTest.xml",
+    "sha256": "8D95FE64FE8FEFE0AA55460ADBF62B3671E96243C31631E18D833A6AD895C303",
+    "updatedAtUtc": "2026-11-13T14:51:06.6242592Z",
+    "name": "br.com.easypet.pet.service.PetAccessServiceTest",
+    "tests": "4",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0"
+  }
+]

@@ -1,0 +1,40 @@
+# R01 — Revisão independente S01–S07
+
+Revisão concluída em 13/11/2026, após observar a conclusão da primeira entrega de cada S01–S07 por `wait_threads`, com cursores. Snapshot final às 12:28:49 BRT (15:28:49 UTC). HEAD: `ceba61cc4ae325ddd8ff5012020508c6e55e5966`. O objeto revisado é o checkout compartilhado, incluindo alterações não commitadas; o HEAD sozinho não identifica a entrega.
+
+O conjunto ainda não tem aceite integrado. Há dois defeitos P2 confirmados, um P3 observado no aceite real S07 e um bloqueio reproduzido de TypeScript. Testes locais positivos não autorizam extrapolar para as jornadas entre serviços ou para produção.
+
+## Achados e bloqueios
+
+1. **R01-001 / P2 / S04:** as leituras legadas completas de parceiros permitem anônimo no serviço interno, incluindo dados fiscais e contato. Reproduzido com os arquivos reais de segurança após a primeira entrega S04. Gateway/Nginx restringem esses caminhos na entrada pública; não foi comprovada exposição pública.
+2. **R01-002 / P2 / S03:** o cliente HTTP do Booking não configura timeout, inclusive quando usado depois de adquirir a trava da agenda. Pet/Partner que não termina a resposta pode reter a transação e bloquear outras alocações do estabelecimento. Configuração real inspecionada em runtime; a indisponibilidade com duas transações não foi simulada.
+3. **R01-003 / P3 / S05:** tutor autenticado recebe 401 na API do caixa, em vez de 403. Sem bypass observado; a resposta pode apagar uma sessão válida pelo interceptor frontend. Confirmado pelo erro Playwright da stack real S07, apesar do teste MockMvc aprovado.
+4. **Build compartilhado bloqueado:** typecheck independente sem emissão mantém três `TS2741`, relativos a `NO_SHOW`, em `Frontend/src/pages/admin/tabs/AgendamentosTab.tsx:54` e `Frontend/src/pages/partner/DashboardPage.tsx:28,36`. Dependência já registrada entre os donos; não atribuída às primitivas da S01. Bundling Vite isolado não substitui `npm run build`.
+
+Reprodução, evidências, limites, correções e hashes dos defeitos estão em [findings.md](findings.md). Cenários de aceite ainda necessários, com resultados esperados, estão em [test-gaps.md](test-gaps.md).
+
+## Parecer por sprint
+
+| Sprint | Parecer R01 | Evidência e limites |
+| --- | --- | --- |
+| S01 — design system | **Revisada; integração não validada.** | Primitivas e galeria não carregam domínio/dados reais; galeria em build exige ADMIN e em DEV permite acesso direto. Guard não substitui backend. Teste Chromium do dono usa sessão/API simuladas. Novas rotas de recuperação/equipe, caixa e notificações ainda não conectadas. Build global bloqueado. |
+| S02 — identidade | **Revisada; bloqueadores de integração.** | Papéis atribuídos no servidor, digest de link, trava de conta no reset, sessão versionada, convites por estabelecimento e chave separada de equipe. Oito testes locais aprovados, seis HTTP/PostgreSQL e dois JWT, com SMTP/Partner simulados. Reset/revogação invalida sessão no Auth; Gateway e serviços legados ainda não aplicam essa decisão. Equipe fica recusada nesses serviços, sem autorização operacional entregue. |
+| S03 — agenda | **Revisada; R01-002 aberto e integração pendente.** | Serialização por estabelecimento, intervalos/capacidade, idempotência por ator/chave, rollback do reagendamento, estados e histórico/outbox na transação. Relatórios: 36 testes aprovados, dez PostgreSQL e 26 de serviço. Pet/Partner simulados. Adição de balcão reexaminada: IDs verificados via Pet, fonte de cliente exclusiva no banco, `userId` nulo e nenhuma notificação para essa fonte. Faltam cadeia real, UI de criação de balcão e chave estável nos consumidores antigos. |
+| S04 — balcão | **Revisada; R01-001 aberto e integrações pendentes.** | Isolamento por estabelecimento, validação de vínculo Pet→Partner e proibição de prontuário para pet sem titular. Relatórios Partner/Pet somam 23 testes sem falhas, usando H2/MockMvc e doubles. S07 aprovou o cenário real de cadastro, vínculo e isolamento de balcão. Reivindicação não entregue; mesmo e-mail não vincula conta automaticamente. API de reserva foi adicionada posteriormente por S03, ainda sem aceite entre serviços para essa origem. |
+| S05 — caixa | **Revisada; R01-003 aberto; aceite integrado reprovado.** | Centavos inteiros, limites, vínculo ativo/reserva, FKs por estabelecimento, ledger e replay na mesma transação sob trava, reversão auditável e fechamento imutável. Nove testes sem falhas, quatro PostgreSQL com doubles HTTP e cinco de pacotes. Concorrência cobre mesma chave, recebimentos distintos e fechamento. A execução S07 confirmou baixa parcial/replay e isolamento, mas encontrou 401 em vez de 403. A tela usa API simulada e não tem rota no painel. Só titular PARTNER; equipe não habilitada. Checkout/créditos permanecem bloqueados. |
+| S06 — notificações | **Revisada; integração básica comprovada, aceite completo pendente.** | Persistência antes de ACK, deduplicação/revisões, invalidação, backoff, UNKNOWN e retry administrativo. Dezesseis testes sem falhas em H2 e transporte LOCAL/doubles; três verificam SMTP simulado. S07 comprovou polling Booking → Notification com PostgreSQL e uma confirmação LOCAL, sem duplicidade na consulta final. Não comprova todos os cenários de falha/reinício nem administração com Auth real. Destinatário SMTP depende de API Auth ainda ausente; balcão não produz eventos até contrato próprio. |
+| S07 — infraestrutura | **Revisada; aceite parcial, com bloqueadores.** | Duas rodadas de API com 15 containers saudáveis: três cenários passaram (administração, ingresso, balcão), um falhou em 401/403. Dentro desse último, disputa de vaga, replay, baixa parcial, isolamento e fechamento passaram. Captura local Notification confirmada. Build completo/navegador seguem bloqueados. A última restauração sintética dos seis bancos passou após serializar a subida; verificou uma tabela por banco. Restauração das jornadas/anexos e execução de `diagnose.mjs` em stack estável seguem pendentes. |
+
+## Validação e rastreabilidade
+
+R01 executou apenas testes isolados em sua própria pasta: cadeia real de segurança Partner com controller inerte (seis verificações), introspecção do bean HTTP Booking e TypeScript sem emissão. Não iniciou Compose, Maven/Gradle nos outputs compartilhados, suíte integrada, mensagens externas ou alterações de produto.
+
+Os 15 relatórios Java dos workers somam 92 testes aprovados e foram lidos junto com o código dos testes. R01 não os reexecutou. Seus limites estão descritos acima; relatórios de execuções anteriores com falha não foram confundidos com o resultado posterior aprovado. As verificações de navegador S01–S06 usam respostas simuladas. S07 executou quatro cenários de API reais e um smoke de ingresso; o conjunto de dez testes descobertos não foi aprovado integralmente.
+
+`snapshot-final.json` registra 891 arquivos e seus SHA-256; `test-report-summary.json` registra os 15 relatórios Java. `worker-delivery-observations.json` registra os sete chats e cursores observados. `integrated-failure-evidence.json` identifica o erro Playwright 403/401. O snapshot inicial, as mudanças dos arquivos acompanhados e os resultados isolados também estão nesta pasta. Os hashes dos arquivos que sustentam os três achados foram reconferidos no fechamento e permanecem os descritos em `findings.md`. Mudanças posteriores ao snapshot final exigem nova revisão.
+
+## Condições para aceite posterior
+
+Corrigir/revalidar os três defeitos e o build; conectar as rotas pendentes; aplicar sessão e autorização por estabelecimento/permissão nos serviços consumidores antes de habilitar equipe/reset/inativação como garantia transversal; completar a jornada S07 pelo navegador, a suíte de API sem falha, os cenários de falha da fila e a restauração de registros representativos. As lacunas de reivindicação, destinatário e mensagens de balcão devem permanecer explícitas no escopo do piloto.
+
+Conclusão da revisão é distinta de aprovação de produção. Não há parecer favorável para os fluxos afetados pelos bloqueadores abertos.

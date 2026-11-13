@@ -1,0 +1,18 @@
+[
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\config\\SecurityConfig.java",
+    "sha256": "64FD475DD8EE2E866CA6BA17E6B1D1E050F76141E2511A10E49F180A4713E11C"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\JwtAuthenticationFilter.java",
+    "sha256": "EB7BEBE45F479CF1BDE312D359BF30C8D4FA0ABA87F6B37820424DC82E4B4360"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\JwtService.java",
+    "sha256": "438437162A8A1FD2953115AB769BFEB9EC03E9C83484F2345607EADDCFF62851"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\UserPrincipal.java",
+    "sha256": "2A5E8C43210FC32014E23E0E8DA0E8CCD2351C181F9AB51814E3FC791A4A9F51"
+  }
+]

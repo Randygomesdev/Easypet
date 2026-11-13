@@ -1,0 +1,7 @@
+{
+  "capturedAtUtc": "2026-11-13T18:20:58.886285+00:00",
+  "command": "node Frontend/node_modules/typescript/bin/tsc --project Frontend/tsconfig.app.json --noEmit --incremental false",
+  "exitCode": 0,
+  "diagnostics": "",
+  "staffPageSha256": "be4e7a7db116020b7047e9cf5c73a84d7d23216ad7b43013d4a6a3f3d83a1943"
+}

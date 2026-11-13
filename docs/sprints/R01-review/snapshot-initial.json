@@ -1,0 +1,2282 @@
+[
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\App.tsx",
+    "sha256": "82BF6E90FE7003BCFA0CE617DF3D52C9B3ABA3B8CB5912CFA3AE011DEDAA0312",
+    "lastWriteUtc": "2026-11-13T14:41:27.1410299Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\main.tsx",
+    "sha256": "66BF4828010933CA7CE7CAE9D66F5DA9ACAE902B6B36264D812684640BBE5E30",
+    "lastWriteUtc": "2026-11-13T07:04:07.9644753Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\layout\\Header.tsx",
+    "sha256": "ADAFF2DAD3E44A21CE6FA880DF521E463371A076D7CA2D9F71548B4C75D8464A",
+    "lastWriteUtc": "2026-11-13T14:42:52.1314972Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\layout\\Layout.tsx",
+    "sha256": "B93B05781D28B96F04F8C0F9AB4935B9EE7E867A0F956271FDDDB53EEF4B2D40",
+    "lastWriteUtc": "2026-11-13T14:42:52.4553402Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\layout\\Sidebar.tsx",
+    "sha256": "2FB5EF8F69A5500C8FF3A023818335FE1E2A56BA860399E95E74AC7EC8480343",
+    "lastWriteUtc": "2026-11-13T14:42:52.7783546Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Badge.tsx",
+    "sha256": "8FEBE0164B614158AFE0BC7CB46F151F127E3C7ADD4A8492252CE956CBBFD371",
+    "lastWriteUtc": "2026-11-13T14:37:47.8778353Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Button.tsx",
+    "sha256": "0FF5C07DF13ACC3D48894CAFB99EEBC32A10A122DCAF38CFC42D832F10294BBF",
+    "lastWriteUtc": "2026-11-13T14:37:47.4319615Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Card.tsx",
+    "sha256": "F410CDFADA197AD3A9117335FB3B934289DABF320F9E7BC33EFAF83E66187CDA",
+    "lastWriteUtc": "2026-11-13T14:37:48.1093536Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Dialog.tsx",
+    "sha256": "B442522BE2707774532EF8FE3D6D7668E33A322E41A7A9DD14C1F280DD76BDE6",
+    "lastWriteUtc": "2026-11-13T14:38:50.1532449Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\FeedbackState.tsx",
+    "sha256": "45EBBF3080CD0BA79A4C9F9A7A8DA4BFFA83F705C3FF791D56B6A61157E73ADE",
+    "lastWriteUtc": "2026-11-13T14:38:50.8647832Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Field.tsx",
+    "sha256": "19990582B185EF8A3ADB9BCCA43D90AD7E65FE6F16F6EE7A940CB289AFD617EF",
+    "lastWriteUtc": "2026-11-13T14:37:47.6473013Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Pagination.tsx",
+    "sha256": "9B9E94D48FBFFFA6D75D8C61DA4AA2310315A39CFC28D54A35E23EB949C6D97B",
+    "lastWriteUtc": "2026-11-13T14:38:50.6165991Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Table.tsx",
+    "sha256": "54A63D8C9C2EF04BBFEA7E826F83CDE52607A6FD7D049342A9720EA02252A0A8",
+    "lastWriteUtc": "2026-11-13T14:38:50.3983948Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\TimePicker.tsx",
+    "sha256": "C575BF500CA224AB43C6ECAC8182E260D45FC38EF53D7CA6E7916AB11DF5733B",
+    "lastWriteUtc": "2026-11-13T01:49:36.6670160Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\UserAvatar.tsx",
+    "sha256": "FF34192DFE758CC280D25087241406EA2BBA47845178B1C06A4B0E0A346378CF",
+    "lastWriteUtc": "2026-11-13T01:49:36.6680153Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\config\\env.ts",
+    "sha256": "F5F65623F1069057FB367BE4D7B57D92005A44ADC35DD9C68FDB6F00C5C79A38",
+    "lastWriteUtc": "2026-11-13T02:07:59.0945070Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\contexts\\AuthContext.tsx",
+    "sha256": "6665E46096D2085C739A93E4A8CCB7DE95C6A36A5E5BF0F3DDE9610192BD361E",
+    "lastWriteUtc": "2026-11-13T01:49:36.6690156Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\contexts\\CartContext.tsx",
+    "sha256": "6A29E0E5B31F078C6D083ACFACB2DD24094B42BD5ADEDF327253DEEF01929543",
+    "lastWriteUtc": "2026-11-13T07:04:07.9644753Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\contexts\\ThemeContext.tsx",
+    "sha256": "FBE0EEB902EFEB911F4FEF21EC61B52D5EF70F3CCCC243289A01FD2DB01ADC90",
+    "lastWriteUtc": "2026-11-13T01:49:36.6697745Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\features\\customers\\CustomerCreateForm.tsx",
+    "sha256": "179FD3D53C2B213D664188A8A8D8D23C66E94CF1FB011EE139ADE409B5B02F86",
+    "lastWriteUtc": "2026-11-13T14:42:30.0672552Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\features\\customers\\CustomerDirectory.tsx",
+    "sha256": "E013EB6105CC6EFD9EBDF330C559C2E128F2BF37A008C11DB8AA7A179E2A749E",
+    "lastWriteUtc": "2026-11-13T14:42:29.7537892Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\features\\customers\\ReceptionPetCreateForm.tsx",
+    "sha256": "567F1B11565E27F166DB99F2061909AE50649975CD88231256C7D4B871A4B3F9",
+    "lastWriteUtc": "2026-11-13T14:42:30.3481505Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\features\\customers\\useCustomerQuery.ts",
+    "sha256": "49724F2ABB4A8CA234A321D4B84F417FAFBE34EB20616FFC8FF983B2AF22A757",
+    "lastWriteUtc": "2026-11-13T14:42:29.1108724Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\features\\customers\\useDirectoryFilter.ts",
+    "sha256": "F2DBAFFB5FC23A025C9513CC4BE1C6ED1A6032E05E85239CCAA1F52FC6BA6315",
+    "lastWriteUtc": "2026-11-13T14:42:29.4590704Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\lib\\api.ts",
+    "sha256": "CFC7E9E83F2CC32AC0B5A7D7CD3BA665B3B26743FB14DD62A50608674FEF46F7",
+    "lastWriteUtc": "2026-11-13T01:49:36.6702065Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\LandingPage.tsx",
+    "sha256": "A5C91D9E8B19799C983ACE25C5E118B2DED57C2263166606259EF325644306B7",
+    "lastWriteUtc": "2026-11-13T01:49:36.6711154Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\ClientesPage.tsx",
+    "sha256": "E0F5EA0A46B5AF822B560055F582BABEE9891112F5E9940A2824A7CFB2933A9F",
+    "lastWriteUtc": "2026-11-13T07:04:07.9654752Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\ParceiroDetailPage.tsx",
+    "sha256": "D392CAFF683CB82AFECFAC9B3811FE08415F6A851BBD9BFBC948D90031DE9056",
+    "lastWriteUtc": "2026-11-13T14:16:33.4783661Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\ParceirosPage.tsx",
+    "sha256": "1A25AF4434C048C0F5EB4C57241F4918D8A715D8DAE3E92B6DBE32552128BDFD",
+    "lastWriteUtc": "2026-11-13T14:16:32.8870401Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\tabs\\AgendamentosTab.tsx",
+    "sha256": "1FCDDB348CBB605C0CE6FD32B0ACAA9D2DFAA4178642EE3C5F5B18DE011BAC98",
+    "lastWriteUtc": "2026-11-13T12:41:55.0865452Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\tabs\\ColaboradoresTab.tsx",
+    "sha256": "43CFE122EC75A5AA4EFE34B1046ED9BE40AEEBF6C145ABBADD44FF5B0DFB0520",
+    "lastWriteUtc": "2026-11-13T07:04:07.9674754Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\tabs\\PacotesTab.tsx",
+    "sha256": "356BF3B138D55BEE4510B9AEA4FAF0F9141F179683EEF5C80C73D51391721A06",
+    "lastWriteUtc": "2026-11-13T14:16:34.0317671Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\tabs\\ServicosTab.tsx",
+    "sha256": "4D5D86A58A0022205B5DB8A2CFC4B8D92064ACD24832C0D943C8125E54CE19DF",
+    "lastWriteUtc": "2026-11-13T14:16:33.7666284Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\CartPage.tsx",
+    "sha256": "4E30FB0F5CB04898C82C95FB4933C1DF682FBF494C31EFBC9549CACE7E621D72",
+    "lastWriteUtc": "2026-11-13T07:04:07.9694759Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\HomePage.tsx",
+    "sha256": "4AC73162D4B222275DF6B69C601287D3EA95BAFAABFB65DA425EF8B0DFD378A3",
+    "lastWriteUtc": "2026-11-13T07:09:52.2909868Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\MeusAgendamentosPage.tsx",
+    "sha256": "738F8A67D50B1266A23C0D95376308818E312987677DF09AC7C1678C83191AB1",
+    "lastWriteUtc": "2026-11-13T13:05:14.7776408Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PartnerDetailPage.tsx",
+    "sha256": "61918F5A05D1DF781C49E0432D8C61F817BDF6226F1BAF26D21E1A2B157A51F9",
+    "lastWriteUtc": "2026-11-13T07:13:01.5513041Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PaymentFailurePage.tsx",
+    "sha256": "C353103CA0F5517F105DD566F4273E3F8DE802510FE7D577CA7757A75772C5EA",
+    "lastWriteUtc": "2026-11-13T07:04:07.9724745Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PaymentPendingPage.tsx",
+    "sha256": "E80B4D7F372C5D9ADCE996448AA15AB50221434B7139EEDAE773EEA65668D469",
+    "lastWriteUtc": "2026-11-13T07:04:07.9724745Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PaymentSuccessPage.tsx",
+    "sha256": "1BA9971E4AE1D34E7F4E4388E066525FE2C5B2F8733B5ABDBA3764698F40C830",
+    "lastWriteUtc": "2026-11-13T07:04:07.9734753Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PetDetailPage.tsx",
+    "sha256": "1F0DD66851BF7CC0535DAE8A102D5F7D63938F00730ACD3C8A24363A0D57C10D",
+    "lastWriteUtc": "2026-11-13T07:04:07.9734753Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PetFormPage.tsx",
+    "sha256": "1BED136F80DCD236D406A3856CFA8B03BD1404227666E93D42A334F91C68596C",
+    "lastWriteUtc": "2026-11-13T07:07:49.2519791Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\PetsPage.tsx",
+    "sha256": "C2745378A06FFFED2FE9746B2829217EEFBDBC08A38D0AF404C125A514AE3D37",
+    "lastWriteUtc": "2026-11-13T07:04:07.9744759Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\auth\\LoginPage.tsx",
+    "sha256": "4D357C2E04118F7D2D66D2E98B64F9E88B5A43495B1C13901013DE6B2B74AC53",
+    "lastWriteUtc": "2026-11-13T02:12:55.9363870Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\auth\\LoginSuccessPage.tsx",
+    "sha256": "C65355970FF031935DC733CD037D6E2EF890468BD3D0038689A54D0FA594482B",
+    "lastWriteUtc": "2026-11-13T07:04:07.9754751Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\auth\\SejaParceiroPage.tsx",
+    "sha256": "986C6E18200241D74A0188280FAAA69FE0D56AC73AC755E774C2AE726ECB5411",
+    "lastWriteUtc": "2026-11-13T01:49:36.6721208Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\ControlExamples.tsx",
+    "sha256": "7C6B523EC22FECF6D2009B7DF951445930FD331C570486EED775CA296B5F5425",
+    "lastWriteUtc": "2026-11-13T14:40:18.7682381Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\DataExamples.tsx",
+    "sha256": "61285641F8B96BCA3F1BE0DB09E7024D2959D2E0121BC2C2AE7840C0AFD20031",
+    "lastWriteUtc": "2026-11-13T14:41:25.8482641Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\DesignSystemPage.tsx",
+    "sha256": "E01B174EC03BA8952F7C3D00221E2E77EAB1F670FBA70485C47E49FD30EAD952",
+    "lastWriteUtc": "2026-11-13T14:41:26.2864942Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\ExampleCode.tsx",
+    "sha256": "EE610D1651C8CCE4258C5B290B0234BCB473C287D913289F0A77BBFFC21ED18F",
+    "lastWriteUtc": "2026-11-13T14:40:18.2883041Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\FoundationExamples.tsx",
+    "sha256": "1395D30919DB2D0620557ED2BD10517E03DBDA9F25FF20BCF09BE02FE4938B77",
+    "lastWriteUtc": "2026-11-13T14:40:18.5210685Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\AgendamentosPage.tsx",
+    "sha256": "DD4421B9344F84095D59B5CD266CE81FD596F65958B6869C035230D6A356F463",
+    "lastWriteUtc": "2026-11-13T07:06:11.0387782Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\AtendimentoPage.tsx",
+    "sha256": "69C4E56B4CC3E509510BC082E9D7D7BD421DE92E819E9401DDE0749FCC3AD759",
+    "lastWriteUtc": "2026-11-13T12:41:55.3018629Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\CadastroPage.tsx",
+    "sha256": "51AC5A8F223853344ABEB47EC686F0586A1ECE4DA70581B0991C2B9F1545FB5A",
+    "lastWriteUtc": "2026-11-13T01:49:36.6736257Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\ColaboradoresPage.tsx",
+    "sha256": "37162121F77CC540998EDBA62C47C4B854652188A9564D939E0250AEC84781FB",
+    "lastWriteUtc": "2026-11-13T01:49:36.6759406Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\ColaboradorPage.tsx",
+    "sha256": "7A79DC08264037C5D5C64C5E7D33957020BA81586857B536047FA92F247B116F",
+    "lastWriteUtc": "2026-11-13T14:16:34.2971463Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\DashboardPage.tsx",
+    "sha256": "623B16FF45CDED40E377E39F9AACFB40181CB376AF70DB139AE0568C12234851",
+    "lastWriteUtc": "2026-11-13T07:05:32.7111271Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\PacotesPage.tsx",
+    "sha256": "9640FAF62359B4A8F8AD32F82840508D628C0FD24D3F6DD574FC19DB86CFFC61",
+    "lastWriteUtc": "2026-11-13T01:49:36.6759406Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\PlaceholderPage.tsx",
+    "sha256": "D7144ADB0AF5180A98C4A0D43AEA8D60874885F5AA89D0EE3DD9889B5C2435E5",
+    "lastWriteUtc": "2026-11-13T01:49:36.6770418Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\ServicosPage.tsx",
+    "sha256": "E92AE522B1F5287C3E71A50A105E3F6E3D160F33A1436B58264E8B70FFA49495",
+    "lastWriteUtc": "2026-11-13T07:05:32.7782705Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\tabs\\EnderecoTab.tsx",
+    "sha256": "59FE5874FB80836CF427B8514BCF01BA44086533F2A6D0581001A6F99DFECC0D",
+    "lastWriteUtc": "2026-11-13T01:49:36.6780424Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\tabs\\HorarioTab.tsx",
+    "sha256": "020E6E630DDCEF2C84405B2117984AFD9BADF58F789F52D6AA042CCA9FA4B6CE",
+    "lastWriteUtc": "2026-11-13T01:49:36.6780424Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\routes\\DesignSystemRoute.tsx",
+    "sha256": "B53E98641B3BAB414AEBBA6A34F421B58849271221D6E3E8CC053790DC39AF18",
+    "lastWriteUtc": "2026-11-13T14:41:26.7272481Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\routes\\ProtectedRoute.tsx",
+    "sha256": "29094F6258BCB929F0F65FD38E46DA9F859E225B255EBBA78CB4671511D41CBD",
+    "lastWriteUtc": "2026-11-13T14:42:53.1535104Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\routes\\RoleRouter.tsx",
+    "sha256": "E34E463337D1666D8334B4427F973933C10B0A98D4A83DD844E245866D271A86",
+    "lastWriteUtc": "2026-11-13T07:09:52.2925854Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\auth.service.ts",
+    "sha256": "9E9A5363739F50B95D846FA1A46986C05D21B010B34F0D17890D591AD6850EF5",
+    "lastWriteUtc": "2026-11-13T01:49:36.6800428Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\booking.service.ts",
+    "sha256": "8155CB4905117ECFC4C55235BE55E6BDB32109D6AFAEA40312F9F85FC764C97E",
+    "lastWriteUtc": "2026-11-13T07:04:07.9864787Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\customer.service.ts",
+    "sha256": "660A6EF4FE6152B197346865637C190B2F9366D4D0D1875AEFD07C15694205CB",
+    "lastWriteUtc": "2026-11-13T14:42:28.3399152Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\package.service.ts",
+    "sha256": "E773805FE1C9C75504DF7C7180DE4BAF016B92479F29184F1BF91D756F3CE89B",
+    "lastWriteUtc": "2026-11-13T07:04:07.9874770Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\partner.service.ts",
+    "sha256": "F8E5414D11AF8224225C512BFBEDE4D9145684713624C61237B13C6E8CFC8933",
+    "lastWriteUtc": "2026-11-13T14:16:32.4523624Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\payment.service.ts",
+    "sha256": "44AB8FD5CD559CDB8B3B501A73356B079CF1569B422CE6563A6D1204FD564114",
+    "lastWriteUtc": "2026-11-13T07:04:07.9884786Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\pet.service.ts",
+    "sha256": "E90329678981BBCB7FDE6385EE035F7A531F70DA2A3AA4F101E5B01957625EFC",
+    "lastWriteUtc": "2026-11-13T07:04:07.9894752Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\staff.service.ts",
+    "sha256": "ECB60F92A806F2D29981BB9C0398E528B1C1BAF1076F1F2189E0881DB515C7FF",
+    "lastWriteUtc": "2026-11-13T01:49:36.6820428Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\upload.service.ts",
+    "sha256": "D26D85A135F663D8EA853FA4475A16771F41A27AA67FC00379663D1044BBAB2A",
+    "lastWriteUtc": "2026-11-13T07:04:07.9894752Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\types\\auth.types.ts",
+    "sha256": "755ADA108C9BC23304672EC0252A0B0E0C2819C28A355385ACA0411982523172",
+    "lastWriteUtc": "2026-11-13T01:49:36.6820428Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\AuthApplication.java",
+    "sha256": "EEA58D205278A067984E48E7F64B2965484A8ED09DE03A051FCF08E85F1EB069",
+    "lastWriteUtc": "2026-11-13T01:49:36.4500965Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\ProvisionPilotUser.java",
+    "sha256": "17D221AB56ED83281E2D4A104A8417EAD7A93389057CF8EE04A1DA005BA64482",
+    "lastWriteUtc": "2026-11-13T02:07:58.8709876Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\config\\AuthMailConfig.java",
+    "sha256": "9D0F47D03A3B028ECDFE3E824ED912039C1049569BAF7596C98EFAECFEEC6234",
+    "lastWriteUtc": "2026-11-13T14:43:02.5162906Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\config\\SecurityConfig.java",
+    "sha256": "53C2FD117939BEA1A1433CB235F93144AC842D6340558BD3F1577F787896442A",
+    "lastWriteUtc": "2026-11-13T02:07:18.8899537Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\controller\\AdminCustomerController.java",
+    "sha256": "4F6CB2CABD884551CD6361C1067CEE0D176B3B3F52DFD970FADD656C0B5BA2C3",
+    "lastWriteUtc": "2026-11-13T14:41:18.0875603Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\controller\\AuthController.java",
+    "sha256": "03AB300B11F32C56453ABD1BA4F9A2DAAAAC5535E93BD577172A02BD838B3DAD",
+    "lastWriteUtc": "2026-11-13T01:49:36.4510969Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\controller\\UserController.java",
+    "sha256": "0C9589FD4868AC400EEFD3618570B0A577FC19F67F9BB9901DAC87BF7DF0A6F5",
+    "lastWriteUtc": "2026-11-13T01:49:36.4510969Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\domain\\entity\\BaseEntity.java",
+    "sha256": "6881C9D899E9EAC759656BAB0D20761D01ACB7946D69D15C737E474A8484662F",
+    "lastWriteUtc": "2026-11-13T01:49:36.4520972Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\domain\\entity\\PasswordResetToken.java",
+    "sha256": "88D586E06EADB114F16083716001C636F867CA16B9D499F6CBF483AE4DED44F2",
+    "lastWriteUtc": "2026-11-13T14:39:53.8002184Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\domain\\entity\\User.java",
+    "sha256": "07E1D8D71CA358BD7B35017AEB6D3B2407B490267CF1000B5753614A64F9AA75",
+    "lastWriteUtc": "2026-11-13T14:39:53.5731323Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\domain\\model\\UserRole.java",
+    "sha256": "864AAE73560A088D72E387468FC0CAFBEA0ABA0A137C50D8D98524814FAB8380",
+    "lastWriteUtc": "2026-11-13T14:39:53.3084707Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\AuthenticationRequest.java",
+    "sha256": "605B79D26870CC6D81AA83DC8604ED33F52346836FD76212B7286470324F5E27",
+    "lastWriteUtc": "2026-11-13T01:49:36.4536012Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\ExchangeRequest.java",
+    "sha256": "5D7224ABBADD718D2A582ABEDC5D0359CBD08038D222A6B44BA0AF6F55646E1A",
+    "lastWriteUtc": "2026-11-13T01:49:36.4551228Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\ForgotPasswordRequest.java",
+    "sha256": "248877A3100B373F18411FC97375FC7B59726AD6C18B3FE53B4325CCDCD8354B",
+    "lastWriteUtc": "2026-11-13T01:49:36.4554771Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\OneTimeTokenRequest.java",
+    "sha256": "B5BD037EC82A394CB79FB607A3E170CC09F028A6048ECD8EC9042D2F3E766F11",
+    "lastWriteUtc": "2026-11-13T14:39:17.7280100Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\RegisterRequest.java",
+    "sha256": "DD0B5E01273DB2C87DB85431ACA8420D3395411AE74893A7B1ADFD45822ED5F6",
+    "lastWriteUtc": "2026-11-13T14:39:54.8472538Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\ResetPasswordRequest.java",
+    "sha256": "6D5D84F4CFD8B6FD2F4D8508B5E043F5EBE72EC29D186D2596A2313A4FB3868E",
+    "lastWriteUtc": "2026-11-13T14:39:55.0853229Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\SetCustomerActiveRequest.java",
+    "sha256": "FC947F03EC284AF4BC4A4ED87FFBDEBCB9B99210B990A90C4F249C857504CC62",
+    "lastWriteUtc": "2026-11-13T14:39:17.9503278Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\response\\AdminCustomerResponse.java",
+    "sha256": "11CEEF95F4A4E40F89F3D63E997DD87F2610E595AD89A0488482D2CA50A44FBD",
+    "lastWriteUtc": "2026-11-13T14:39:18.1768178Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\response\\AuthenticationResponse.java",
+    "sha256": "925D6245B21B880DEF16228F9CC4377F07986D78311E774DEF04916D54CC541C",
+    "lastWriteUtc": "2026-11-13T01:49:36.4564821Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\response\\CustomerPageResponse.java",
+    "sha256": "B5D05FE16EC3A80B1336FC996C66883F1E2383F2EB99EAFAEE0BCA189FE8C48D",
+    "lastWriteUtc": "2026-11-13T14:39:18.4232702Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\response\\ErrorResponse.java",
+    "sha256": "4113598647BD9D2DA0ACF33C729CD6D491D3668B69B4EBC4BCD024BD849D1B83",
+    "lastWriteUtc": "2026-11-13T01:49:36.4564821Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\response\\UserResponse.java",
+    "sha256": "0DA379D32E0E0F1693177A00D30DCAFAE50E4C1BF73055D4674E659CF2A0F07F",
+    "lastWriteUtc": "2026-11-13T01:49:36.4574820Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\exception\\ApiException.java",
+    "sha256": "0977AB373EF46F6C86CB4FAC82214A3D1830F6250C6C0070A38D7B714B6901EF",
+    "lastWriteUtc": "2026-11-13T14:39:17.5014337Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\exception\\AuthException.java",
+    "sha256": "604AA5525662F92561D0EF70CCD3CE85756E7563D8E69E0B8BF6212915465EDA",
+    "lastWriteUtc": "2026-11-13T01:49:36.4574820Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\exception\\EmailException.java",
+    "sha256": "A0D32D1EC8FD29FA15F883E15B2A33215A9E36A4F979CEC06C67E4AB6D9B4B27",
+    "lastWriteUtc": "2026-11-13T01:49:36.4574820Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\exception\\GlobalExceptionHandler.java",
+    "sha256": "1E9277C6FB23342128D4DD2A7016DE60A717ED62818626BE4F7005EF099619A0",
+    "lastWriteUtc": "2026-11-13T01:49:36.4586340Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\exception\\UserNotFoundException.java",
+    "sha256": "8E1B9B1DD2CA891A7CBDA45B8B8916FCAACFD7765E09EED392975D6A3ED016AB",
+    "lastWriteUtc": "2026-11-13T01:49:36.4586340Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\repository\\PasswordResetTokenRepository.java",
+    "sha256": "6789219C3F1EE0AFEA493B874E030EB70309FFD3A6CD3DA921F3BC07A41997E8",
+    "lastWriteUtc": "2026-11-13T14:39:54.2433957Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\repository\\UserRepository.java",
+    "sha256": "80F5514CCF9F01F2E0FB9D15CC8716FEF792C5AC6DED94A1BD4731FCC5B74081",
+    "lastWriteUtc": "2026-11-13T14:42:16.5420868Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\CustomOAuth2UserService.java",
+    "sha256": "F5D0FDA2C179B357BFB3F3B5691755FC67CA008886E3D84F5E83F193AF8F9AC9",
+    "lastWriteUtc": "2026-11-13T01:49:36.4596390Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\CustomUserDetailsService.java",
+    "sha256": "117999FE397E1096DDB225BB55FFD45544BF453EA8A06ED4733DAA02C3D406C5",
+    "lastWriteUtc": "2026-11-13T14:42:16.7821722Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\JwtAuthenticationFilter.java",
+    "sha256": "17CF457D259D85B57C5625453012BCB126BBB1549B87F3E6EB2AB8DEE92A4D10",
+    "lastWriteUtc": "2026-11-13T01:49:36.4606391Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\JwtService.java",
+    "sha256": "D333651EF3C7D1E75BB86FDFC44D88A977DEB25D7B6E1C9FA864381BF9F84EB7",
+    "lastWriteUtc": "2026-11-13T01:49:36.4616398Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\OAuth2SuccessHandler.java",
+    "sha256": "D76D5C533D6ACE4E3A1616B33FEBBA1140CB1F887B538F65B832C12ECE30CC56",
+    "lastWriteUtc": "2026-11-13T01:49:36.4616398Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\AccountCredentials.java",
+    "sha256": "EF03BC29E9DF98479ABF5A9565BE7562C74EB0BE4E1E4219AFC0A85537BA7B58",
+    "lastWriteUtc": "2026-11-13T14:41:16.3617006Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\AdminCustomerService.java",
+    "sha256": "CE3AA55AE798B87FF2C75D5317966F7C636EA0E2AC4056AA1C61F30207867F5F",
+    "lastWriteUtc": "2026-11-13T14:41:17.4861451Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\AuthService.java",
+    "sha256": "B6C0997A2723E1FBEAF4F7BC3B9254F201CF0EED218811ED8A13B0A67A36CC54",
+    "lastWriteUtc": "2026-11-13T14:43:01.6179786Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\EmailService.java",
+    "sha256": "BDB32C8F797552CCA7DF2BCCA677C3A161E7CB8860FBDDC4CE237C3AF3C3B080",
+    "lastWriteUtc": "2026-11-13T14:43:01.9983731Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\OAuth2TokenExchangeService.java",
+    "sha256": "7FDC7FD6E0587DAC2D4B4199090EB4DAE7249F9B871D382427FF9479D27A3F0B",
+    "lastWriteUtc": "2026-11-13T01:49:36.4636389Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\OneTimeTokens.java",
+    "sha256": "FD7592AE4CB122C293547288E0335399E663376371DAE66C3942BD1412A82AA6",
+    "lastWriteUtc": "2026-11-13T14:39:17.2970883Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\PasswordRecoveryService.java",
+    "sha256": "2213D3A1C3384DC1FC2F071B1AE36B0277714CA6D82BF421D4C3EC67CF621082",
+    "lastWriteUtc": "2026-11-13T14:41:16.8270018Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\resources\\db\\migration\\V1__create_users_table.sql",
+    "sha256": "1E77E49797C1F2693186316CD045749C6DA8A7A37F84C36A433DC17BD690D1ED",
+    "lastWriteUtc": "2026-11-13T01:49:36.4651906Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\resources\\db\\migration\\V2__create_password_reset_tokens_table.sql",
+    "sha256": "8125D875E1565B0AC0E7AB8432285ACBA9C26027417F095EFDB8AC603D14EF1A",
+    "lastWriteUtc": "2026-11-13T01:49:36.4651906Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\resources\\db\\migration\\V3__add_partner_and_customer_roles.sql",
+    "sha256": "466473B63B3C4781D9C8117B5AA27CE44746D45B29A9EBC383564BCFE338B752",
+    "lastWriteUtc": "2026-11-13T01:49:36.4665090Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\resources\\db\\migration\\V4__add_account_sessions_and_team_access.sql",
+    "sha256": "A97BB974F299F701CE3DA0EC0112068528017785593752D5F99A2F31EEA8C861",
+    "lastWriteUtc": "2026-11-13T14:39:17.0774208Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\BookingServiceApplication.java",
+    "sha256": "B05310BE26706EB48BE9FE2A0E6E541C4D00CF77A5DED96B76627050A7AD347E",
+    "lastWriteUtc": "2026-11-13T01:49:36.4719328Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\PartnerServiceClient.java",
+    "sha256": "ED695B8F2DB8F83B91A0B5B0D630DC90C1707931EAAD2BCDF90F4230A27C73F7",
+    "lastWriteUtc": "2026-11-13T02:09:15.1509445Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\PaymentServiceClient.java",
+    "sha256": "9E79D711F6B0EB4E482CD9A622D907EFA925B573F2468FA5E95AA5162D157740",
+    "lastWriteUtc": "2026-11-13T07:04:07.6764972Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\PetServiceClient.java",
+    "sha256": "A810FF28B4905229025C2C46568E76509F1F065AF45B1CF482FA0C4DDA388A3F",
+    "lastWriteUtc": "2026-11-13T02:06:33.2014121Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\CreditConsumeRequest.java",
+    "sha256": "8F17660CFE378CE940982B7B83CA3818457B0F531B8898EE4893809860F4026E",
+    "lastWriteUtc": "2026-11-13T01:49:36.4734376Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\CreditConsumeResponse.java",
+    "sha256": "006BE696E443225EDF4E56B8D4704AAEBDA2AA906AF053970470158DC2B2861E",
+    "lastWriteUtc": "2026-11-13T01:49:36.4734376Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\PartnerResponseDto.java",
+    "sha256": "A3EEF6FC88013918A2CB87A6D353BB8823BFADAEAC4D6E7987D4ECDE29EEBE2D",
+    "lastWriteUtc": "2026-11-13T01:49:36.4754650Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\ServiceResponseDto.java",
+    "sha256": "A7CD2A0B9E4525F55B34119A92E63D5AF8F2E681DD6DCA55341AA488F9CA59ED",
+    "lastWriteUtc": "2026-11-13T01:49:36.4754650Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\StaffAbsenceResponseDto.java",
+    "sha256": "75E3010D45EF6AD911547E1D944CEA0CC04B9B171404772DE891654E01DF3989",
+    "lastWriteUtc": "2026-11-13T01:49:36.4754650Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\StaffResponseDto.java",
+    "sha256": "ACD348CBCE841DE7DB01D6C46CA4EEEB1B2ED01915815BACE9580E903BD5D0DF",
+    "lastWriteUtc": "2026-11-13T01:49:36.4764701Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\dto\\StaffScheduleResponseDto.java",
+    "sha256": "38DC12524BDA0F7127E816730EC5A8E96550A6B7477D36BF79C7E5C4CCBEAB4C",
+    "lastWriteUtc": "2026-11-13T07:04:07.6774951Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\config\\OpenApiConfig.java",
+    "sha256": "674E03D217F89FE7161127C678F2B9B2DD8963C772A43F19A61F751AB1F518AA",
+    "lastWriteUtc": "2026-11-13T01:49:36.4774707Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\config\\RestTemplateConfig.java",
+    "sha256": "9348F548E97327665831439ED559844DA9AD3832F2084A92EF89C7D88E0D659B",
+    "lastWriteUtc": "2026-11-13T01:49:36.4774707Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\config\\SecurityConfig.java",
+    "sha256": "302892B677F6BE377FDD6755483C85382BE9F4E451CC8E70F4ACCA97F5EFFF18",
+    "lastWriteUtc": "2026-11-13T02:08:52.6123306Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\controller\\BookingController.java",
+    "sha256": "6F5C9F83F41D2DFB2270ACE7838DC7B4B6C7FCAE8C9C94C23AE144F39716AA69",
+    "lastWriteUtc": "2026-11-13T02:06:52.0741874Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\controller\\PetAccessController.java",
+    "sha256": "9DEEFED6E014C7BE9B78E2CA4A18853B4E1FF4EE2394AF71F0EA34DDA2E0985D",
+    "lastWriteUtc": "2026-11-13T02:06:52.3112040Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\domain\\entity\\Booking.java",
+    "sha256": "9EF1BBBAF57D2109C8A93FFF584A814E2887D5E6C2CFAA540FDEAE60BA325B49",
+    "lastWriteUtc": "2026-11-13T14:37:38.4948310Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\domain\\enums\\BillingUnit.java",
+    "sha256": "1DE14A2B468404AE383C63E35EC99C8FEA50FC552260193B226AF91F5720B5E1",
+    "lastWriteUtc": "2026-11-13T01:49:36.4804704Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\domain\\enums\\BookingStatus.java",
+    "sha256": "23548B396AD7CBBD51855F10C4827FE20A418D6A8D3EC7E2B22F9594F4008FF3",
+    "lastWriteUtc": "2026-11-13T14:37:38.7330177Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\domain\\enums\\BookingType.java",
+    "sha256": "1651BAB5FC95C81B6374DB3F5E5D24591970D2ED9627A7C4F95A8A958C7FAEB7",
+    "lastWriteUtc": "2026-11-13T01:49:36.4814706Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\domain\\enums\\PaymentMethod.java",
+    "sha256": "6F4AEA393C661840D59FD33634ABF973EA48655FC647513E9FE2643BF5CA1E8C",
+    "lastWriteUtc": "2026-11-13T07:04:07.6784946Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\AgendaBlockRequest.java",
+    "sha256": "90AC1C81A0498FB4D7E66AA86658E13123234287052564743D9B36A4D4E1375B",
+    "lastWriteUtc": "2026-11-13T14:38:47.8662531Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\BookingCheckIn.java",
+    "sha256": "9C4F8CE86F50FDAFF9D187775484BA182F6F434B8AC76E5D3E51F1CB55BA8DF9",
+    "lastWriteUtc": "2026-11-13T14:38:48.4737225Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\BookingRequest.java",
+    "sha256": "015E84C4790FE6D0517A00046209A90182ECFC9AC44CC85126B448CFFEC225EB",
+    "lastWriteUtc": "2026-11-13T01:49:36.4824697Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\BookingStatusRequest.java",
+    "sha256": "EB29311E22190503A7858E3987A4A2234AA6D5E0BF34200B697306F0585E0E0E",
+    "lastWriteUtc": "2026-11-13T14:38:47.6246080Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\FittingDecisionRequest.java",
+    "sha256": "AD9A9C498A6CD0711DD12B24BB79CFCFD8B7F1579897443974849A22B8BB0F93",
+    "lastWriteUtc": "2026-11-13T01:49:36.4834703Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\RescheduleRequest.java",
+    "sha256": "3AE131BC331100B2BC5A75B84E190F68ED1AECD564273F008460169D6DE4310F",
+    "lastWriteUtc": "2026-11-13T14:38:47.4245104Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\AgendaBlock.java",
+    "sha256": "2E9EA5D39D242E520EDC35BCDC6F63F798DEDC6754E9B5C8E7317DD61BD6619C",
+    "lastWriteUtc": "2026-11-13T14:38:48.1283720Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\AvailabilitySlot.java",
+    "sha256": "A754F2AF1BF304C90B8843AE91D7DDB8C121D3C6E018D8B3335B1A2E80B87015",
+    "lastWriteUtc": "2026-11-13T01:49:36.4834703Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\BookingEvent.java",
+    "sha256": "5996DA20013B5142710FEE66B66D29E2794D4B2CA4E6342957B141405583177C",
+    "lastWriteUtc": "2026-11-13T14:38:49.1783665Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\BookingHistoryEntry.java",
+    "sha256": "52EAE6F18FB34445F7D5B8EB12601823B9DA53D8FA9A7C57F9EF5B0656943DBC",
+    "lastWriteUtc": "2026-11-13T14:38:48.8439944Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\BookingResponse.java",
+    "sha256": "429FC9D80FA8D62CB80B5CB081689C0F904855913BC9AB8738267951274DFE32",
+    "lastWriteUtc": "2026-11-13T14:37:38.9653805Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\ClientStatsResponse.java",
+    "sha256": "85EC74E235426233060B5F50FF0F099B917839372E5C8344FE8A1B2F0D1A0515",
+    "lastWriteUtc": "2026-11-13T01:49:36.4851691Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\DailyStatsEntry.java",
+    "sha256": "083CEC806A4376C5D3688E04EA0DA503538D2118155D147C6C12705B52201808",
+    "lastWriteUtc": "2026-11-13T01:49:36.4851691Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\ErrorResponse.java",
+    "sha256": "DA11FFED30C53A241DB4431545C9063238A46C683A94815DE9F89F9E23BB82A0",
+    "lastWriteUtc": "2026-11-13T01:49:36.4851691Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\FittingDecisionResponse.java",
+    "sha256": "490774767876194922FC66A7FBF5026E103B2E823464C93E49371FA69A8C00F5",
+    "lastWriteUtc": "2026-11-13T01:49:36.4861746Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\PartnerBusinessHourIntegrationResponse.java",
+    "sha256": "BB745DA9C77136F70EB214A8A447F4A862C09F9D90F7E75E78CF725ECE5C83FF",
+    "lastWriteUtc": "2026-11-13T01:49:36.4861746Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\PartnerIntegrationResponse.java",
+    "sha256": "10A64A03EAE42DC95E132E184D9D3FAB944FCB0E022C17F229BCA35A9E3E393C",
+    "lastWriteUtc": "2026-11-13T01:49:36.4861746Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\RevenueStatsResponse.java",
+    "sha256": "0638A47DF3CFBD9320B627E1218DB57A4F1E42E1A660244EEB86014EEDAB6F10",
+    "lastWriteUtc": "2026-11-13T01:49:36.4871746Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\exception\\BookingConflictException.java",
+    "sha256": "C9FC04A72AFEC61548C4480CE4E1D9738176BFE5499F4F01FF7B2111D8303FB6",
+    "lastWriteUtc": "2026-11-13T14:37:37.9732822Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\exception\\BusinessException.java",
+    "sha256": "7F6CD72DAA396A66CD642E1EE8F0116D2130D972765A64E1DEECEACED8553BB9",
+    "lastWriteUtc": "2026-11-13T01:49:36.4871746Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\exception\\GlobalExceptionHandler.java",
+    "sha256": "182A2F1ED089632FAB86BD0C0675257C413314CDA99361DE7755BDE97E987903",
+    "lastWriteUtc": "2026-11-13T14:37:38.2544917Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\exception\\ResourceNotFoundException.java",
+    "sha256": "5035FCA874ED2A9A74E04FD48A1F00D51FA2E29756BC5807200BEEF2E32FA297",
+    "lastWriteUtc": "2026-11-13T01:49:36.4887942Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\mapper\\BookingMapper.java",
+    "sha256": "00368B6C4EEF2914F5038B2FEEDFC65FCEC51A584A091FEC35917933AD7DBBF5",
+    "lastWriteUtc": "2026-11-13T14:37:39.1839763Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\repository\\BookingAgendaStore.java",
+    "sha256": "09310E251397F8B9D7495F3982F1B4F58BE25416B660550D7338811807C43928",
+    "lastWriteUtc": "2026-11-13T14:38:49.4497515Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\repository\\BookingRepository.java",
+    "sha256": "5ED9D6BA3D28FEB156911BE01E3368901D080EE336A8D13924A7AF8FB24F575A",
+    "lastWriteUtc": "2026-11-13T14:37:39.4137597Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\security\\JwtAuthenticationFilter.java",
+    "sha256": "7FEB720AB404C10576C30CA99FBCF8B5B9D403A08B0974AB98BA7A66D0ABCD44",
+    "lastWriteUtc": "2026-11-13T01:49:36.4897987Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\security\\JwtService.java",
+    "sha256": "14B4BEE3BC9410F7E5792EC6FD438DA72C478DDEBFEA827D33F22D485880AD5C",
+    "lastWriteUtc": "2026-11-13T01:49:36.4907995Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\service\\BookingSchedule.java",
+    "sha256": "3F4DD49E7DDA37703419D3F3408B123C81799EFB1569585848504591F9137BE0",
+    "lastWriteUtc": "2026-11-13T14:40:50.2959965Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\service\\BookingService.java",
+    "sha256": "FBC030C1AF552F1A622E64A4DCBB542BDD9D3C80D235AA80DF7858C1C9B4DBAD",
+    "lastWriteUtc": "2026-11-13T12:38:53.0927163Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\service\\PartnerIntegrationService.java",
+    "sha256": "909D3E13E29DCA6B35C07273A5DEDB581E4309785E227B44B5608C5882DF2124",
+    "lastWriteUtc": "2026-11-13T02:09:58.0419679Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V1__create_bookings_table.sql",
+    "sha256": "22CB69FBBCA405CD209518EBD5DF9FDA2BB0D167DC556C648508DF91F36C236C",
+    "lastWriteUtc": "2026-11-13T01:49:36.4937988Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V2__add_deleted_at_to_bookings.sql",
+    "sha256": "F21C465B8EEA9FE1499D1EC14505C221565A0A1C4CCD35FCA44055AA505DFD62",
+    "lastWriteUtc": "2026-11-13T01:49:36.4937988Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V3__add_boarding_fields_and_service_id_to_bookings.sql",
+    "sha256": "C63C77647CC3FBA1FF3A453E3392ED5EDEC3E695E0FD6E086E7739BBFC4C6B28",
+    "lastWriteUtc": "2026-11-13T01:49:36.4937988Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V4__add_payment_fields_to_bookings.sql",
+    "sha256": "83A767847016662B2E1399FF3C9D4EDA3F470C443819E67C70657680E85260A4",
+    "lastWriteUtc": "2026-11-13T01:49:36.4937988Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V5__extend_booking_staff.sql",
+    "sha256": "3C29CB075A7470EEA365142FE09328F3E6F9F4584C54A07686CABCC5AED2D7A9",
+    "lastWriteUtc": "2026-11-13T01:49:36.4952683Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V6__add_staff_booking_unique_constraint.sql",
+    "sha256": "2B5739AA3A0539BA7600910E4B50E5BCED69E88CF37A4C1B81675ED9697853BE",
+    "lastWriteUtc": "2026-11-13T07:19:40.5525053Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V7__reliable_booking_agenda.sql",
+    "sha256": "1E011DCFF6F2FE34107910DA565218991F0F117099C81ED8DF61ABBC1D10E12C",
+    "lastWriteUtc": "2026-11-13T14:37:37.6988581Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\test\\java\\br\\com\\easypet\\booking\\service\\BookingServiceTest.java",
+    "sha256": "A7AD8F1DF13459DAF94A85DFB473D242A760CD69F4F29556295C50BBB0B264D3",
+    "lastWriteUtc": "2026-11-13T12:39:40.5125827Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\PaymentApplication.java",
+    "sha256": "8800C868BC073C73E43922F9F758B86AB01BFD3B5E8A9392582114CB1AEC4551",
+    "lastWriteUtc": "2026-11-13T01:49:36.5493482Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\cashier\\CashierAccess.java",
+    "sha256": "B3D8E32126E8B9C1301821DA9C336CCFE234F720EEC68291E3C951E1F9B02728",
+    "lastWriteUtc": "2026-11-13T14:42:48.7391734Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\cashier\\CashierController.java",
+    "sha256": "F8BC9A948373C3C1419E96AA13AC5385FCCDF423D860C62B31E969F19B27D8C1",
+    "lastWriteUtc": "2026-11-13T14:42:48.0795200Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\cashier\\CashierException.java",
+    "sha256": "33D694C4F922036C41824D23B324521195BB442FAF6EC6F9301B568434F76C4B",
+    "lastWriteUtc": "2026-11-13T14:38:19.7828965Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\cashier\\CashierModels.java",
+    "sha256": "2B7A4C74B1036EFB99C8995E5AE50D39CBAA205993194A68E05892CA0A139AF7",
+    "lastWriteUtc": "2026-11-13T14:39:48.4914934Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\cashier\\CashierRepository.java",
+    "sha256": "772D5EC79F09AC250C0B9F2690B44D46AB8563B587CE5F9206928DFD703F19B0",
+    "lastWriteUtc": "2026-11-13T14:39:48.8205966Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\cashier\\CashierService.java",
+    "sha256": "03EB263C506CA4DBF2C1000410B989B3765D72D80ED39A155050C6711D04060D",
+    "lastWriteUtc": "2026-11-13T14:42:47.4599007Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\client\\PartnerServiceClient.java",
+    "sha256": "37309BB962A87CB3F9A467D47189527B6D20427827562D8D569C497D9BDE2C2C",
+    "lastWriteUtc": "2026-11-13T01:49:36.5493482Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\client\\dto\\PartnerResponseDto.java",
+    "sha256": "A87E1184E9C697F8292B9F31ACB688009B78C2CB187B55629515A1E871B33661",
+    "lastWriteUtc": "2026-11-13T01:49:36.5503770Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\client\\dto\\ServiceResponseDto.java",
+    "sha256": "9D8611F8EE4E60BC29DD269E00B8E498F1443DB712CA10AAE9CBEC145BC8C026",
+    "lastWriteUtc": "2026-11-13T01:49:36.5503770Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\config\\RestTemplateConfig.java",
+    "sha256": "AE83E4C999BCCFB7FBC7A325010071B47618E1E8FFEC1E6A32328F1AF43B8D03",
+    "lastWriteUtc": "2026-11-13T01:49:36.5513826Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\config\\SecurityConfig.java",
+    "sha256": "D49461EF75B54F5B5EB97DE79877C55149A54FE17E835800A675B845436AA3F2",
+    "lastWriteUtc": "2026-11-13T14:42:11.0377431Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\controller\\CheckoutController.java",
+    "sha256": "740CBCBAB1A7F8DBBD4BD05BCE3D8FF4DFAF952E4115999BDB9089331A792ECB",
+    "lastWriteUtc": "2026-11-13T07:04:07.8219627Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\controller\\CreditWalletController.java",
+    "sha256": "915169FBB9D24E9FF9A556DC446C3E241E4B8D33C17C11139C858AE4579BF213",
+    "lastWriteUtc": "2026-11-13T07:04:07.8230124Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\controller\\PackageController.java",
+    "sha256": "9F5FC314AD2570D3B9FEAF9A81B1D8C1C8AF0C3CC7F14F6D0252815EDE7C5808",
+    "lastWriteUtc": "2026-11-13T01:49:36.5523823Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\entity\\CreditTransaction.java",
+    "sha256": "DC22324150EB73BC191A640F1A353C328EA330F2E2CC2E2E5E27E2879D839EA4",
+    "lastWriteUtc": "2026-11-13T07:04:07.8240567Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\entity\\CustomerPackage.java",
+    "sha256": "13BEFCE779C5EEEB834A06C5F80715D47D6F9A90AC2B0E86B7F2C2F17981F863",
+    "lastWriteUtc": "2026-11-13T01:49:36.5538870Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\entity\\PackageTemplate.java",
+    "sha256": "01DC153CEAF4536141FBEF2196DBDA04E1D45844444D5B29B76F7B1850A43732",
+    "lastWriteUtc": "2026-11-13T01:49:36.5538870Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\entity\\PaymentTransaction.java",
+    "sha256": "B873D42AFD9C38CBB607FD660BBBD0A6F39DC65503B4500FF51A9C0AB8EA3120",
+    "lastWriteUtc": "2026-11-13T07:04:07.8245831Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\entity\\UserCreditBalance.java",
+    "sha256": "ECF8EC51634630EF66F4FA9B5B7F0F47B3CB90999B5BDA6E613408743024C642",
+    "lastWriteUtc": "2026-11-13T07:04:07.8256294Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\enums\\CustomerPackageStatus.java",
+    "sha256": "06E2346C4A0AF9A57E91FABC97B96B24FCC979E55C5DB98A16AB21571D1F08A2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5548916Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\domain\\enums\\PaymentMethod.java",
+    "sha256": "8A4AEC51D9819CF7D0B740F41D9C34A6ADA3EECC444609F7A012DF83878C7BD0",
+    "lastWriteUtc": "2026-11-13T01:49:36.5558925Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\AddCreditRequest.java",
+    "sha256": "D05577077FFE38F393BFC401D27668F492AF392021BCA00B0803B253389DE9B7",
+    "lastWriteUtc": "2026-11-13T07:04:07.8266952Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\CheckoutItemRequest.java",
+    "sha256": "C4512A164135E41CA397F85A2429AB58EC63409F452A31327ACD832936AED81B",
+    "lastWriteUtc": "2026-11-13T07:04:07.8272248Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\CheckoutRequest.java",
+    "sha256": "C551E65723BB0C74A3BC9712BDBA3DC30C7C16617A7D6A83A53B83AAC75A6427",
+    "lastWriteUtc": "2026-11-13T07:04:07.8277393Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\CreditConsumeRequest.java",
+    "sha256": "4B3BA524DCF9570E58FEEC0932E09AF455595E6DF85889C2EE78558387C8901F",
+    "lastWriteUtc": "2026-11-13T01:49:36.5568927Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\MercadoPagoWebhookRequest.java",
+    "sha256": "18CEFFBBEC9607F2404EA4ADBEE84D15DAC1B1D73FBDD365EE0414660B9EEB3E",
+    "lastWriteUtc": "2026-11-13T07:04:07.8282590Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\PackageTemplateRequest.java",
+    "sha256": "0F1003B29B514ED3C2ABB43DD0DD2BEEBEBBA7D6879A7F6783D1102EDB6E688A",
+    "lastWriteUtc": "2026-11-13T01:49:36.5568927Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\request\\RestorePackageCreditRequest.java",
+    "sha256": "6C08E09BFFEE3CB34C5F3B7C4F27E9239FE48E3CD242902388AC85F698AB1B5C",
+    "lastWriteUtc": "2026-11-13T07:04:07.8287766Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\response\\CheckoutResponse.java",
+    "sha256": "02BB8915F1C238B2B0EAD2C24321487E50EA58A132CBB518EE61CEBC23F52D30",
+    "lastWriteUtc": "2026-11-13T07:04:07.8298016Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\response\\CreditBalanceResponse.java",
+    "sha256": "BCEEE2C590D2180AE3AD741458CCC59CB851EE12A79F03F9B31E023DE14FD224",
+    "lastWriteUtc": "2026-11-13T07:04:07.8303207Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\response\\CreditConsumeResponse.java",
+    "sha256": "E1571479F55979D1077E1882F31A7DBDF94821806582416AF8824BE87A72B7A2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5568927Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\response\\CustomerPackageResponse.java",
+    "sha256": "6C5D4BE9FDB947F624FE0CDD842602988C7F9F18EEFFF5EF11160C2BC32893ED",
+    "lastWriteUtc": "2026-11-13T01:49:36.5578926Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\response\\ErrorResponse.java",
+    "sha256": "0625C8ADD983A412478972B2F7989CB3142529E466AEFF3EC9A937517FA9B425",
+    "lastWriteUtc": "2026-11-13T01:49:36.5578926Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\dto\\response\\PackageTemplateResponse.java",
+    "sha256": "8D16E6FB0F14D47D890C6B315306698546821DBE4207A96163A5DFE374A5557E",
+    "lastWriteUtc": "2026-11-13T01:49:36.5588917Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\exception\\BusinessException.java",
+    "sha256": "A5FFDE16F5BA6189BC2C918F762D55394A799FC12FBF9C23D207F4C074054997",
+    "lastWriteUtc": "2026-11-13T01:49:36.5588917Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\exception\\GlobalExceptionHandler.java",
+    "sha256": "E25B7A226049369275B3DD885FB302070019872CD3B01A507300B261C8DD4A00",
+    "lastWriteUtc": "2026-11-13T07:04:07.8308530Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\exception\\ResourceNotFoundException.java",
+    "sha256": "95DB054B4F8A5C39A864D5BFC490A5DC21066333E66B4C3F78F21E558B000542",
+    "lastWriteUtc": "2026-11-13T01:49:36.5598927Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\mapper\\PackageMapper.java",
+    "sha256": "CDE4859A00B27933346BFDA62A143D654990A0005BFF8FA317F9EB45F42BBAC2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5608924Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\repository\\CreditTransactionRepository.java",
+    "sha256": "6C3F4A4710DE49E825577A167D58A9C187A2790690FF690533A9753D81121FFF",
+    "lastWriteUtc": "2026-11-13T07:04:07.8318888Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\repository\\CustomerPackageRepository.java",
+    "sha256": "BBE6DC01C4EE6282C412D9A0BB45BE32B5FC7890FF30B48B6105A032254C2ABC",
+    "lastWriteUtc": "2026-11-13T01:49:36.5608924Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\repository\\PackageTemplateRepository.java",
+    "sha256": "30165A22CAD20C493A5F8189F3D58116770D9380A47BF7CF366B0261ECA11962",
+    "lastWriteUtc": "2026-11-13T01:49:36.5618943Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\repository\\PaymentTransactionRepository.java",
+    "sha256": "1CF5E0827D9977E2DECC7F2EF88CB793E3EA2EC09F6BF59A849DF0C49F9B8875",
+    "lastWriteUtc": "2026-11-13T07:04:07.8324153Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\repository\\UserCreditBalanceRepository.java",
+    "sha256": "0BCAD27456396750EA456BC1FC2FA3E6BD3DB77C2F3171632A0614FBF09B2455",
+    "lastWriteUtc": "2026-11-13T07:04:07.8329430Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\security\\JwtAuthenticationFilter.java",
+    "sha256": "9E3F8F85FFC2C87665D2713A28515127487278AE00B03783B6BD12ED89548E8F",
+    "lastWriteUtc": "2026-11-13T01:49:36.5634012Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\security\\JwtService.java",
+    "sha256": "AFA5D3A46FC6C0129EB0B77194152BEDDD33ACBA35EBABC17B9C1DF943890833",
+    "lastWriteUtc": "2026-11-13T01:49:36.5634012Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\service\\CheckoutService.java",
+    "sha256": "76FCEC737F26D049A36356E9CB8AD22279F379B9E3A5029CDC6D4876886D26FF",
+    "lastWriteUtc": "2026-11-13T07:05:32.4418008Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\service\\CreditWalletService.java",
+    "sha256": "AEE799825F907557897D051295532575F6409C2ED6AED06D7C94E4C5CBD35715",
+    "lastWriteUtc": "2026-11-13T07:04:07.8339818Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\java\\br\\com\\easypet\\payment\\service\\PackageService.java",
+    "sha256": "B5F0FEFDFC4454D27D2199D0FBCB9164AC4475EA771402E2D945F153EBA414E1",
+    "lastWriteUtc": "2026-11-13T07:05:32.4408015Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\resources\\db\\migration\\V1__create_payment_tables.sql",
+    "sha256": "5878651DC24400DBF83181028DE05FF867F5A79D191DF1D68024D6C0F7B03FA4",
+    "lastWriteUtc": "2026-11-13T01:49:36.5669394Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\resources\\db\\migration\\V2__add_checkout_fields.sql",
+    "sha256": "2EE5A31FA6079321FBC02781B2FA3993F75183DF27D6EE6ABE601F9229B16354",
+    "lastWriteUtc": "2026-11-13T07:04:07.8360409Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\resources\\db\\migration\\V3__create_credit_wallet_tables.sql",
+    "sha256": "AB6530D53EA7D437CDC99455A920F26435D2FC258524F98BD4DB6242BA9DB4BA",
+    "lastWriteUtc": "2026-11-13T07:04:07.8367442Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\main\\resources\\db\\migration\\V4__create_cashier_ledger.sql",
+    "sha256": "AB5118604DC2469F49D226921CDF5132092F27CB87BDAB03AF5AD982E5F0B102",
+    "lastWriteUtc": "2026-11-13T14:38:18.9079366Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Payment-Service\\src\\test\\java\\br\\com\\easypet\\payment\\service\\PackageServiceTest.java",
+    "sha256": "1CD822B2B945FFE554201D5E2F07EE8A32FD4AE113A21ED9095DFAC30006FBC8",
+    "lastWriteUtc": "2026-11-13T02:14:11.5672173Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\PetServiceApplication.java",
+    "sha256": "733D0BF672A17C53F03B7038E5B47F614046D6CCEE4258B959AAE951758D2A17",
+    "lastWriteUtc": "2026-11-13T01:49:36.5811279Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\client\\BookingAccessClient.java",
+    "sha256": "36EE8D0C194D6508F202218ADDC030C125608A1AB045CC07A2AEF70DA82766AD",
+    "lastWriteUtc": "2026-11-13T02:08:27.0098641Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\client\\CustomerMembershipClient.java",
+    "sha256": "BFBEFDC0822C5331DD40CFE62C89E606EC870972699F968CF0332F48455D8B12",
+    "lastWriteUtc": "2026-11-13T14:39:50.4278594Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\config\\OpenApiConfig.java",
+    "sha256": "2D85A6A5DE24B85F63006358B2FE58A5243E21A2305B0797EE36C22C9B8AFE09",
+    "lastWriteUtc": "2026-11-13T01:49:36.5821267Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\config\\RedisConfig.java",
+    "sha256": "C7EBCE49B8976B9888DB8A1B9C14885F8A6EF67958825DD05E3B9E679A912AB5",
+    "lastWriteUtc": "2026-11-13T01:49:36.5821267Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\config\\SecurityConfig.java",
+    "sha256": "B7E2D2B3931982822570620D19BFFFB24A0913C611CBCF0F29CFD9DB31A05B5D",
+    "lastWriteUtc": "2026-11-13T14:39:51.7466522Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\AppointmentController.java",
+    "sha256": "28DD7C64D96DA072EBB5B759927746C99838AD4BAE07CC2C0477F7725AB12539",
+    "lastWriteUtc": "2026-11-13T01:49:36.5836313Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\ExamController.java",
+    "sha256": "60DC015DC4FD179BF927871F76337BA3D9233BC599C4D84DD6171300E6E8C5F9",
+    "lastWriteUtc": "2026-11-13T01:49:36.5836313Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\MedicationController.java",
+    "sha256": "837B3774B0043BA8B4C677B6597E0323D90C9606A6B9CF31B9C011F6A73582E3",
+    "lastWriteUtc": "2026-11-13T01:49:36.5836313Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\PetController.java",
+    "sha256": "821951E71E6AB8A447A375997C562FD57AA09A8933A2563E64AFB18A71EFFEFE",
+    "lastWriteUtc": "2026-11-13T02:09:51.2171310Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\PetHistoryController.java",
+    "sha256": "870E3C947CD75A9A600D89AD5A5C0A455FE7DA1F491ACB42B23A86034D2A810E",
+    "lastWriteUtc": "2026-11-13T07:05:32.4368002Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\ReceptionPetController.java",
+    "sha256": "1D040EE59D0B360C8FA7DB34DC230A13921ECD60A53A92ABC0AB988AF8F340C7",
+    "lastWriteUtc": "2026-11-13T14:39:51.1957457Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\ReceptionPetErrors.java",
+    "sha256": "DB8780F02298C5A868B9167BCF8304CA81811299D1ABE16E2FF155ED631EA89C",
+    "lastWriteUtc": "2026-11-13T14:39:51.4562858Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\SurgeryController.java",
+    "sha256": "6F66AA78F95A6A92AD3901BC9CCEBBD1417069FEA1261403522E185CB6C8D223",
+    "lastWriteUtc": "2026-11-13T01:49:36.5851553Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\VaccineController.java",
+    "sha256": "A60E795A9D0C1A3C3EEEE627E5E0BBF14C755B5787CBA978B01D1EDE920D647B",
+    "lastWriteUtc": "2026-11-13T01:49:36.5861606Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\controller\\WeightController.java",
+    "sha256": "E14C280735C1DC13FDE8E92A73BA692033C354475BEB85C4370B1F2386AB5BF6",
+    "lastWriteUtc": "2026-11-13T01:49:36.5864758Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\Appointment.java",
+    "sha256": "396A11E1C15676275AB24B924D5983DB225EC2C2272429B0F2A34542E0D23C97",
+    "lastWriteUtc": "2026-11-13T07:04:07.5322827Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\Exam.java",
+    "sha256": "18901715CFC6985AB522478879DABF8C36D3803ABC8B5777036941EFAF364F2A",
+    "lastWriteUtc": "2026-11-13T07:04:07.5342837Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\Medication.java",
+    "sha256": "6E9C6C9C729CD165CB55B4C002897ED47FDA2B28B24846A93F5F7511CE6C00B0",
+    "lastWriteUtc": "2026-11-13T07:04:07.5352834Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\Pet.java",
+    "sha256": "EEE64714F77A4FEE6DFD64671059949A6CDB0C55C57ACABA85377B5CFFB0EAE6",
+    "lastWriteUtc": "2026-11-13T14:39:49.2289876Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\Surgery.java",
+    "sha256": "74228815348D00ED43D03F8A320662E711A8FE73B383CBD327CB3919C46CB821",
+    "lastWriteUtc": "2026-11-13T07:04:07.5372891Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\Vaccine.java",
+    "sha256": "8BA6F37FDD7637618D12C1168E3AFF0A115DC5CA85DDF51BE87ADF02ECC671E5",
+    "lastWriteUtc": "2026-11-13T07:04:07.5382886Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\entity\\WeightRecord.java",
+    "sha256": "18ECBCE9D8E1DBFE3782EFABC558E6B93CE4E2CA08678E177AC8CA9CD992BD2E",
+    "lastWriteUtc": "2026-11-13T07:04:07.5392862Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\model\\AppointmentStatus.java",
+    "sha256": "42F019F75C6432EB8E85153420FEEE019EB9AE116AD6B7DA9705E61306333ACA",
+    "lastWriteUtc": "2026-11-13T01:49:36.5905143Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\model\\HistorySource.java",
+    "sha256": "EACE5F4B53D650DEF56056C169A3BFA03D7339CF9764AF49B0D9B7E540A04D7D",
+    "lastWriteUtc": "2026-11-13T07:04:07.5402829Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\model\\PetGender.java",
+    "sha256": "AF887540DC6102788B0533B8362DE14F78304826799F8126085A88440B66B4FA",
+    "lastWriteUtc": "2026-11-13T01:49:36.5905143Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\model\\PetSpecies.java",
+    "sha256": "63B95C7FD210AA54129FA7F72A42E4B82ADE79A7C8DD3B01E4F7B76B486B2541",
+    "lastWriteUtc": "2026-11-13T01:49:36.5905143Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\domain\\model\\VaccineStatus.java",
+    "sha256": "0B274287BA3368652E1902415257073CAE4BB935556186DAE50B287894945796",
+    "lastWriteUtc": "2026-11-13T01:49:36.5915139Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\AppointmentRequest.java",
+    "sha256": "4C4B0F98727996BF817ADA29C88A1C883C4BFBB5F8DDFD5898390EF88D4C61B6",
+    "lastWriteUtc": "2026-11-13T07:04:07.5412823Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\ExamRequest.java",
+    "sha256": "04B3CD7E48A9E86EEA9C8DD4DF81D23C87683C4115FA3A012A97ED39BF0A5F0E",
+    "lastWriteUtc": "2026-11-13T07:04:07.5422808Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\MedicationRequest.java",
+    "sha256": "618408C75A23A7F2A1876555A08B242A23796183310F969BAF32A5EDCFDD41F7",
+    "lastWriteUtc": "2026-11-13T07:04:07.5422808Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\PetRequest.java",
+    "sha256": "276B9A2444F6DADD1F9501BA01C98B5023A27AC374F0295DB094D94450EAABBA",
+    "lastWriteUtc": "2026-11-13T01:49:36.5935140Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\SurgeryRequest.java",
+    "sha256": "9277C40DDC0920BD42363630F7B866AC753C987A097BEDA5EEA333AB5EF7703E",
+    "lastWriteUtc": "2026-11-13T07:04:07.5432821Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\VaccineRequest.java",
+    "sha256": "6505E4DCBBD1150C9600684A84F81365F44AC17AB731CAD1173FFE98D09467B8",
+    "lastWriteUtc": "2026-11-13T07:04:07.5442833Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\request\\WeightRecordRequest.java",
+    "sha256": "84A9741931B842CDDADFD95BD272C5A7A9207324DC3042BC5771E9AF847C3DEE",
+    "lastWriteUtc": "2026-11-13T07:04:07.5442833Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\AppointmentResponse.java",
+    "sha256": "D982FA82B3D33231BBB94CEDC4A7DC6747B527187177F8BA701B87F9B5E4039E",
+    "lastWriteUtc": "2026-11-13T07:04:07.5452838Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\ErrorResponse.java",
+    "sha256": "F9048AD46229BE912CEB9CB894F2DE538044FC5A73AE221A2CC6453CF010F95B",
+    "lastWriteUtc": "2026-11-13T01:49:36.5960653Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\ExamResponse.java",
+    "sha256": "2A447CFA7937AEF50583E092BB23E887A9C927936DC7238C2098DBD53556FFE7",
+    "lastWriteUtc": "2026-11-13T07:04:07.5462820Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\MedicationResponse.java",
+    "sha256": "54C2006883B55841226F607A7F8033A610A8F7D32DC05E9E92F27806332B97F2",
+    "lastWriteUtc": "2026-11-13T07:04:07.5462820Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\PetHistoryResponse.java",
+    "sha256": "37C3EA9B9B13AA3EDF759B4B11388D87E61ECEC0D203FFEEA6ECA407479B2F6E",
+    "lastWriteUtc": "2026-11-13T01:49:36.5970649Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\PetResponse.java",
+    "sha256": "A705C58F267D2397F7AE1F6F2CD503921B2A3C615D9BF00600E726642961E929",
+    "lastWriteUtc": "2026-11-13T01:49:36.5980653Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\ReceptionPetResponse.java",
+    "sha256": "1CCA53BC3E2D0B119EF2A7A2B1A87A21772B4237C0FB08F051AE075DB9BF5C6C",
+    "lastWriteUtc": "2026-11-13T14:39:50.7181340Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\SurgeryResponse.java",
+    "sha256": "FCEC6C3A830D993CE5746F407F8F677498087239881164829021F7BB1478F61D",
+    "lastWriteUtc": "2026-11-13T07:04:07.5472873Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\VaccineResponse.java",
+    "sha256": "3CBD82B6A9B59DD4A13AFE795FA54028C3B199D1B3B7ED188ECA9CD1EDD9BA36",
+    "lastWriteUtc": "2026-11-13T07:04:07.5482864Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\dto\\response\\WeightRecordResponse.java",
+    "sha256": "D6A4A697F8950027F70DEA5CD7E487BF123B928F005E66371F6F658B0A73A3F1",
+    "lastWriteUtc": "2026-11-13T07:04:07.5482864Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\exception\\GlobalExceptionHandler.java",
+    "sha256": "A70EFA685581A6A6EB5657D03BBA0C81447BB96A0464B483872233CC4E468A80",
+    "lastWriteUtc": "2026-11-13T01:49:36.5990660Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\exception\\ResourceNotFoundException.java",
+    "sha256": "48251EAF71F25CF4A9AE452ADC201AE800D5C3AF72FDF7AA09D6B2356BC1B90A",
+    "lastWriteUtc": "2026-11-13T01:49:36.6000658Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\AppointmentMapper.java",
+    "sha256": "A5DE4F3026741A9C6F23BBF748401400A81D8859B535F6235350589EB8A1477E",
+    "lastWriteUtc": "2026-11-13T07:04:07.5492865Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\ExamMapper.java",
+    "sha256": "ADD6A2BB355689E77F9A14A1B14C73519D01E60CF05CC2E3DD67FA5A8F7E495F",
+    "lastWriteUtc": "2026-11-13T07:04:07.5502869Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\MedicationMapper.java",
+    "sha256": "FE00D7CEECC71DE1B6086D934D6C625CC5A6D2121484F5F9427DEC80ACB6546E",
+    "lastWriteUtc": "2026-11-13T07:04:07.5512888Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\PetMapper.java",
+    "sha256": "7E1C3790E34C952D4EEB813BA323132651FE788CEA05C9696788174D1B3D3213",
+    "lastWriteUtc": "2026-11-13T01:49:36.6020654Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\SurgeryMapper.java",
+    "sha256": "E82BF8347EB13FACCC38EDAE2F492DF184D98052087951D9156FD69FFA8D42A4",
+    "lastWriteUtc": "2026-11-13T07:04:07.5512888Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\VaccineMapper.java",
+    "sha256": "E912D5F5AE555BE372282D981B4F856A45EE03D245FDE69FBCCA54367018B035",
+    "lastWriteUtc": "2026-11-13T07:04:07.5522885Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\mapper\\WeightRecordMapper.java",
+    "sha256": "A56040853A824A8591F7003469A1516A993FEAFB1AB679A4DEE981C1E216DDFD",
+    "lastWriteUtc": "2026-11-13T07:04:07.5532906Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\AppointmentRepository.java",
+    "sha256": "7CE250A0B9246573B83554C8DFEDEAFC4A40D87CF5B605395DBF81271F6A66D2",
+    "lastWriteUtc": "2026-11-13T01:49:36.6035697Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\ExamRepository.java",
+    "sha256": "E1964EB08AC479AE45210BF2EB6A038E0DF9CD56D1882B4B8A72C83846FD2787",
+    "lastWriteUtc": "2026-11-13T01:49:36.6035697Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\MedicationRepository.java",
+    "sha256": "44E111A44B9C9F1E4A9B958AA063C88DC78D0007700941E932706B16F4D22FC7",
+    "lastWriteUtc": "2026-11-13T01:49:36.6035697Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\PetRepository.java",
+    "sha256": "A41C7A2A5CD4480A672B47C9677C6F31F34BE7FA0DB2D0CAA96299AE018558B9",
+    "lastWriteUtc": "2026-11-13T14:39:50.0735728Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\SurgeryRepository.java",
+    "sha256": "14AFD76D661ECDD19EFCA4AE16D498D8635330F1FBEC6CAB8200C308411175D6",
+    "lastWriteUtc": "2026-11-13T01:49:36.6052471Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\VaccineRepository.java",
+    "sha256": "459820C6320F020549C0D357EA6E37B8562AE65180FBF944E69F3BEC711F5A5D",
+    "lastWriteUtc": "2026-11-13T01:49:36.6052471Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\repository\\WeightRecordRepository.java",
+    "sha256": "AA07BA4B1682A70D6A3B78C86FB25EA99173E2661CA40BC7862555D4E169A6DE",
+    "lastWriteUtc": "2026-11-13T01:49:36.6062531Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\security\\JwtAuthenticationFilter.java",
+    "sha256": "DB79441D94E4482CA7663A551E21CC92BFA502456768880261F9598BBD2D0513",
+    "lastWriteUtc": "2026-11-13T01:49:36.6062531Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\security\\JwtService.java",
+    "sha256": "EC16AB6E5612F89BBFE633C9D75AE2160DACF09C11AF278FB23C33978004DC23",
+    "lastWriteUtc": "2026-11-13T01:49:36.6072532Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\AppointmentService.java",
+    "sha256": "AC99CF2DF6C740AC9CB572DF6FC3AA35F175D7A5F221190D714339EF4CB733FB",
+    "lastWriteUtc": "2026-11-13T07:07:59.3628349Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\ExamService.java",
+    "sha256": "DDACF700DFA1330D1B9254E2BCB307D488F2AF11E4CF20C3ACBCC6163202087F",
+    "lastWriteUtc": "2026-11-13T07:07:59.3638340Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\MedicationService.java",
+    "sha256": "8842C8E65F1D2701CE7CC97A2D86BC375EF7B52FD20447B40393A591FFD1A275",
+    "lastWriteUtc": "2026-11-13T07:07:59.3648350Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\PetAccessService.java",
+    "sha256": "D5523D57F5298452B254DACB4C906D26AEE101470A2EB242062911A74C197441",
+    "lastWriteUtc": "2026-11-13T14:39:49.6672877Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\PetHistoryService.java",
+    "sha256": "9BEBBFCD2BF655F1AFC6864097C222200D2280C14788C6122BA54E09F11248B6",
+    "lastWriteUtc": "2026-11-13T02:09:51.4719787Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\PetService.java",
+    "sha256": "FECB522199C2082514802ED0DD3597FAA95A1C029798861B9E15CC964466C9D6",
+    "lastWriteUtc": "2026-11-13T02:09:50.9256182Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\ReceptionPetService.java",
+    "sha256": "4B6012065B6B77AA83ED6AD2374D171443173B48FC997591CC9CA6F7BC5DCF77",
+    "lastWriteUtc": "2026-11-13T14:39:50.9459914Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\SurgeryService.java",
+    "sha256": "81F148A7C42E3EA4F3555D26C53EDB29222B52AF3E5D89E2646FE48819F6BD9F",
+    "lastWriteUtc": "2026-11-13T07:07:59.3648350Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\VaccineService.java",
+    "sha256": "C47A24DBE94B9C76C87AC3D8BEE6EE26AF9BFEA5DF67202EB7E9F11F4D9E71F0",
+    "lastWriteUtc": "2026-11-13T07:07:59.3658393Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\WeightRecordService.java",
+    "sha256": "A260634CED37EB20A992D6C6E3F6AE5073AF521786891B877906B8D235371DDC",
+    "lastWriteUtc": "2026-11-13T07:07:59.3658393Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V1__create_pets_table.sql",
+    "sha256": "5E5E6182B40D00293A6F974E4728A9EAA8F9ABAB7BC29FBAC3FC3C22E695115B",
+    "lastWriteUtc": "2026-11-13T01:49:36.6126662Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V10__add_reception_pet_membership.sql",
+    "sha256": "1D2D6ADE251CE384441B91F6F0DA1B68E6FA3D6AA232B98C4A841D4F3DD126D3",
+    "lastWriteUtc": "2026-11-13T14:39:48.7823406Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V2__add_microchip_to_pets.sql",
+    "sha256": "4028E3227CA9339B43E96C13289063230A3B841505F6A4899B21AB683FA5FB97",
+    "lastWriteUtc": "2026-11-13T01:49:36.6136673Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V3__create_appointments_table.sql",
+    "sha256": "F943ECDFA39E71D6CFED07F85BF3BBEF0C4653E311743F97480985992EEA3837",
+    "lastWriteUtc": "2026-11-13T01:49:36.6136673Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V4__create_medications_table.sql",
+    "sha256": "83AF2BD20D4B08F1E37D7D1E300A54D66CAB49F327F7CAC380713E76BE1EFB39",
+    "lastWriteUtc": "2026-11-13T01:49:36.6136673Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V5__create_surgeries_table.sql",
+    "sha256": "9824062B7C5984CA885F646E42230B7DF258103D21C27787A2A75B70A8256D78",
+    "lastWriteUtc": "2026-11-13T01:49:36.6136673Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V6__create_exams_table.sql",
+    "sha256": "C7548CB28785DB42529892956B2832A27CD3EE07F3811FFCFAB97B548A963E40",
+    "lastWriteUtc": "2026-11-13T01:49:36.6153624Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V7__create_vaccines_table.sql",
+    "sha256": "A655667AA146D3DD719040D4A4EA797E6C4699B225062531164E2FA3B0DF59E9",
+    "lastWriteUtc": "2026-11-13T01:49:36.6153624Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V8__create_weight_records_table.sql",
+    "sha256": "1A58094A5AC1AF1ACC232EF6ECC0079A65AB2908293E31735E23A71E6AE9690D",
+    "lastWriteUtc": "2026-11-13T01:49:36.6163685Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\resources\\db\\migration\\V9__add_history_source_fields.sql",
+    "sha256": "5FEE5DE5D15BCFD040A588E5E1BBDD66FF56A1CCA9C8A5639C03189C859718DE",
+    "lastWriteUtc": "2026-11-13T07:04:07.5602872Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\test\\java\\br\\com\\easypet\\pet\\PetServiceApplicationTests.java",
+    "sha256": "6AFA681A8EB130E5CE8D46943B52C250C41E3EE2A416130C35F1A7359C7EB688",
+    "lastWriteUtc": "2026-11-13T01:49:36.6186091Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\test\\java\\br\\com\\easypet\\pet\\service\\PetAccessServiceTest.java",
+    "sha256": "BCF7AA31B9537762166A93C9CCCC7F78880B1827E73A1529E3622FF80A138D1B",
+    "lastWriteUtc": "2026-11-13T02:11:10.0522526Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\PartnerServiceApplication.java",
+    "sha256": "B583F3C4729A590C775609E5442823FE87C247DE55919A8CD4428874F9CCCE9D",
+    "lastWriteUtc": "2026-11-13T01:49:36.5103065Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\config\\OpenApiConfig.java",
+    "sha256": "4916EC61E79B31DBDECDD21CD2012754BCDDB3197EE7695B12ED714420C6D8BF",
+    "lastWriteUtc": "2026-11-13T01:49:36.5113068Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\config\\SecurityConfig.java",
+    "sha256": "B349C3C4CD72EC43C880FF6476CFEA8AC4769AB50CFFE4798CA2AB4FF5FF2223",
+    "lastWriteUtc": "2026-11-13T14:38:24.2377754Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\AdminPartnerController.java",
+    "sha256": "A6D2F70AFFED32BFB89BB34D5E2866F323A83B8356F0582264D40166AFDB708B",
+    "lastWriteUtc": "2026-11-13T14:16:32.4418476Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\InternalStaffController.java",
+    "sha256": "4BDFFCD8667115AFEB1D2BC0E25351A9AC7D311D1764C6C86F8EC3D34E8DD841",
+    "lastWriteUtc": "2026-11-13T02:17:12.1658663Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\PartnerController.java",
+    "sha256": "B769E59937A53C812DDE2395893994B538F4BF2CBA631B7D6B0803645B8EAE2F",
+    "lastWriteUtc": "2026-11-13T07:09:52.2869922Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\ReceptionCustomerController.java",
+    "sha256": "BA6CBE0FD2E69138C2458165C257D08C9C072C8550A24745D64660059E51DF3F",
+    "lastWriteUtc": "2026-11-13T14:38:23.6990548Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\ReceptionCustomerErrors.java",
+    "sha256": "C0988A7630A9C7C0BE1045C713B28D633FE8B9BABDFD48385534CD91E98D717E",
+    "lastWriteUtc": "2026-11-13T14:38:23.9470015Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\ServiceCategoryController.java",
+    "sha256": "3D601F2C4930FDD58F5DC4E1DD36CE360FF4013007A81C1618A6B9059B19115B",
+    "lastWriteUtc": "2026-11-13T07:04:07.3722679Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\StaffController.java",
+    "sha256": "A736626FA86A6D1780F5A3C2D0D8BA0883BBF14CFA42D2642B0534C1CC6DC640",
+    "lastWriteUtc": "2026-11-13T02:09:14.6993103Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\Partner.java",
+    "sha256": "AE363C3C64F47BB380EFB2A74967A046C1B87264AE5474B198F02458A267CAA2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5138147Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\PartnerBusinessHour.java",
+    "sha256": "FFEDEB4FBB6DF70552D21E37FD7D094086C90071A815020493DAA57ABAC32F87",
+    "lastWriteUtc": "2026-11-13T01:49:36.5138147Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\PartnerReview.java",
+    "sha256": "D2EE7DBDB96A87A254FDB2C1B9C44FB876E913C367C2B40238784EB013438D17",
+    "lastWriteUtc": "2026-11-13T01:49:36.5153654Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\ReceptionCustomer.java",
+    "sha256": "0A7AD7985B1A3B6F90894544F96C835083C3E39395CA233371F06D0E3ACEB435",
+    "lastWriteUtc": "2026-11-13T14:38:22.1159818Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\ServiceCategory.java",
+    "sha256": "A2E3A2F59EEDD92A9BCCFBEC6F60FFD26FE9D87D8A0AFE2F272687A3A79B6F20",
+    "lastWriteUtc": "2026-11-13T07:04:07.3722679Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\ServiceOffer.java",
+    "sha256": "45583A42A029235A5AC9ACDD12588732A85E2572F579D9040D7C534C4AA305B0",
+    "lastWriteUtc": "2026-11-13T07:04:07.3732710Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\ServiceSubcategory.java",
+    "sha256": "D903809BCAD00397F6EB7B68EAC68508247DC65F987B4616EE5F9311AA155D7B",
+    "lastWriteUtc": "2026-11-13T07:04:07.3742730Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\Staff.java",
+    "sha256": "7DE3F9B31E889A31D52C00749220255929E2C08248BF001EE3E42CE349EFDEC3",
+    "lastWriteUtc": "2026-11-13T01:49:36.5163726Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\StaffAbsence.java",
+    "sha256": "B18EF2C564CF5D04133AE6D9958EA6A62E869EB4377079E5555F8D2812D3BFEA",
+    "lastWriteUtc": "2026-11-13T01:49:36.5163726Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\StaffSchedule.java",
+    "sha256": "F9D8E7CEA0D282C572A3F1D1798E177734C8F33B87ED21B30951FEB6C1D74BE4",
+    "lastWriteUtc": "2026-11-13T01:49:36.5163726Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\model\\BillingUnit.java",
+    "sha256": "7151B8CA8A1269E85DE5122BB5626DD346AFBDC107AA067B83BE0C9B5A3A564C",
+    "lastWriteUtc": "2026-11-13T01:49:36.5173732Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\model\\BookingType.java",
+    "sha256": "31523102958A588A2DE23B007991ADB6BDC4503167D74955B27486E35024360F",
+    "lastWriteUtc": "2026-11-13T07:04:07.3752699Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\model\\PartnerCategory.java",
+    "sha256": "8FCC89C884987CD17CBDAB1EAA9D6409A5B1E5ECF6D0FD804F90FFD713CAC246",
+    "lastWriteUtc": "2026-11-13T01:49:36.5173732Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\model\\StaffStatus.java",
+    "sha256": "B0522F33E935B44F0B2E1553E3FD28E569A042A6FC3571080B586AABE4460D9F",
+    "lastWriteUtc": "2026-11-13T01:49:36.5183773Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\PartnerBusinessHourRequest.java",
+    "sha256": "1FA46B553EF86F80975F90F83AFD39DEEB22EAA7CDC7EE4621CF2E89B80D7E3B",
+    "lastWriteUtc": "2026-11-13T01:49:36.5187791Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\PartnerRequest.java",
+    "sha256": "10390AAA7C7E30186D6E591410D4FFE91690D67AF0761A35F47C3387A229CAC1",
+    "lastWriteUtc": "2026-11-13T01:49:36.5187791Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\ReceptionCustomerRequest.java",
+    "sha256": "A256F345E4E8EE2F50D97D74432B2D3B3E591525222A57AD8C5AEFB67980087A",
+    "lastWriteUtc": "2026-11-13T14:38:22.3945403Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\ReviewRequest.java",
+    "sha256": "31783370FB5F6196F82BAF5CE442DC4A5F65F70296D1FE964BC0CF5785C05131",
+    "lastWriteUtc": "2026-11-13T01:49:36.5197845Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\ServiceOfferRequest.java",
+    "sha256": "18106207DF459DEB066BC44E8D22468FF28E72FFD0113E890722BECD7BF0B0DC",
+    "lastWriteUtc": "2026-11-13T07:04:08.1138055Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\StaffAbsenceRequest.java",
+    "sha256": "09F659395A516242134A7EA4E8AA726F14C47B23F4491B0A0D4D29D7C2C95DC7",
+    "lastWriteUtc": "2026-11-13T01:49:36.5207851Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\StaffRequest.java",
+    "sha256": "0D6ACB95A28CD3CEC8CA4F937F709E37DE1D922F20E31AD645F6AC1153F84214",
+    "lastWriteUtc": "2026-11-13T01:49:36.5207851Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\request\\StaffScheduleRequest.java",
+    "sha256": "9394149E005391D33CDFF9C1641361BDD3E1F5D60130FB4D00ADCFEC6DFBE562",
+    "lastWriteUtc": "2026-11-13T01:49:36.5207851Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\CatalogPartnerResponse.java",
+    "sha256": "41928BF6690259A1F360E82C6FA400F52E6961690BBCD2CFB38F64F6D17054D3",
+    "lastWriteUtc": "2026-11-13T07:09:52.2889987Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\PartnerBusinessHourResponse.java",
+    "sha256": "A70DAB11CC78F04F1A272C94C30E4F580D505C90A0A346D4E90C901A33D7CE90",
+    "lastWriteUtc": "2026-11-13T01:49:36.5217844Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\PartnerResponse.java",
+    "sha256": "91A73AE2375714457605C3D2A661D54CDA4BEE1748DD6E8BB6AA721329AF1528",
+    "lastWriteUtc": "2026-11-13T01:49:36.5217844Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\ReceptionCustomerResponse.java",
+    "sha256": "ADBCAB3412282CC1E91F9EDFA3CC058C970D08E7B98F12AADF6ADD2D6BFB1192",
+    "lastWriteUtc": "2026-11-13T14:38:22.6973107Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\ReviewResponse.java",
+    "sha256": "D77ED2F980C05915C0173BA7B4AE0F0DDCBDC07C30442A0CFC5B8C02BE01B195",
+    "lastWriteUtc": "2026-11-13T01:49:36.5227160Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\ServiceCategoryResponse.java",
+    "sha256": "267FC3DD60F395C9E2400B09B0228770E9CBAFF4CC31ADEC87E62CDB2BAE46E2",
+    "lastWriteUtc": "2026-11-13T07:04:07.3772681Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\ServiceResponse.java",
+    "sha256": "D5C5575D634DA3E071BDB933D527FF3422FCAF2C61340E9D3726A105C63AED4D",
+    "lastWriteUtc": "2026-11-13T07:04:07.3782722Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\ServiceSubcategoryResponse.java",
+    "sha256": "D629674BA07CF7C4BBB6E947F03E95E655856C9A04E4D2E2BD06F94961DBF01B",
+    "lastWriteUtc": "2026-11-13T07:04:07.3792715Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\StaffAbsenceResponse.java",
+    "sha256": "A6C5C6C8309E311488D2335B64CE94D8ADD6C890013A70F19AC3618F6DC6DC9A",
+    "lastWriteUtc": "2026-11-13T01:49:36.5227160Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\StaffResponse.java",
+    "sha256": "1F081D5ED10EA55D22A0C8378C84F2FA52DDD9C0DCA29AD2AFC0865AD13D888C",
+    "lastWriteUtc": "2026-11-13T01:49:36.5238184Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\dto\\response\\StaffScheduleResponse.java",
+    "sha256": "DC0B09F62A30DE9F26C5990B7B2C87B7196BD3C39768301B39C70DA9F3B77958",
+    "lastWriteUtc": "2026-11-13T01:49:36.5238184Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\exception\\GlobalExceptionHandler.java",
+    "sha256": "078A273EE19ACD493784A210E4FDF672ED5A463D569D7D2246278DAE4982F525",
+    "lastWriteUtc": "2026-11-13T02:07:26.0904974Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\exception\\ResourceNotFoundException.java",
+    "sha256": "DA72F0516B444783840B9D5305479985F2E3D02BF6FD4690BCD5AB6CDF09447A",
+    "lastWriteUtc": "2026-11-13T01:49:36.5238184Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\mapper\\PartnerMapper.java",
+    "sha256": "0B172C5A6679507A94A45836A7E37BC90108F27C69970E58970D24AC15B711C5",
+    "lastWriteUtc": "2026-11-13T07:04:07.3792715Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\mapper\\ReviewMapper.java",
+    "sha256": "6603E6F9B6E303B5CB1CFA42D1331964323C515B06FEF1EE647F6C893E98368E",
+    "lastWriteUtc": "2026-11-13T01:49:36.5253441Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\mapper\\StaffMapper.java",
+    "sha256": "E33D44015E791B86D002FC683A4E37D2E1B3201494AB29A7AC3D7134CAFB1A67",
+    "lastWriteUtc": "2026-11-13T07:04:07.3802671Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\PartnerRepository.java",
+    "sha256": "2B48A141CA6766A1D012C5541FF07A29C1A2D49601E27BB8FD814D492808EB8A",
+    "lastWriteUtc": "2026-11-13T01:49:36.5263544Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\PartnerReviewRepository.java",
+    "sha256": "EDA63AA1E421EA870197FFF02063FC4FCCCEB4BC29CEEB9D8A0D3D733C02F4E5",
+    "lastWriteUtc": "2026-11-13T01:49:36.5273511Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\ReceptionCustomerRepository.java",
+    "sha256": "573A842A8878D168DF042919084AA321289F95FD946C65DCCBD7FAF02B6D1690",
+    "lastWriteUtc": "2026-11-13T14:38:23.0215967Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\ServiceCategoryRepository.java",
+    "sha256": "2E1B4C90336556D829151852B9AC5B07293039CF5A60F888439975438ECA39B1",
+    "lastWriteUtc": "2026-11-13T07:04:07.3812673Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\ServiceOfferRepository.java",
+    "sha256": "DCCCB0ED366956E078124C60C037C8A6E92BA08B33CEAAA4C454FB2B1BE9F60F",
+    "lastWriteUtc": "2026-11-13T01:49:36.5273511Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\StaffAbsenceRepository.java",
+    "sha256": "BB9857EC25E0DB0805656FEA56EAF1C0C6E6814006077615ACC653C94CEE82C5",
+    "lastWriteUtc": "2026-11-13T01:49:36.5273511Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\StaffRepository.java",
+    "sha256": "91DE044DFB20ABA1A04581E383024A0B5F02B4D4563C465F76C1557C27476781",
+    "lastWriteUtc": "2026-11-13T07:04:08.1143554Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\repository\\StaffScheduleRepository.java",
+    "sha256": "D146FFB37A27AC0CC68046A7F0D9577754216C7B6EF17181D23435C21039E9A9",
+    "lastWriteUtc": "2026-11-13T01:49:36.5283522Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\JwtAuthenticationFilter.java",
+    "sha256": "EB7BEBE45F479CF1BDE312D359BF30C8D4FA0ABA87F6B37820424DC82E4B4360",
+    "lastWriteUtc": "2026-11-13T01:49:36.5293533Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\JwtService.java",
+    "sha256": "438437162A8A1FD2953115AB769BFEB9EC03E9C83484F2345607EADDCFF62851",
+    "lastWriteUtc": "2026-11-13T01:49:36.5303529Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\PartnerAccess.java",
+    "sha256": "B8B3CE3A34282484BE9477415D58C1FB128D39EA789332414878497BE8810D22",
+    "lastWriteUtc": "2026-11-13T02:07:25.8860291Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\security\\UserPrincipal.java",
+    "sha256": "2A5E8C43210FC32014E23E0E8DA0E8CCD2351C181F9AB51814E3FC791A4A9F51",
+    "lastWriteUtc": "2026-11-13T01:49:36.5303529Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\service\\GeocodingService.java",
+    "sha256": "348C92D0B081D4443D8868615EA27AE0D7C21B23A86E1ACE44C58C21F1B76D60",
+    "lastWriteUtc": "2026-11-13T01:49:36.5313534Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\service\\PartnerService.java",
+    "sha256": "61EF92013190C19CDCA2FBF75D60E1873C01B6C35112D92298B644920D28BCDA",
+    "lastWriteUtc": "2026-11-13T07:20:58.9812534Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\service\\ReceptionCustomerService.java",
+    "sha256": "8A1BD5C4EDA48D23909705F8E487CE06110B37B4FDBCE65F0B29F73B82ED9339",
+    "lastWriteUtc": "2026-11-13T14:38:23.3355087Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\service\\ServiceCategoryService.java",
+    "sha256": "ED8E5A8EAB84E81EBEF0C4B3DDB9347A9C921D863DA71135E50BAE64306A1935",
+    "lastWriteUtc": "2026-11-13T07:04:07.3822685Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\service\\StaffService.java",
+    "sha256": "6DA9D67AF6B2FF3F5015C462DA45656EC386E39D920752F2953B8D35CE315D23",
+    "lastWriteUtc": "2026-11-13T07:04:08.1163629Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V1__create_partners_tables.sql",
+    "sha256": "8F14BF16537B41B3E5D2BFE90F516F15B24AE26F8487F6DAA2BD5D3BE90099DD",
+    "lastWriteUtc": "2026-11-13T01:49:36.5358678Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V10__add_fiscal_details.sql",
+    "sha256": "B5A558394A39ED665F1E352DAE7984A4BF90FCD723CA845709BE2A6AC897C5FF",
+    "lastWriteUtc": "2026-11-13T01:49:36.5338562Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V11__add_staff_tables.sql",
+    "sha256": "1A7FF1C99A691AA7D6A2022F727A930AC17704E804342A889787C3AE9C3889E2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5338562Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V12__add_user_id_to_partners.sql",
+    "sha256": "86C3B870F11F1B73FB4E2632AA8151A86CE282D0DFC0C1074B9C17E6B6CA822D",
+    "lastWriteUtc": "2026-11-13T01:49:36.5348623Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V13__add_contact_fields_to_staff.sql",
+    "sha256": "873283CC10CF7E38445286AEFA0C83D65011A269195473E622DC4DCC05B0465D",
+    "lastWriteUtc": "2026-11-13T01:49:36.5348623Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V14__add_lunch_to_staff_schedule.sql",
+    "sha256": "E8E5E3030F40FBB1F7D9EB846A92F319E6301C10BBA024865067533B2156DF02",
+    "lastWriteUtc": "2026-11-13T01:49:36.5358678Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V15__create_service_categories.sql",
+    "sha256": "D688EF0E7CDF4937303015137200D06A2837A04A8A9CC6C6848E6A4C2EE6A893",
+    "lastWriteUtc": "2026-11-13T07:04:07.3842704Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V16__seed_service_categories.sql",
+    "sha256": "E1028D9E01D7605C542E26CB81486C875EF8E0466D3CB66774AE76A84BE94AEA",
+    "lastWriteUtc": "2026-11-13T07:04:07.3852676Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V17__create_reception_customers.sql",
+    "sha256": "4ABD350DB23D2B409C9B63146F79DCE0B20C0B8F605DE0AC8B380CD89288DA5F",
+    "lastWriteUtc": "2026-11-13T14:38:21.8677008Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V2__update_partner_fields.sql",
+    "sha256": "E6B5C4EAAEADAD472DB40E3AFD66359EADB44462EC60155ED3BCDBF52691216A",
+    "lastWriteUtc": "2026-11-13T01:49:36.5358678Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V3__add_partner_gallery_and_reviews.sql",
+    "sha256": "684373222AA14F3EBD98D9680DF5189C1B3FE72507A3DE53E3B3E760392401F2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5368686Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V4__add_partner_phone.sql",
+    "sha256": "820F6E85AD6F7C2A9C703923F8F04FBB9E377F81FC3E4E2CE208C470292A5689",
+    "lastWriteUtc": "2026-11-13T01:49:36.5368686Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V5__add_partner_coordinates.sql",
+    "sha256": "2989089915969DD2CEDEA2C4D6C002C681C878F1B0C8C4833022A4D71F408864",
+    "lastWriteUtc": "2026-11-13T01:49:36.5368686Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V6__add_partner_business_hours.sql",
+    "sha256": "A1481D9BBB4FAE1BB3D069811F6DC2649CB784E93D8A016E5CDA78849CF1B8C6",
+    "lastWriteUtc": "2026-11-13T01:49:36.5378685Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V7__create_partner_business_hours.sql",
+    "sha256": "F97C7DDA00E5A6A625AB2FBDD4FDA7E20F7028B60330F4ED498AE0C0C43600F5",
+    "lastWriteUtc": "2026-11-13T01:49:36.5378685Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V8__add_boarding_capacity_and_billing_unit.sql",
+    "sha256": "53886629E0426DE18BAF9CD082BFD28811EE2F2727413AA8AF52F84EE6D1CF56",
+    "lastWriteUtc": "2026-11-13T01:49:36.5378685Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V9__seed_florianopolis_partners.sql",
+    "sha256": "91B5FBF6BF5252D9EEF0D13630A4565C29E7C8E4695A7B28F990B13464F617CB",
+    "lastWriteUtc": "2026-11-13T01:49:36.5388683Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\test\\java\\br\\com\\easypet\\partner\\PartnerServiceApplicationTests.java",
+    "sha256": "AF9FEE4DEB0FB5946930957E0C95BFA1C728AFF6177607E87C212F6B447E1E16",
+    "lastWriteUtc": "2026-11-13T01:49:36.5398683Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\test\\java\\br\\com\\easypet\\partner\\controller\\AdminPartnerControllerTest.java",
+    "sha256": "4A0F1038BD1FB4ABA7654B74463849DFEAEE90E1C3EAE3B8A68543B3F956135D",
+    "lastWriteUtc": "2026-11-13T14:17:09.2857977Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\test\\java\\br\\com\\easypet\\partner\\service\\StaffServiceTest.java",
+    "sha256": "BECED9A4B8774AE60E1F6DB3A44642F559A04F42903778FCB866DC8A03985AA6",
+    "lastWriteUtc": "2026-11-13T02:10:13.5009398Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\BookingEvent.java",
+    "sha256": "42E38053C9EDB9C9D58F912A15B1C78E41EB4329BBFBF6C66D2928B83FD0E944",
+    "lastWriteUtc": "2026-11-13T14:40:53.7281636Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\BookingEventConsumer.java",
+    "sha256": "F6AB801C3B220F3E2F9A615799333DC55044A10AE54C71CBBF3B7C33FFA521F8",
+    "lastWriteUtc": "2026-11-13T14:42:07.8842372Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\Delivery.java",
+    "sha256": "79C7761B74E07DDB0A875BBBB0E4089C9F27F1D677816C6B11A20691C5ABB9A6",
+    "lastWriteUtc": "2026-11-13T14:40:54.1094628Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\DeliveryProcessor.java",
+    "sha256": "2CB181CF17EF0F65CE7192471D8EE5DFD08C66EDC9357614486773A8534AE8CB",
+    "lastWriteUtc": "2026-11-13T14:42:08.6263597Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\EmailMessage.java",
+    "sha256": "6AC0D44AAA0077CC415408317655F8C72486B144CA9060441E1C28EDBDBE0BA7",
+    "lastWriteUtc": "2026-11-13T14:42:09.0960171Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\EmailTransport.java",
+    "sha256": "A82068D47EC40EFE755B4E56988A8A5F792F769D86489C70BA7254DC5C7166F6",
+    "lastWriteUtc": "2026-11-13T14:42:08.8666897Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\InternalHttp.java",
+    "sha256": "4BB229CEB03FE5A46098D92B63FB08BBA698FD3074E0228070472CDE572116A5",
+    "lastWriteUtc": "2026-11-13T14:42:08.3638014Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\LocalEmailTransport.java",
+    "sha256": "224FF049C8591493C5911E8F943A602672815A61A413253EF978329E3B806B3C",
+    "lastWriteUtc": "2026-11-13T14:42:09.3174726Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\NotificationApplication.java",
+    "sha256": "2FFF6604AC960C387898E29118C9F353E553FA03500E7D673DC68B0CFCC5DF10",
+    "lastWriteUtc": "2026-11-13T14:40:53.4622777Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\NotificationJobs.java",
+    "sha256": "00C3E97CDDC256E9F71E3C33607BB2325A7E50911C51EDF8D76D86C9CD82B4E7",
+    "lastWriteUtc": "2026-11-13T14:42:08.1268480Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\NotificationStore.java",
+    "sha256": "C16E202A0D494DFA7E0D6D688860FC18B5FD6BB9DAB07561ABF680F854204A7B",
+    "lastWriteUtc": "2026-11-13T14:40:54.4901233Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\WhatsAppTransport.java",
+    "sha256": "71836867C4DC472643886743A7778B1F70D49A62ECDFE9DB34D2FA82D8933DDC",
+    "lastWriteUtc": "2026-11-13T14:42:09.5596518Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\resources\\db\\migration\\V1__create_notification_queue.sql",
+    "sha256": "BE52A0D847373415A8AA1C93FEF7B9EA4DE55105BA5FAFD9A876EA0F1C0899B6",
+    "lastWriteUtc": "2026-11-13T14:39:03.2439771Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Gateway-Service\\src\\main\\java\\br\\com\\innkercode\\gateway\\GatewayApplication.java",
+    "sha256": "206E3776E0DC64C3700B4B88D990736E15757764609736230FE2D86F77038FA2",
+    "lastWriteUtc": "2026-11-13T01:49:36.5002738Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Gateway-Service\\src\\main\\java\\br\\com\\innkercode\\gateway\\config\\RateLimiterConfig.java",
+    "sha256": "C3A937C23566C0B0F72E0AC958BFD7E801F7B8CFCA2B7080A0A6789D0FEDC26A",
+    "lastWriteUtc": "2026-11-13T01:49:36.5012732Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Gateway-Service\\src\\main\\java\\br\\com\\innkercode\\gateway\\security\\JwtGlobalFilter.java",
+    "sha256": "19F6C71A3E4D60F4B8DDDD454C4C65113B4E4716C46C8EC26B00474BC73A85F9",
+    "lastWriteUtc": "2026-11-13T14:37:20.0046578Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\README.md",
+    "sha256": "1CABC9E743226C74246F0A46306928F737383B249A192449E9F4A30B8DC14917",
+    "lastWriteUtc": "2026-11-13T14:40:57.2975185Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\contracts.md",
+    "sha256": "19176DB0AFCE81C6D67FDDB678A44088A5D6708EF8A60322F687F9C8B87093D3",
+    "lastWriteUtc": "2026-11-13T14:38:51.1339006Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\integration.md",
+    "sha256": "50322BBC7076DF2BFEDEA5A69C58CCF0BBC0F07DE7E03F88BBC47322DB0B9C60",
+    "lastWriteUtc": "2026-11-13T14:35:26.8526761Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\mission.md",
+    "sha256": "8218A2B6ADB4C701181A395D31E3FC930F91B56AD7F044E7BCAB158545FE04DE",
+    "lastWriteUtc": "2026-11-13T14:32:36.4098082Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\spec.md",
+    "sha256": "3CFA179ECE5DFB957CA781DEA3FCD06B16E64525577ECF0C0EAEBF313F03778E",
+    "lastWriteUtc": "2026-11-13T14:32:36.1609421Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\status.md",
+    "sha256": "6900CE879F0461A49A71F70984D6C59908BE6059803BAA23F648F39D28507C72",
+    "lastWriteUtc": "2026-11-13T14:35:27.1469778Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\contracts.md",
+    "sha256": "CF29F9569BD26C062C382C2F3CD2F7DD1CE80510CF8A59824967AA06D1751291",
+    "lastWriteUtc": "2026-11-13T14:36:32.6699254Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\integration.md",
+    "sha256": "A2D6CBD9FA638972752FD3A1B416CB87DF784B419D4293C8EE7EA92FF278F7CA",
+    "lastWriteUtc": "2026-11-13T14:37:29.6364387Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\mission.md",
+    "sha256": "C12021242062ADC2C932A1A7203157E8A449D6EBE082D4160196472FE0901946",
+    "lastWriteUtc": "2026-11-13T14:32:37.9167955Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\spec.md",
+    "sha256": "D8CA5241E02D90A063C9C43F8AF6ADDBA8F5C5F3A709D92DD59FC4067AEBC439",
+    "lastWriteUtc": "2026-11-13T14:32:37.6715618Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\status.md",
+    "sha256": "C2F928A659BD6D70264365E9CD5BEFD07451AF91F05CA39EAF81A19B090994FF",
+    "lastWriteUtc": "2026-11-13T14:37:29.8417215Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\contracts.md",
+    "sha256": "31F3B7C426A9C1C6CB0872C9426F9984B4E6D9193F43BDBE2EAABFC53CF99197",
+    "lastWriteUtc": "2026-11-13T14:35:35.2801360Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\integration.md",
+    "sha256": "A069E17C00AACF1046979A2D0B03B82D4DDCC8EE6FF67427F6B9245550EC3C5B",
+    "lastWriteUtc": "2026-11-13T14:35:35.5083995Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\mission.md",
+    "sha256": "4262EA2BF38D715B4CF75556BF013334754E22930A1EBFACCFF75528F2B4E9DC",
+    "lastWriteUtc": "2026-11-13T14:32:39.0557012Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\spec.md",
+    "sha256": "94DDD1ED8F6E8EB74B94B065F816D4501A676EF534F84CFBD6BDEBF8F8A7EC33",
+    "lastWriteUtc": "2026-11-13T14:32:38.8352379Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\status.md",
+    "sha256": "CC1CF783F7B9685B3870BF186FCA3802145DC32363025A7EB5D59EB8F1271F56",
+    "lastWriteUtc": "2026-11-13T14:35:35.7372550Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\contracts.md",
+    "sha256": "0AB7A239568C664151E1818F9AC06CB04D82991D7C81C04CE3D98C8A57F46995",
+    "lastWriteUtc": "2026-11-13T14:35:34.2895120Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\integration.md",
+    "sha256": "E499E0285DC6FE9513E17CBD05CA0F2F3F2C2A55B45E55766BC7452C8EF19390",
+    "lastWriteUtc": "2026-11-13T14:35:34.4996750Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\mission.md",
+    "sha256": "E1B644EDD1F578D9AA3F5C471266F7FC855C545923F77A4241F312360DF522C0",
+    "lastWriteUtc": "2026-11-13T14:32:40.3190662Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\spec.md",
+    "sha256": "353E6F693B08ED2DCCC6D25843FFA5E4DD22E9183FDA696D0FE481F6B9B2A853",
+    "lastWriteUtc": "2026-11-13T14:32:40.0885844Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\status.md",
+    "sha256": "4F873D5643706673AA73A88CA558A7642A19AE8991ACBCB8CDB5B8B498BB9024",
+    "lastWriteUtc": "2026-11-13T14:35:34.7734244Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\contracts.md",
+    "sha256": "F6AA45DADD03C394EC203A91820A9100418DC505293B7657407AD2F0CB921405",
+    "lastWriteUtc": "2026-11-13T14:42:49.2609056Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\integration.md",
+    "sha256": "A94E76C372024B3021FAFC63C11399212BAB4A31F8A25C261850ED1DF64163F1",
+    "lastWriteUtc": "2026-11-13T14:42:49.6409913Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\mission.md",
+    "sha256": "392DF855AC1F6A6FCABD1E3FB2BD9C7EF122DC50FC83A5D20C641DC0E25223F5",
+    "lastWriteUtc": "2026-11-13T14:32:41.4538535Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\spec.md",
+    "sha256": "AA301B628D0F8EA4760980B71C5E18372CD470E60F2015D37F4A23978D2EC4EA",
+    "lastWriteUtc": "2026-11-13T14:32:41.2166887Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\status.md",
+    "sha256": "84D3E9533FF76DF1FEBDBF8B668ECC2FE74F3DBF88CBDA8B2501B960EC7A0617",
+    "lastWriteUtc": "2026-11-13T14:37:01.6846770Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\contracts.md",
+    "sha256": "0C31EB7F940D8337387C8794AA1C0D1D343D0A68E0E5DB90249AF397B0C4AD33",
+    "lastWriteUtc": "2026-11-13T14:37:52.8417156Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\integration.md",
+    "sha256": "27178D772900E7DF9ACB64D94F8E6652A3FC15A8958694478B9777407C5C1356",
+    "lastWriteUtc": "2026-11-13T14:37:53.0579873Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\mission.md",
+    "sha256": "E6868B197E3E6AE909B9735BCF9CD083F2C2A998CB669BD3BF52793462ADADA8",
+    "lastWriteUtc": "2026-11-13T14:32:42.9007497Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\spec.md",
+    "sha256": "2FF7B70B603D51B60825FDB9D9DCCC5CC93B71D2CF491038D01B13093D430DFA",
+    "lastWriteUtc": "2026-11-13T14:32:42.5503638Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\status.md",
+    "sha256": "8F6AEB4BCB93722FB01CFDD8FFB7FED8717747BD385C10CC79F693FB406FFE52",
+    "lastWriteUtc": "2026-11-13T14:37:53.2705302Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\contracts.md",
+    "sha256": "C4FBEE6FCE51B083E98A4ED5295368DFADC8703DFE41ECB780D8728FB9CC9FAC",
+    "lastWriteUtc": "2026-11-13T14:37:21.0866687Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\integration.md",
+    "sha256": "06E7E40031186264F87538CBEE8C6B2DF81E293BF5138B7A8D98DE761893FE86",
+    "lastWriteUtc": "2026-11-13T14:42:54.3121325Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\mission.md",
+    "sha256": "F4AA9F92465C9445AA2B637FA012EB9EDF876B188DE92C4242241AE506480C8B",
+    "lastWriteUtc": "2026-11-13T14:32:44.3455752Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\spec.md",
+    "sha256": "B62F9186291D7EE77799296483FC63CBBD0160EFE6FBD3C0CC4A73BE198CF952",
+    "lastWriteUtc": "2026-11-13T14:32:44.0861095Z"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\status.md",
+    "sha256": "49F43595E274FFC06DD29FDB1996E2D0733070E4762046C19203D4BE7FEF78B7",
+    "lastWriteUtc": "2026-11-13T14:35:06.0662113Z"
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "capturedAt": "2026-11-13T20:26:56.140521+00:00",
+  "logs": [
+    {
+      "project": "easypet-h1-ops-d23b9fe1",
+      "path": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-h1-ops-d23b9fe1\\smoke.log",
+      "sha256": "d4de384e35fea22254628292177d140e919da774a84461456e7dc44ad3073724",
+      "bytes": 39100
+    },
+    {
+      "project": "easypet-h1-ops-f03c6b1a",
+      "path": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-h1-ops-f03c6b1a\\smoke.log",
+      "sha256": "72798ce865766ff9e6ef476447c8df6ecd047b03c82653395fbeb76daa6f6a3b",
+      "bytes": 951
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-13",
+  "gate": "H1-01",
+  "result": "passed-locally",
+  "project": "easypet-h1-ops-resume-49d24eb7",
+  "compose": {
+    "file": "compose.homolog.yml",
+    "overlays": [],
+    "commands": [
+      "docker compose -p <project> --env-file <fixture> -f compose.homolog.yml config --quiet",
+      "docker compose -p <project> --env-file <fixture> -f compose.homolog.yml up -d --build --wait --wait-timeout 420"
+    ],
+    "configExit": 0,
+    "upExit": 0,
+    "healthyServices": 16,
+    "postgres": "15.20",
+    "authDatabaseReadyUtc": "2026-11-13T21:11:23.633Z",
+    "previousFailure": "Post-bootstrap without TCP readiness before the healthcheck deadline. Not reproduced on resume. Root cause undetermined."
+  },
+  "diagnose": {
+    "command": "node scripts/production/diagnose.mjs --project <project> --env-file <fixture>",
+    "steps": [
+      { "state": "healthy", "exit": 0 },
+      { "state": "notification-service stopped", "exit": 1 },
+      { "state": "notification-service recovered", "exit": 0 }
+    ],
+    "http": {
+      "/healthz": 204,
+      "/api/v1/admin/partners": 401,
+      "/api/v1/admin/notifications": 401,
+      "/api/v1/internal/booking-events": 404,
+      "/api/v1/payments/checkout": 404
+    }
+  },
+  "alert": {
+    "command": "node scripts/production/alert-local.mjs --project <project> --env-file <fixture> --max-due-age-seconds 120 --max-failed-hour 0 --max-unknown-hour 0 --max-unroutable-hour 0",
+    "steps": [
+      { "state": "healthy", "exit": 0 },
+      { "state": "synthetic FAILED delivery", "failedLastHour": 1, "unroutableLastHour": 1, "exit": 2 },
+      { "state": "synthetic delivery removed", "exit": 0 },
+      { "state": "notification-service stopped", "exit": 1 },
+      { "state": "notification-service recovered", "exit": 0 }
+    ]
+  },
+  "admin": {
+    "command": "docker compose -p <project> --env-file <fixture> -f compose.homolog.yml exec auth-service java -Dloader.main=br.com.innkercode.auth.ProvisionPilotUser -cp /app/app.jar org.springframework.boot.loader.launch.PropertiesLauncher ADMIN admin-ops@example.test <name>",
+    "interactiveProvisionExit": 0,
+    "duplicateDifferentCaseRolePasswordExit": 1,
+    "withoutTerminalExit": 1,
+    "outsideHomologProfileExit": 1,
+    "outsideFixtureDomainExit": 1,
+    "login": 200,
+    "session": 200,
+    "sessionRole": "ADMIN",
+    "administrativeRead": 200,
+    "anonymousRead": 401,
+    "loginWithRefusedPassword": 401,
+    "originalAccountPreserved": true
+  },
+  "snapshot": {
+    "head": "ceba61cc4ae325ddd8ff5012020508c6e55e5966",
+    "functionalBaseline": "h1-run2-after.json",
+    "before": "h1-ops-resume-before.json",
+    "after": "h1-ops-resume-after.json",
+    "entries": 640,
+    "differences": 0
+  },
+  "cleanup": {
+    "downExit": 0,
+    "fixtureCredentialsFileRemoved": true,
+    "inventoryByProject": {
+      "easypet-h1-ops-resume-49d24eb7": { "containers": 0, "volumes": 0, "networks": 0, "images": 0 },
+      "easypet-h1-ops-f03c6b1a": { "containers": 0, "volumes": 0, "networks": 0, "images": 0 },
+      "easypet-h1-ops-d23b9fe1": { "containers": 0, "volumes": 0, "networks": 0, "images": 0 },
+      "easypet-h1-ops-c5a80f3e": { "containers": 0, "volumes": 0, "networks": 0, "images": 0 }
+    }
+  },
+  "logs": {
+    "directory": "%TEMP%/easypet-h1-ops-resume-49d24eb7",
+    "sha256": {
+      "up.log": "4d40badd40e2d6afc4ce45590ff156e808b446c0119d2bc8bdc5c81fabff01b2",
+      "checks.log": "344e00aafd2f85558e9193c104790a4904338eedcc0e97ffedac9033ae7d233b",
+      "cleanup.log": "40bd1381d83a932b215be619c0372fbe5f2d8614e1a483be69a4c76f6428eed8"
+    }
+  },
+  "pending": ["versioned-release", "vps-preflight", "published-https-smoke"]
+}

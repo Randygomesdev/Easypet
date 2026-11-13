@@ -1,0 +1,103 @@
+{
+  "date": "2026-11-13",
+  "decision": "Aceite funcional local 22/22 preservado; fechamento operacional H1-01 incompleto; publicação pendente",
+  "head": "ceba61cc4ae325ddd8ff5012020508c6e55e5966",
+  "integrated": {
+    "owner": "S07",
+    "project": "easypet-e2e-7b39dda479",
+    "passed": 22,
+    "total": 22,
+    "duration": "2.8m",
+    "exitCode": 0
+  },
+  "restore": {
+    "project": "easypet-restore-503394f857220b96",
+    "databases": 6,
+    "tables": 55,
+    "referenceQueries": 12,
+    "incompatibleMigrationRehearsed": true
+  },
+  "javaReports": {
+    "tests": 162,
+    "reports": 26,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "execution": "workers",
+    "independentReview": "R01 XML/hash inventory"
+  },
+  "typecheck": {
+    "owner": "R01",
+    "exitCode": 0,
+    "evidence": "typecheck.json"
+  },
+  "snapshot": {
+    "entries": 640,
+    "present": 630,
+    "trackedDeletions": 10,
+    "differences": 0,
+    "evidence": "snapshot-verification.json"
+  },
+  "cleanup": {
+    "independentReadOnlyDockerQuery": true,
+    "projects": [
+      {
+        "project": "easypet-e2e-7b39dda479",
+        "containers": [],
+        "volumes": [],
+        "networks": []
+      },
+      {
+        "project": "easypet-restore-503394f857220b96",
+        "containers": [],
+        "volumes": [],
+        "networks": []
+      }
+    ]
+  },
+  "publicationExecuted": false,
+  "operationalSupplement": {
+    "status": "blocked",
+    "projects": [
+      "easypet-h1-ops-d23b9fe1",
+      "easypet-h1-ops-f03c6b1a"
+    ],
+    "reason": "PostgreSQL não abriu porta TCP antes do limite em dois ensaios, inclusive sequencial. Causa raiz indeterminada; fontes/imagem/configuração coincidem com o aceite funcional.",
+    "independentObservation": "Healthcheck psql devolveu conexão recusada em 127.0.0.1:5432. Contêiner já marcado para remoção na leitura; não determina causa raiz.",
+    "diagnosePassed": false,
+    "alertPassed": false,
+    "adminProvisioningIntegratedPassed": false,
+    "adminProvisioningS02Passed": true,
+    "cleanup": [
+      {
+        "project": "easypet-h1-ops-d23b9fe1",
+        "containers": [],
+        "volumes": [],
+        "networks": []
+      },
+      {
+        "project": "easypet-h1-ops-f03c6b1a",
+        "containers": [
+          "easypet-h1-ops-f03c6b1a-auth-db-1 (Dead)"
+        ],
+        "volumes": [
+          "easypet-h1-ops-f03c6b1a_auth-data"
+        ],
+        "networks": [
+          "easypet-h1-ops-f03c6b1a_default"
+        ],
+        "reason": "Docker informa remoção já em andamento; limpeza dirigida pendente de normalização do daemon."
+      }
+    ],
+    "workerTurnCompleted": true,
+    "extraDiagnosticAttempt": "Tentativa com volumes em memória interrompida durante exportação das imagens, antes de criar containers; não gera aceite.",
+    "logManifest": "operational-log-manifest.json"
+  },
+  "consolidatedAt": "2026-11-13T20:28:44.902239+00:00",
+  "supersededOperationalStatus": {
+    "currentResult": "passed-locally",
+    "evidence": "../h1-ops/evidence.json",
+    "review": "../h1-ops-review.md",
+    "note": "O bloqueio e os resíduos registrados neste arquivo pertencem à rodada anterior; retomada concluiu os testes e a limpeza."
+  }
+}

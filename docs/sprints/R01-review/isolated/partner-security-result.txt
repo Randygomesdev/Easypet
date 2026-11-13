@@ -1,0 +1,10 @@
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+anonymous GET /partners => 200
+anonymous GET /partners/c2257a04-cbca-4254-a1d2-954773d1bf5e => 200
+anonymous GET /admin/partners => 401
+anonymous GET /partners/catalog => 401
+CUSTOMER GET /partners/c2257a04-cbca-4254-a1d2-954773d1bf5e => 200
+CUSTOMER GET /admin/partners => 403
+6 checks passed: legacy complete-read paths bypass service authorization; admin/catalog controls reject anonymous.

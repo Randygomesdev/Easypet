@@ -1,0 +1,25 @@
+{
+  "capturedAtUtc": "2026-11-13T17:23:02.3062232Z",
+  "files": [
+    {
+      "path": "C:\\Projects\\Easypet\\docs\\ROADMAP.md",
+      "sha256": "CACD6EC8F46FCFFFBAFDC05EAE1B0154544F011A1900CA19906CCCFF2D489ED1"
+    },
+    {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\R01-review\\review.md",
+      "sha256": "9DC0AC78DA0F7F16E5EEBE1E5A724E782E6E07A29A9C18DE32296E7759BC1C21"
+    },
+    {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\R01-review\\status.md",
+      "sha256": "B9D00856BEC34C37EB678A24997CB58DEB84570E2C1A28DD7F002D51F912B3C0"
+    },
+    {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\R01-review\\findings.md",
+      "sha256": "A4207BC2BD440952A787DC3CD964A2B44849D3116EA074B0079E00A1049429F8"
+    },
+    {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\R01-review\\test-gaps.md",
+      "sha256": "39145E05FA0342EE06B1EEE64E389E34560775AE7CF67EF6E637177D632B2A85"
+    }
+  ]
+}

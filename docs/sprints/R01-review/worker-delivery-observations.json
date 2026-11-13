@@ -1,0 +1,58 @@
+[
+  {
+    "sprint": "S01",
+    "threadId": "01a1d553-ad17-7591-91d6-80a851b22ece",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "05c65350-70ca-4d47-9be9-dbffc3a664e1:9",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  },
+  {
+    "sprint": "S02",
+    "threadId": "01a1d553-bd0b-7ba1-a53f-4c2fd6677821",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "8c9a3fd3-17ed-458f-8258-1f65b3e5486c:20",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  },
+  {
+    "sprint": "S03",
+    "threadId": "01a1d553-cc44-7d52-aac6-852ee076249d",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "80828e84-5719-48d5-ada6-b475e7668f13:28",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  },
+  {
+    "sprint": "S04",
+    "threadId": "01a1d553-db87-7643-b899-9d0f893810fe",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "ac4c5707-7aad-425a-9903-568855287aee:7",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  },
+  {
+    "sprint": "S05",
+    "threadId": "01a1d553-ec59-7420-bd98-7ccdfbf91644",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "f5e3de25-0da1-4368-8726-506005929309:24",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  },
+  {
+    "sprint": "S06",
+    "threadId": "01a1d553-ff06-7ea1-bfa7-590afb3968c4",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "35d78315-aabc-4b12-bb89-c3f7db48df02:6",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  },
+  {
+    "sprint": "S07",
+    "threadId": "01a1d554-14e1-7e72-a58c-64ebaf73795a",
+    "hostId": "local",
+    "firstDeliveryObserved": "completed",
+    "cursor": "8527db17-935e-4840-9e97-b96e24ae75a6:56",
+    "scope": "Primeira entrega; conclusão local não equivale a aceite integrado."
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "verifiedAt": "2026-11-13T20:04:45.856766+00:00",
+  "head": "ceba61cc4ae325ddd8ff5012020508c6e55e5966",
+  "beforeAt": "2026-11-13T19:43:37.705Z",
+  "afterAt": "2026-11-13T19:55:57.584Z",
+  "reviewAt": "2026-11-13T20:04:04.702Z",
+  "entries": 640,
+  "present": 630,
+  "deleted": 10,
+  "differences": [],
+  "sameHead": true,
+  "finalVerifiedAt": "2026-11-13T20:26:55.804Z",
+  "finalEntries": 640,
+  "finalDifferences": []
+}

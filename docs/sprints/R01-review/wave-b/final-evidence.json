@@ -1,0 +1,61 @@
+{
+  "verifiedAtUtc": "2026-11-13T19:01:16.862798+00:00",
+  "project": "easypet-e2e-d60c028996",
+  "restoreProject": "easypet-restore-6e7b9b18c7f18509",
+  "logPath": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-wave-b-run4.log",
+  "logSha256": "383949dea784f0243458fe75492d831c34110e21636d4c019b7d6912120c8570",
+  "passed": 18,
+  "failed": 0,
+  "skipped": 0,
+  "duration": "2.6m",
+  "scenarios": [
+    "e2e\\admin-partners.spec.ts:83:1 › somente ADMIN lista, busca e abre o cadastro completo de parceiros (1.6s)",
+    "e2e\\admin-partners.spec.ts:119:1 › API administrativa rejeita anônimo, JWT adulterado e cabeçalhos de papel forjados @api (560ms)",
+    "e2e\\admin-partners.spec.ts:163:1 › rota administrativa redireciona anônimo, parceiro e tutor; tutor mantém catálogo sem dados fiscais (1.5s)",
+    "e2e\\admin-partners.spec.ts:202:1 › galeria de design system carrega direto apenas para ADMIN (4.1s)",
+    "e2e\\ingress.spec.ts:3:1 › proxy identifica requisições e protege a entrada da homologação @api (61ms)",
+    "e2e\\partner-onboarding.spec.ts:12:1 › parceiro cadastra estabelecimento, serviço, colaborador e escala pelo painel (3.1s)",
+    "e2e\\pilot.spec.ts:100:1 › tutor cadastra pet e reserva; parceiro registra e conclui o atendimento (6.8s)",
+    "e2e\\pilot.spec.ts:189:1 › parceiro B não vê a reserva na agenda nem lê ou altera dados do parceiro A (1.4s)",
+    "e2e\\pilot.spec.ts:229:1 › balcão vincula tutor e pet ao estabelecimento e recusa acesso de outro parceiro @api (1.6s)",
+    "e2e\\pilot.spec.ts:262:1 › agenda disputa a última vaga e caixa registra baixa parcial idempotente @api (2.6s)",
+    "e2e\\pilot.spec.ts:346:1 › Partner recusa a leitura fiscal legada na rede interna @api (4.2s)",
+    "e2e\\pilot.spec.ts:394:1 › timeout de Pet libera a agenda e permite repetir a reserva @api (2.6s)",
+    "e2e\\wave-b-booking.spec.ts:6:1 › reserva no catálogo preserva intenção após resposta perdida e recarga (2.5s)",
+    "e2e\\wave-b-identity.spec.ts:6:1 › recuperação SMTP de uso único invalida o JWT antigo no Gateway e no Booking direto (2.7s)",
+    "e2e\\wave-b-identity.spec.ts:44:1 › inativação revoga o tutor no Gateway e nos serviços diretos (2.6s)",
+    "e2e\\wave-b-identity.spec.ts:64:1 › Auth indisponível fecha o acesso no Gateway e nos serviços diretos (17.3s)",
+    "e2e\\wave-b-notification.spec.ts:7:1 › ADMIN investiga e reenvia após falha SMTP; reagendamento e reinício preservam a fila (1.3m)",
+    "e2e\\wave-b-team.spec.ts:7:1 › equipe opera por permissão e o tutor reivindica somente seu cadastro (18.8s)"
+  ],
+  "restoredTables": {
+    "auth": 4,
+    "pet": 8,
+    "partner": 16,
+    "booking": 8,
+    "payment": 11,
+    "notification": 7
+  },
+  "referenceRecordsVerified": [
+    "auth",
+    "pet",
+    "partner",
+    "booking",
+    "payment",
+    "notification"
+  ],
+  "cleanup": {
+    "method": "Independent read-only docker ps -a, volume ls, network ls filtered by exact Compose project labels",
+    "remainingContainers": 0,
+    "remainingVolumes": 0,
+    "remainingNetworks": 0
+  },
+  "snapshotVerification": "final-snapshot-verification.json",
+  "currentInventory": "final-source-snapshot.json",
+  "localJavaManifest": "test-report-summary.json",
+  "frontendTypecheck": "typecheck-after-b02.json",
+  "runnerExitCode": 0,
+  "runnerExitCodeSource": "S07 final status/report and completed chat",
+  "representativeQueries": 12,
+  "workersCompleted": 7
+}

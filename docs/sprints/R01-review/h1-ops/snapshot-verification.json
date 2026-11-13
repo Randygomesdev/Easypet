@@ -1,0 +1,42 @@
+{
+  "verifiedAt": "2026-11-13T21:17:54.582367+00:00",
+  "head": "ceba61cc4ae325ddd8ff5012020508c6e55e5966",
+  "entries": 640,
+  "present": 630,
+  "deleted": 10,
+  "snapshots": {
+    "accepted": {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\h1-run2-after.json",
+      "capturedAt": "2026-11-13T19:55:57.584Z",
+      "sha256": "a66e0074a76c2ae927e6b655c1be28570744eb345ba03165f2bb4347102346ef"
+    },
+    "r01Before": {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\R01-review\\h1-ops\\before.json",
+      "capturedAt": "2026-11-13T21:06:23.710Z",
+      "sha256": "a29e1ab7cca5b277ea3eb5a9e688518d6547106b984ca3809b106f28da7e90a9"
+    },
+    "s07Before": {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\h1-ops-resume-before.json",
+      "capturedAt": "2026-11-13T21:07:02.314Z",
+      "sha256": "69297242758c008d4278ba2dbbf2ab80b7efddac8c39bdf605837e6a3d394544"
+    },
+    "s07After": {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\h1-ops-resume-after.json",
+      "capturedAt": "2026-11-13T21:16:23.290Z",
+      "sha256": "1565d7aab2ff0a7cdeadd3f25166f7f065ab4d23286e60160d525d2507850d32"
+    },
+    "r01After": {
+      "path": "C:\\Projects\\Easypet\\docs\\sprints\\R01-review\\h1-ops\\after.json",
+      "capturedAt": "2026-11-13T21:16:42.783Z",
+      "sha256": "262c1b4da79f6a4e15420ef6dd4f00a280836ebde57ce3950b126621ab84a021"
+    }
+  },
+  "sameHead": true,
+  "differences": {
+    "accepted": [],
+    "r01Before": [],
+    "s07Before": [],
+    "s07After": [],
+    "r01After": []
+  }
+}

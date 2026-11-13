@@ -1,0 +1,16 @@
+{
+  "project": "easypet-e2e-a3fcc375b8",
+  "passed": 16,
+  "failed": 2,
+  "duration": "5.7m",
+  "snapshotEntries": 619,
+  "beforeAfterEqual": true,
+  "headEqual": true,
+  "logPath": "C:\\Users\\randy\\AppData\\Local\\Temp\\easypet-wave-b-run3.log",
+  "logSha256": "61dc2b1d77175b29626e245dd469084175119fb596d18f61c8ebca5550eaadcf",
+  "recovery": "Not executed: suite failed",
+  "failures": [
+    "reset token reuse HTTP429 before expected400",
+    "team list GET HTTP429; UI retry button available; later desk/cashier/claim not reached"
+  ]
+}

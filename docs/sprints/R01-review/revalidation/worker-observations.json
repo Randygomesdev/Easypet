@@ -1,0 +1,62 @@
+[
+  {
+    "sprint": "S04",
+    "polls": [
+      {
+        "id": "01a1d553-db87-7643-b899-9d0f893810fe",
+        "cursor": "ac4c5707-7aad-425a-9903-568855287aee:22",
+        "status": "completed",
+        "completedAt": 1794586381,
+        "message": "Corrigi o R01-001 no Partner Service. A lista completa de estabelecimentos exige ADMIN. O detalhe completo exige ADMIN ou o titular do estabelecimento. O catálogo autenticado continua disponível com a projeção existente. Booking e Payment já usam a nova rota interna com o JWT original. Ela retorna capacidade, expediente e serviços, sem dados fiscais ou de contato. Validação isolada: 20 testes no Partner e 9 no Pet passaram. Os novos testes HTTP confirmaram 401 sem JWT válido, 403 para tutor e parceiro alheio nas leituras completas e acesso aos dados permitidos para titular, administrador e consumidores. O aceite entre serviços e a verificação do bloqueio da rota interna no ingresso público seguem com S07. Contrato · Integração · Evidências"
+      }
+    ]
+  },
+  {
+    "sprint": "S03",
+    "polls": [
+      {
+        "id": "01a1d553-cc44-7d52-aac6-852ee076249d",
+        "cursor": "80828e84-5719-48d5-ada6-b475e7668f13:49",
+        "status": "completed",
+        "completedAt": 1794586636,
+        "message": "R01-002 corrigido e validado. O Booking agora usa limites configuráveis de 750 ms para conexão, 2 s para resposta HTTP, 4 s para espera pela trava e 12 s para a transação. A verificação de vagas continua sob a trava do PostgreSQL. No teste com PostgreSQL 16, o Pet enviou parte da resposta e ficou parado. A primeira operação recebeu 503 em cerca de 2,5 s, dentro do limite configurado para o teste. A segunda, que aguardava pela trava, reservou a mesma vaga. Apenas ela gravou a reserva, a chave de idempotência e o evento. Os 40 testes do Booking passaram. Teste de regressão Para R01-001, o Booking passou a consumir a projeção interna da S04 com o JWT original. O teste local confirmou expediente, duração, capacidade de hospedagem e reserva de balcão. O aceite com Booking e Partner reais segue com S07. Status e evidências"
+      }
+    ]
+  },
+  {
+    "sprint": "S05",
+    "polls": [
+      {
+        "id": "01a1d553-ec59-7420-bd98-7ccdfbf91644",
+        "cursor": "f5e3de25-0da1-4368-8726-506005929309:28",
+        "status": "completed",
+        "completedAt": 1794586196,
+        "message": "R01-003 corrigido no Payment. Reproduzi o 401 indevido em Tomcat: o sendError(403) iniciava um despacho de erro sem a autenticação original. O Payment agora devolve 403 JSON diretamente para tutor autenticado e preserva 401 para JWT ausente ou inválido. O caixa continua restrito ao titular do estabelecimento. R01-001: a criação e a alteração de vínculos de templates de pacote agora consultam a projeção interna publicada pela S04, encaminhando o JWT original e lendo os IDs dos serviços. Os 11 testes do Payment passaram, incluindo a regressão HTTP com PostgreSQL 15 descartável, isolamento entre estabelecimentos, idempotência e fechamento. O aceite pelo Gateway e com o Partner real fica com a S07. Evidências e pendências"
+      }
+    ]
+  },
+  {
+    "sprint": "S01",
+    "polls": [
+      {
+        "id": "01a1d553-ad17-7591-91d6-80a851b22ece",
+        "cursor": "05c65350-70ca-4d47-9be9-dbffc3a664e1:14",
+        "status": "completed",
+        "completedAt": 1794586053,
+        "message": "Corrigi os três erros TS2741 de NO_SHOW. A agenda administrativa e o dashboard do parceiro exibem o rótulo Falta conforme o contrato S03. A alteração ficou restrita aos mapas de apresentação. O typecheck, o build completo e o teste da galeria no Chrome passaram. O lint ainda aponta sete erros e três avisos preexistentes nas duas telas. A atualização da imagem Docker em localhost:18082 e o aceite integrado ficam com a S07. Registro da correção e evidências"
+      }
+    ]
+  },
+  {
+    "sprint": "S07",
+    "polls": [
+      {
+        "id": "01a1d554-14e1-7e72-a58c-64ebaf73795a",
+        "cursor": "8527db17-935e-4840-9e97-b96e24ae75a6:59",
+        "status": "completed",
+        "completedAt": 1794587489,
+        "message": "Aceite integrado da R01 aprovado. O build completo passou e os 12 cenários Playwright passaram em 28,2 s numa stack descartável. R01-001: o Partner recusou leituras fiscais para anônimo, tutor e parceiro alheio. Booking e Payment usaram a projeção interna sem dados fiscais ou de contato. R01-002: com o Pet sem responder, Booking retornou 503 em 2,252 s. A segunda operação conseguiu reservar a mesma vaga com a mesma chave de idempotência. R01-003: Gateway e Payment retornaram 401 para JWT ausente ou inválido e 403 para tutor autenticado. A baixa parcial idempotente e o fechamento passaram. Frontend e Notification: a navegação existente, o atendimento e a galeria administrativa passaram. Booking gerou duas confirmações distintas na captura local. O primeiro ensaio expôs um problema na conta fictícia da galeria e recebeu 429 no login. Ajustei os testes e repeti a suíte com o limitador ativo. Checkout e créditos permaneceram bloqueados. A stack descartável foi removida ao final. Resultados e pendências · Snapshot validado"
+      }
+    ]
+  }
+]

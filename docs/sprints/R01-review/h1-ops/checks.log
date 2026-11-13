@@ -1,0 +1,139 @@
+auth-db: running healthy
+auth-service: running healthy
+booking-db: running healthy
+booking-service: running healthy
+frontend: running healthy
+gateway-service: running healthy
+notification-db: running healthy
+notification-service: running healthy
+partner-db: running healthy
+partner-service: running healthy
+payment-db: running healthy
+payment-service: running healthy
+pet-db: running healthy
+pet-service: running healthy
+redis: running healthy
+smtp-capture: running healthy
+GET /healthz: 204 (esperado 204).
+GET /api/v1/admin/partners: 401 (esperado 401).
+GET /api/v1/admin/notifications: 401 (esperado 401).
+GET /api/v1/internal/booking-events: 404 (esperado 404).
+GET /api/v1/payments/checkout: 404 (esperado 404).
+Notification due=0
+Notification oldestDueAgeSeconds=0
+Notification retryScheduled=0
+Notification sending=0
+Notification failedLastHour=0
+Notification unknownLastHour=0
+Notification unroutableLastHour=0
+Notification transporte SMTP: true; polling ativo: true.
+diagnostico saudavel exit=0 esperava=0
+Fila dentro dos limites locais.
+alerta saudavel exit=0 esperava=0
+failedLastHour=1 acima de 0.
+unroutableLastHour=1 acima de 0.
+alerta detecta limiar exit=2 esperava=2
+Fila dentro dos limites locais.
+alerta retorna saudavel exit=0 esperava=0
+ Container easypet-h1-ops-resume-49d24eb7-notification-service-1 Stopping 
+ Container easypet-h1-ops-resume-49d24eb7-notification-service-1 Stopped 
+auth-db: running healthy
+auth-service: running healthy
+booking-db: running healthy
+booking-service: running healthy
+frontend: running healthy
+gateway-service: running healthy
+notification-db: running healthy
+notification-service: exited
+partner-db: running healthy
+partner-service: running healthy
+payment-db: running healthy
+payment-service: running healthy
+pet-db: running healthy
+pet-service: running healthy
+redis: running healthy
+smtp-capture: running healthy
+GET /healthz: 204 (esperado 204).
+GET /api/v1/admin/partners: 401 (esperado 401).
+GET /api/v1/admin/notifications: 401 (esperado 401).
+GET /api/v1/internal/booking-events: 404 (esperado 404).
+GET /api/v1/payments/checkout: 404 (esperado 404).
+diagnostico detecta Notification parado exit=1 esperava=1
+exec falhou (1).
+alerta detecta endpoint indisponivel exit=1 esperava=1
+ Container easypet-h1-ops-resume-49d24eb7-booking-service-1 Running 
+ Container easypet-h1-ops-resume-49d24eb7-smtp-capture-1 Running 
+ Container easypet-h1-ops-resume-49d24eb7-booking-db-1 Running 
+ Container easypet-h1-ops-resume-49d24eb7-notification-db-1 Running 
+ Container easypet-h1-ops-resume-49d24eb7-booking-db-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-booking-db-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-booking-service-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-smtp-capture-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-notification-db-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-smtp-capture-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-booking-service-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-notification-db-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-notification-service-1 Starting 
+ Container easypet-h1-ops-resume-49d24eb7-notification-service-1 Started 
+ Container easypet-h1-ops-resume-49d24eb7-notification-service-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-notification-db-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-booking-service-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-smtp-capture-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-booking-db-1 Waiting 
+ Container easypet-h1-ops-resume-49d24eb7-smtp-capture-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-booking-db-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-notification-db-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-booking-service-1 Healthy 
+ Container easypet-h1-ops-resume-49d24eb7-notification-service-1 Healthy 
+auth-db: running healthy
+auth-service: running healthy
+booking-db: running healthy
+booking-service: running healthy
+frontend: running healthy
+gateway-service: running healthy
+notification-db: running healthy
+notification-service: running healthy
+partner-db: running healthy
+partner-service: running healthy
+payment-db: running healthy
+payment-service: running healthy
+pet-db: running healthy
+pet-service: running healthy
+redis: running healthy
+smtp-capture: running healthy
+GET /healthz: 204 (esperado 204).
+GET /api/v1/admin/partners: 401 (esperado 401).
+GET /api/v1/admin/notifications: 401 (esperado 401).
+GET /api/v1/internal/booking-events: 404 (esperado 404).
+GET /api/v1/payments/checkout: 404 (esperado 404).
+Notification due=0
+Notification oldestDueAgeSeconds=0
+Notification retryScheduled=0
+Notification sending=0
+Notification failedLastHour=0
+Notification unknownLastHour=0
+Notification unroutableLastHour=0
+Notification transporte SMTP: true; polling ativo: true.
+diagnostico retorna saudavel exit=0 esperava=0
+Fila dentro dos limites locais.
+alerta depois de reinicio exit=0 esperava=0
+ADMIN sem terminal exit=1
+ADMIN fora do perfil exit=1
+ADMIN fora do domínio fictício exit=1
+Uma conta ADMIN ativa com hash BCrypt de 60 caracteres, nome e papel originais
+2026-11-13 21:11:09.693 UTC [77] LOG:  background worker "logical replication launcher" (PID 83) exited with exit code 1
+2026-11-13 21:11:22.651 UTC [1] LOG:  starting PostgreSQL 15.20 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+2026-11-13 21:11:22.651 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-11-13 21:11:22.651 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-11-13 21:11:22.969 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-13 21:11:23.494 UTC [111] LOG:  database system was shut down at 2026-11-13 21:11:21 UTC
+2026-11-13 21:11:23.633 UTC [1] LOG:  database system is ready to accept connections
+2026-11-13 21:11:09.693 UTC [78] LOG:  shutting down
+2026-11-13 21:11:10.046 UTC [78] LOG:  checkpoint starting: shutdown immediate
+............2026-11-13 21:11:21.743 UTC [78] LOG:  checkpoint complete: wrote 931 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.729 s, sync=8.237 s, total=12.051 s; sync files=301, longest=1.117 s, average=0.028 s; distance=4320 kB, estimate=4320 kB
+2026-11-13 21:11:21.765 UTC [77] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+

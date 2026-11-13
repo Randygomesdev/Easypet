@@ -1,0 +1,392 @@
+[
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\App.tsx",
+    "initialSha256": "82BF6E90FE7003BCFA0CE617DF3D52C9B3ABA3B8CB5912CFA3AE011DEDAA0312",
+    "finalSha256": "22FAE63DF74B8898B06B392C4B84F834FC9CF3456B399086469FA48E01CB10A1"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\layout\\Header.tsx",
+    "initialSha256": "ADAFF2DAD3E44A21CE6FA880DF521E463371A076D7CA2D9F71548B4C75D8464A",
+    "finalSha256": "5CF30D1A3B2512AF9DB3B68FFB9ED66AC96B5C3CF2899EDBF06F340AC40A9898"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\layout\\Sidebar.tsx",
+    "initialSha256": "2FB5EF8F69A5500C8FF3A023818335FE1E2A56BA860399E95E74AC7EC8480343",
+    "finalSha256": "E78A6D52F33E272318F3175F6CFC08945D0390ED519FABC4B076FFF4859BE0B0"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\components\\ui\\Dialog.tsx",
+    "initialSha256": "B442522BE2707774532EF8FE3D6D7668E33A322E41A7A9DD14C1F280DD76BDE6",
+    "finalSha256": "F58357652A7A935E2D7DC14A922DFDE979D351397CEC8DF5CA2F990437C2A2E7"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\admin\\ClientesPage.tsx",
+    "initialSha256": "E0F5EA0A46B5AF822B560055F582BABEE9891112F5E9940A2824A7CFB2933A9F",
+    "finalSha256": "FEB428E59BAB2702AACF5CCEA7602801A32500881C14DD70A1FD764885C9371B"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\app\\MeusAgendamentosPage.tsx",
+    "initialSha256": "738F8A67D50B1266A23C0D95376308818E312987677DF09AC7C1678C83191AB1",
+    "finalSha256": "9AE23D447038BD53E9FB8BAACE76F3E2535FB4AD7C8B897821B4BE3D7A7E0925"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\auth\\LoginPage.tsx",
+    "initialSha256": "4D357C2E04118F7D2D66D2E98B64F9E88B5A43495B1C13901013DE6B2B74AC53",
+    "finalSha256": "6E6B5DFFCC78AC48BBDCDBF15039BF6B24CF51361863C19CDEDE9D4D51E09CF6"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\auth\\LoginSuccessPage.tsx",
+    "initialSha256": "C65355970FF031935DC733CD037D6E2EF890468BD3D0038689A54D0FA594482B",
+    "finalSha256": "33986E0449BD3685298D7B02E38CC93EAFC03BACF8333EDF6B14C3B4C49DD6C7"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\auth\\SejaParceiroPage.tsx",
+    "initialSha256": "986C6E18200241D74A0188280FAAA69FE0D56AC73AC755E774C2AE726ECB5411",
+    "finalSha256": "95BBC180A98FBEDFF19049C3AFF4811EF1304E9545B08F7A881E7BBE010A978F"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\ControlExamples.tsx",
+    "initialSha256": "7C6B523EC22FECF6D2009B7DF951445930FD331C570486EED775CA296B5F5425",
+    "finalSha256": "FF02FA4ADB00E830C394DDC21CDF98B32D61F49EB9E63229311675C82C9E3162"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\design-system\\DesignSystemPage.tsx",
+    "initialSha256": "E01B174EC03BA8952F7C3D00221E2E77EAB1F670FBA70485C47E49FD30EAD952",
+    "finalSha256": "B314ACB44DE501A7DFAE93F053644889A8DBC7BCDA334421C76F00B81D8F5CD7"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\AgendamentosPage.tsx",
+    "initialSha256": "DD4421B9344F84095D59B5CD266CE81FD596F65958B6869C035230D6A356F463",
+    "finalSha256": "3A3B95CFCC7E3A17F62493B47E3C50B16D23F81CF46AC9E75F58413A789E1C3E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\pages\\partner\\AtendimentoPage.tsx",
+    "initialSha256": "69C4E56B4CC3E509510BC082E9D7D7BD421DE92E819E9401DDE0749FCC3AD759",
+    "finalSha256": "2FB469CEA7B7F4AD7E44D7C42D9A297C5AAE23FD6E8663B9CB85A4074B3B5A48"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\auth.service.ts",
+    "initialSha256": "9E9A5363739F50B95D846FA1A46986C05D21B010B34F0D17890D591AD6850EF5",
+    "finalSha256": "0AF354CAE5D3E14360C66FB9F18EF0BB65782DF4A1F94B0520A7E51CE33CE477"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\booking.service.ts",
+    "initialSha256": "8155CB4905117ECFC4C55235BE55E6BDB32109D6AFAEA40312F9F85FC764C97E",
+    "finalSha256": "FB2C8507FDBCCD0F5335F3614666267257A83FDA7A5227CB53F0E56F04EBDFB7"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\services\\customer.service.ts",
+    "initialSha256": "660A6EF4FE6152B197346865637C190B2F9366D4D0D1875AEFD07C15694205CB",
+    "finalSha256": "83AAF1CD69F4A1807831E1965D4DA36497286E6252411AFE8D1DF066BCC3FEF2"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Frontend\\src\\types\\auth.types.ts",
+    "initialSha256": "755ADA108C9BC23304672EC0252A0B0E0C2819C28A355385ACA0411982523172",
+    "finalSha256": "CEAF6B4452D067F44C17CBA8CD41D03AD83B6F1631BDDFBE8EB9CDAF43D459F4"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\config\\SecurityConfig.java",
+    "initialSha256": "53C2FD117939BEA1A1433CB235F93144AC842D6340558BD3F1577F787896442A",
+    "finalSha256": "305E12388E82D9038B8782A13E1AA11924F806BD6FC04878A3A8D30ABAAE63AF"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\controller\\AuthController.java",
+    "initialSha256": "03AB300B11F32C56453ABD1BA4F9A2DAAAAC5535E93BD577172A02BD838B3DAD",
+    "finalSha256": "18CB5254903ECD3BF4420CF498562FC760F4AD1E736D6C01B475EF8CA631C69E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\domain\\entity\\PasswordResetToken.java",
+    "initialSha256": "88D586E06EADB114F16083716001C636F867CA16B9D499F6CBF483AE4DED44F2",
+    "finalSha256": "262DD09079978570C3478F1CA011A764A4A7677619FF4FE96FF0DDDF55EDA620"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\request\\ForgotPasswordRequest.java",
+    "initialSha256": "248877A3100B373F18411FC97375FC7B59726AD6C18B3FE53B4325CCDCD8354B",
+    "finalSha256": "B72EA3283B53937E13AFB4DCF76830770ED93B6A893571198B8B8EE6A59B1024"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\dto\\response\\ErrorResponse.java",
+    "initialSha256": "4113598647BD9D2DA0ACF33C729CD6D491D3668B69B4EBC4BCD024BD849D1B83",
+    "finalSha256": "B4561387D39005B234288E3A46A60205BFCE9AEF9A733D6DE5BF978541A6A320"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\exception\\GlobalExceptionHandler.java",
+    "initialSha256": "1E9277C6FB23342128D4DD2A7016DE60A717ED62818626BE4F7005EF099619A0",
+    "finalSha256": "61DB86561360BA54045C03857B45BB60FBFA975724EDFB08E10F6AACE8C24C71"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\repository\\UserRepository.java",
+    "initialSha256": "80F5514CCF9F01F2E0FB9D15CC8716FEF792C5AC6DED94A1BD4731FCC5B74081",
+    "finalSha256": "5362D6F66D52572FB70D3A6DDC45B5BB82F5FC830C2AD335D07B9D4277FA53DC"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\CustomOAuth2UserService.java",
+    "initialSha256": "F5D0FDA2C179B357BFB3F3B5691755FC67CA008886E3D84F5E83F193AF8F9AC9",
+    "finalSha256": "D205F4AA25A2310E2B465AC7933115BED78DA57B9BB1A677A700F6EABA823792"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\JwtAuthenticationFilter.java",
+    "initialSha256": "17CF457D259D85B57C5625453012BCB126BBB1549B87F3E6EB2AB8DEE92A4D10",
+    "finalSha256": "496D5E32BF1B70AD917DC2EF93B35DF1945F7AE12AF6E7470A8B9B96A0D55D8A"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\JwtService.java",
+    "initialSha256": "D333651EF3C7D1E75BB86FDFC44D88A977DEB25D7B6E1C9FA864381BF9F84EB7",
+    "finalSha256": "DB1D3A35FAEEA7FE0FD5247ED37605EDF0EE208485D648A448DFA5763EDE3749"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\security\\OAuth2SuccessHandler.java",
+    "initialSha256": "D76D5C533D6ACE4E3A1616B33FEBBA1140CB1F887B538F65B832C12ECE30CC56",
+    "finalSha256": "1A3BB51EE8623337DE732C200A19C9DF4F440C05DE45565FF2582D0B8B6CDBE1"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\AdminCustomerService.java",
+    "initialSha256": "CE3AA55AE798B87FF2C75D5317966F7C636EA0E2AC4056AA1C61F30207867F5F",
+    "finalSha256": "341018842896AEE524DDD9453DEA3F07B82893AFD2FE1F68644B57848CF27B7F"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\java\\br\\com\\innkercode\\auth\\service\\PasswordRecoveryService.java",
+    "initialSha256": "2213D3A1C3384DC1FC2F071B1AE36B0277714CA6D82BF421D4C3EC67CF621082",
+    "finalSha256": "4280D0B6DF48DA381630DE904FA784C07E390CBD16B468D38A9EA0D07C288E0C"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Auth-Service\\src\\main\\resources\\db\\migration\\V4__add_account_sessions_and_team_access.sql",
+    "initialSha256": "A97BB974F299F701CE3DA0EC0112068528017785593752D5F99A2F31EEA8C861",
+    "finalSha256": "E369D444C7CA6FBE21F14D37D645818C2742A1CB101F5CE9DCD09E3F0930383E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\client\\PetServiceClient.java",
+    "initialSha256": "A810FF28B4905229025C2C46568E76509F1F065AF45B1CF482FA0C4DDA388A3F",
+    "finalSha256": "01B4099579A5EE5FF69C906590B39B8EBCEF015737B508B1743E7D840975576C"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\config\\SecurityConfig.java",
+    "initialSha256": "302892B677F6BE377FDD6755483C85382BE9F4E451CC8E70F4ACCA97F5EFFF18",
+    "finalSha256": "56E4078461C28F311083305C42E776E80907B6920F8B681DE3DD27D594A63240"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\controller\\BookingController.java",
+    "initialSha256": "6F5C9F83F41D2DFB2270ACE7838DC7B4B6C7FCAE8C9C94C23AE144F39716AA69",
+    "finalSha256": "2DBED2D3B7EBDFA7A57808B134C52179D2E901B4313D7851D3672F8E4880C4EE"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\domain\\entity\\Booking.java",
+    "initialSha256": "9EF1BBBAF57D2109C8A93FFF584A814E2887D5E6C2CFAA540FDEAE60BA325B49",
+    "finalSha256": "0B0163B6ADC0B3EE89B4BB35695ECFFC4E61DCB10A659991D13A3F3652AAF069"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\request\\BookingRequest.java",
+    "initialSha256": "015E84C4790FE6D0517A00046209A90182ECFC9AC44CC85126B448CFFEC225EB",
+    "finalSha256": "1D377C96E288D5637AE15E670739680928681D2C36D3CCD2096AF27154B4E99B"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\dto\\response\\BookingResponse.java",
+    "initialSha256": "429FC9D80FA8D62CB80B5CB081689C0F904855913BC9AB8738267951274DFE32",
+    "finalSha256": "83DB4145FD41D2897327E869AFAD1C483654293A28FD84A1593046BE959991F1"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\exception\\GlobalExceptionHandler.java",
+    "initialSha256": "182A2F1ED089632FAB86BD0C0675257C413314CDA99361DE7755BDE97E987903",
+    "finalSha256": "FA292D63A5212A8250580451D5363CF2BD8A65820C73DDB86118B80C04C1D0AE"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\mapper\\BookingMapper.java",
+    "initialSha256": "00368B6C4EEF2914F5038B2FEEDFC65FCEC51A584A091FEC35917933AD7DBBF5",
+    "finalSha256": "95886C20643D3A1CB1FDF002520C3A7423682C34CE43CDE4EB1156C50C4D5BDA"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\repository\\BookingAgendaStore.java",
+    "initialSha256": "09310E251397F8B9D7495F3982F1B4F58BE25416B660550D7338811807C43928",
+    "finalSha256": "EFCB41FD6FAE84350BF57541F4B7F30D8153E57D1420309FC738D7C84C46A28B"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\repository\\BookingRepository.java",
+    "initialSha256": "5ED9D6BA3D28FEB156911BE01E3368901D080EE336A8D13924A7AF8FB24F575A",
+    "finalSha256": "7AC3935F6F47965A20339A00AECBC24B081B15E1B939510B64E8234C8F02589E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\security\\JwtAuthenticationFilter.java",
+    "initialSha256": "7FEB720AB404C10576C30CA99FBCF8B5B9D403A08B0974AB98BA7A66D0ABCD44",
+    "finalSha256": "D85B1722090D147F47A53351C25C2F96B23F3C15936582B59779F0D9579575A3"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\service\\BookingSchedule.java",
+    "initialSha256": "3F4DD49E7DDA37703419D3F3408B123C81799EFB1569585848504591F9137BE0",
+    "finalSha256": "648DEC5AF9487BFF2C6726EB24455F636AD964380D9B663F5937EBC30AF94B52"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\java\\br\\com\\easypet\\booking\\service\\BookingService.java",
+    "initialSha256": "FBC030C1AF552F1A622E64A4DCBB542BDD9D3C80D235AA80DF7858C1C9B4DBAD",
+    "finalSha256": "170C47FCF656425CFD17DD4D766500B762D7D261C83C2BF84B14ECD3355E0083"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\main\\resources\\db\\migration\\V7__reliable_booking_agenda.sql",
+    "initialSha256": "1E011DCFF6F2FE34107910DA565218991F0F117099C81ED8DF61ABBC1D10E12C",
+    "finalSha256": "3FDAC2D544E911534AA9AF409697F8988C2265367EF98C1A3CB4B6EC71A78F80"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Booking-Service\\src\\test\\java\\br\\com\\easypet\\booking\\service\\BookingServiceTest.java",
+    "initialSha256": "A7AD8F1DF13459DAF94A85DFB473D242A760CD69F4F29556295C50BBB0B264D3",
+    "finalSha256": "A40B497DEBA6ADD65EA4743219CD8E3A021EF056DBBC55F8FDEB1369F9DCC5A9"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\main\\java\\br\\com\\easypet\\pet\\service\\ReceptionPetService.java",
+    "initialSha256": "4B6012065B6B77AA83ED6AD2374D171443173B48FC997591CC9CA6F7BC5DCF77",
+    "finalSha256": "9F0279B1FC7E4F55EE739E9F1CC9726917C8A271B6CAF5C4E3D7F1EFF53E9D33"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Pet-Service\\src\\test\\java\\br\\com\\easypet\\pet\\service\\PetAccessServiceTest.java",
+    "initialSha256": "BCF7AA31B9537762166A93C9CCCC7F78880B1827E73A1529E3622FF80A138D1B",
+    "finalSha256": "55F7B031CA27C6AA1622DF883E04D2B1EC39DB674DCF6F2F4877E34DD4536525"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\config\\SecurityConfig.java",
+    "initialSha256": "B349C3C4CD72EC43C880FF6476CFEA8AC4769AB50CFFE4798CA2AB4FF5FF2223",
+    "finalSha256": "64FD475DD8EE2E866CA6BA17E6B1D1E050F76141E2511A10E49F180A4713E11C"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\ReceptionCustomerController.java",
+    "initialSha256": "BA6CBE0FD2E69138C2458165C257D08C9C072C8550A24745D64660059E51DF3F",
+    "finalSha256": "611BE809C2AE26A70C02CA37213DF1E8185DA8541A350334C6F72D309F82C3A8"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\controller\\ReceptionCustomerErrors.java",
+    "initialSha256": "C0988A7630A9C7C0BE1045C713B28D633FE8B9BABDFD48385534CD91E98D717E",
+    "finalSha256": "0943A39FEC86A212E7BF2C021E01D8BACD910755C3FAF7E60D2CDB6291EBEF12"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\domain\\entity\\ReceptionCustomer.java",
+    "initialSha256": "0A7AD7985B1A3B6F90894544F96C835083C3E39395CA233371F06D0E3ACEB435",
+    "finalSha256": "D7EFBDD968A260FC07BBBA18F27127B7EA998AF5DDE866C91A5874C5BD2AFC2B"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\java\\br\\com\\easypet\\partner\\service\\ReceptionCustomerService.java",
+    "initialSha256": "8A1BD5C4EDA48D23909705F8E487CE06110B37B4FDBCE65F0B29F73B82ED9339",
+    "finalSha256": "A490BC156F965D0E046454C144AF9F75A7B7692D80D37A21BE1C51FC0E814AD6"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Partner-Service\\src\\main\\resources\\db\\migration\\V17__create_reception_customers.sql",
+    "initialSha256": "4ABD350DB23D2B409C9B63146F79DCE0B20C0B8F605DE0AC8B380CD89288DA5F",
+    "finalSha256": "CBD47454AD06FA1258051489679867B798EBBBBC11142AB4BFF5634070456658"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\Delivery.java",
+    "initialSha256": "79C7761B74E07DDB0A875BBBB0E4089C9F27F1D677816C6B11A20691C5ABB9A6",
+    "finalSha256": "66C2336D82C6839740B690F8C25499FD4E93B7A16BAE4CD8A2507D895ACD3F24"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\EmailMessage.java",
+    "initialSha256": "6AC0D44AAA0077CC415408317655F8C72486B144CA9060441E1C28EDBDBE0BA7",
+    "finalSha256": "60B92301742094011E867EEAD9284A394DFC146886C9E116B5E917F1DBA03630"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\InternalHttp.java",
+    "initialSha256": "4BB229CEB03FE5A46098D92B63FB08BBA698FD3074E0228070472CDE572116A5",
+    "finalSha256": "AFDFF0C000DAFC3C0D04B9E583B1F0A8EE838848AE3E3DEEE6773E89CA26325D"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Notification-Service\\src\\main\\java\\br\\com\\easypet\\notification\\NotificationJobs.java",
+    "initialSha256": "00C3E97CDDC256E9F71E3C33607BB2325A7E50911C51EDF8D76D86C9CD82B4E7",
+    "finalSha256": "7662C2310BA6170A8EA7808BF73B4DAE654165C759EE6F8367EEAE47C056F34E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\Backend\\Gateway-Service\\src\\main\\java\\br\\com\\innkercode\\gateway\\security\\JwtGlobalFilter.java",
+    "initialSha256": "19F6C71A3E4D60F4B8DDDD454C4C65113B4E4716C46C8EC26B00474BC73A85F9",
+    "finalSha256": "C65DCD2C04578378D1A887C7CB52F95920D83F243AB7E98DA3E0FA05C1584D6E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\integration.md",
+    "initialSha256": "50322BBC7076DF2BFEDEA5A69C58CCF0BBC0F07DE7E03F88BBC47322DB0B9C60",
+    "finalSha256": "996A7F76CE54AD9E88F78984B8BA5A5961E82F8C33BBE0EE651717725AE40872"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S01-design-system\\status.md",
+    "initialSha256": "6900CE879F0461A49A71F70984D6C59908BE6059803BAA23F648F39D28507C72",
+    "finalSha256": "FA5344BB4DBF9E7606B1C9C95FD43A44F05119E774116484E3E4AEC6D7ED330D"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\contracts.md",
+    "initialSha256": "CF29F9569BD26C062C382C2F3CD2F7DD1CE80510CF8A59824967AA06D1751291",
+    "finalSha256": "24C261D5BA9B2832C4AE5729790101373828CE2D467888B1B30E5F9B1B05EAD2"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\integration.md",
+    "initialSha256": "A2D6CBD9FA638972752FD3A1B416CB87DF784B419D4293C8EE7EA92FF278F7CA",
+    "finalSha256": "41FFEE1CC57F24BB40304A680F748F2118CD50155A9E4FECA65FB488FD259B0A"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S02-identidade\\status.md",
+    "initialSha256": "C2F928A659BD6D70264365E9CD5BEFD07451AF91F05CA39EAF81A19B090994FF",
+    "finalSha256": "F2A39F4BACD6A6E42B1506397990843D590A611CD22E06A9077AE67C0BA2414E"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\contracts.md",
+    "initialSha256": "31F3B7C426A9C1C6CB0872C9426F9984B4E6D9193F43BDBE2EAABFC53CF99197",
+    "finalSha256": "F8E7904802790D88DD464A58B7AB363625E087083CF0A71A6B423B6CCF0CDCA1"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\integration.md",
+    "initialSha256": "A069E17C00AACF1046979A2D0B03B82D4DDCC8EE6FF67427F6B9245550EC3C5B",
+    "finalSha256": "4170C9A925A9DFF8409FC5618B7C8D2E28A1FE34FF52CF3FE83140ED1B2E44B5"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S03-agenda\\status.md",
+    "initialSha256": "CC1CF783F7B9685B3870BF186FCA3802145DC32363025A7EB5D59EB8F1271F56",
+    "finalSha256": "8DFB1A1A3D14338975F0BD67F8E7CBB93ECAC30A924982818A136EAAFBD851F2"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\contracts.md",
+    "initialSha256": "0AB7A239568C664151E1818F9AC06CB04D82991D7C81C04CE3D98C8A57F46995",
+    "finalSha256": "C39342EF35C20926F04E818CB57C67FF01A05303AD871D208934F75C035F3106"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\integration.md",
+    "initialSha256": "E499E0285DC6FE9513E17CBD05CA0F2F3F2C2A55B45E55766BC7452C8EF19390",
+    "finalSha256": "82CFA12F867D2D1477629D4E07A415118AEE8879865B1F6C78C6088932541642"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S04-balcao\\status.md",
+    "initialSha256": "4F873D5643706673AA73A88CA558A7642A19AE8991ACBCB8CDB5B8B498BB9024",
+    "finalSha256": "97348E23D20ECCB674C7C3E83576A8777833447C56A3CD4EC8262F8CB8725CDF"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\integration.md",
+    "initialSha256": "A94E76C372024B3021FAFC63C11399212BAB4A31F8A25C261850ED1DF64163F1",
+    "finalSha256": "B43652EFE8E8E6523709CBA360640A7249B482B535DDDD313035D650D72F3677"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S05-caixa\\status.md",
+    "initialSha256": "84D3E9533FF76DF1FEBDBF8B668ECC2FE74F3DBF88CBDA8B2501B960EC7A0617",
+    "finalSha256": "2CC6DC8A435527DAE0C5865CC5693E1BC186D6315FE0633127BB32A575B6B7F9"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\contracts.md",
+    "initialSha256": "0C31EB7F940D8337387C8794AA1C0D1D343D0A68E0E5DB90249AF397B0C4AD33",
+    "finalSha256": "0FD9AF8A070B0B2A5D26BFA596A7B386E12D93E37B74502C36108DED97D8B7E4"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\integration.md",
+    "initialSha256": "27178D772900E7DF9ACB64D94F8E6652A3FC15A8958694478B9777407C5C1356",
+    "finalSha256": "330F506BEA57D72178B10959CFE765D71A1723DB14D240E796D901E8504C43B3"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S06-notificacoes\\status.md",
+    "initialSha256": "8F6AEB4BCB93722FB01CFDD8FFB7FED8717747BD385C10CC79F693FB406FFE52",
+    "finalSha256": "F09C2C88017F9CB941F188E73A86357FFF24A299BF0D92067E4E1B8213039EB1"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\contracts.md",
+    "initialSha256": "C4FBEE6FCE51B083E98A4ED5295368DFADC8703DFE41ECB780D8728FB9CC9FAC",
+    "finalSha256": "7B67FA8F60113F8E82B2C1F342EB95BDF4083B53DA7A2068156E0B7CB02E024F"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\integration.md",
+    "initialSha256": "06E7E40031186264F87538CBEE8C6B2DF81E293BF5138B7A8D98DE761893FE86",
+    "finalSha256": "DC5CC55C8BA325D67CE80AF56A816CB664BA8005E2C66E44890893239F51688A"
+  },
+  {
+    "path": "C:\\Projects\\Easypet\\docs\\sprints\\S07-infra-integracao\\status.md",
+    "initialSha256": "49F43595E274FFC06DD29FDB1996E2D0733070E4762046C19203D4BE7FEF78B7",
+    "finalSha256": "6A2E0D346B8D540727F48B743993C7BE3FF6F88B61F6F6B6309E0E5FF3EF749A"
+  }
+]

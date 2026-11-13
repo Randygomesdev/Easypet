@@ -1,0 +1,70 @@
+{
+  "createdAt": "2026-11-13",
+  "environment": "local",
+  "threads": [
+    {
+      "threadId": "01a1d553-ad17-7591-91d6-80a851b22ece",
+      "hostId": "local",
+      "sprint": "S01",
+      "title": "EasyPet S01 — Design system e integração frontend",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d553-bd0b-7ba1-a53f-4c2fd6677821",
+      "hostId": "local",
+      "sprint": "S02",
+      "title": "EasyPet S02 — Identidade, onboarding e acessos",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d553-cc44-7d52-aac6-852ee076249d",
+      "hostId": "local",
+      "sprint": "S03",
+      "title": "EasyPet S03 — Agenda confiável e atendimento",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d553-db87-7643-b899-9d0f893810fe",
+      "hostId": "local",
+      "sprint": "S04",
+      "title": "EasyPet S04 — Clientes, pets e operação de balcão",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d553-ec59-7420-bd98-7ccdfbf91644",
+      "hostId": "local",
+      "sprint": "S05",
+      "title": "EasyPet S05 — Caixa e recebimentos no estabelecimento",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d553-ff06-7ea1-bfa7-590afb3968c4",
+      "hostId": "local",
+      "sprint": "S06",
+      "title": "EasyPet S06 — Notificações transacionais",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d554-14e1-7e72-a58c-64ebaf73795a",
+      "hostId": "local",
+      "sprint": "S07",
+      "title": "EasyPet S07 — Infraestrutura, integração e aceite",
+      "model": "gpt-6.1-sol",
+      "thinking": "high"
+    },
+    {
+      "threadId": "01a1d55a-d56e-71c1-9000-4a30c4424d53",
+      "hostId": "local",
+      "sprint": "R01",
+      "title": "EasyPet R01 — Revisão técnica das sprints",
+      "model": "gpt-6-astra",
+      "thinking": "high"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "verifiedAt": "2026-11-13T21:19:01.753Z",
+  "readOnly": true,
+  "result": {
+    "chunk_id": "eee9c0",
+    "wall_time_seconds": 1.6305246,
+    "exit_code": 0,
+    "original_token_count": 120,
+    "output": "[\r\n  {\r\n    \"project\": \"easypet-h1-ops-d23b9fe1\",\r\n    \"containers\": [],\r\n    \"volumes\": [],\r\n    \"networks\": []\r\n  },\r\n  {\r\n    \"project\": \"easypet-h1-ops-f03c6b1a\",\r\n    \"containers\": [],\r\n    \"volumes\": [],\r\n    \"networks\": []\r\n  },\r\n  {\r\n    \"project\": \"easypet-h1-ops-c5a80f3e\",\r\n    \"containers\": [],\r\n    \"volumes\": [],\r\n    \"networks\": []\r\n  },\r\n  {\r\n    \"project\": \"easypet-h1-ops-resume-49d24eb7\",\r\n    \"containers\": [],\r\n    \"volumes\": [],\r\n    \"networks\": []\r\n  }\r\n]\r\n"
+  }
+}

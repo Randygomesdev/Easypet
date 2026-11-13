@@ -1,0 +1,438 @@
+[
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/App.tsx",
+    "sha256": "22fae63df74b8898b06b392c4b84f834fc9cf3456b399086469fa48e01cb10a1"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/main.tsx",
+    "sha256": "66bf4828010933ca7ce7cae9d66f5da9acae902b6b36264d812684640bbe5e30"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/layout/Header.tsx",
+    "sha256": "5cf30d1a3b2512af9db3b68ffb9ed66ac96b5c3cf2899edbf06f340ac40a9898"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/layout/Layout.tsx",
+    "sha256": "b93b05781d28b96f04f8c0f9ab4935b9ee7e867a0f956271fdddb53eef4b2d40"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/layout/Sidebar.tsx",
+    "sha256": "e78a6d52f33e272318f3175f6cfc08945d0390ed519fabc4b076fff4859be0b0"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Badge.tsx",
+    "sha256": "8febe0164b614158afe0bc7cb46f151f127e3c7add4a8492252ce956cbbfd371"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Button.tsx",
+    "sha256": "0ff5c07df13acc3d48894cafb99eebc32a10a122dcaf38cfc42d832f10294bbf"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Card.tsx",
+    "sha256": "f410cdfada197ad3a9117335fb3b934289dabf320f9e7bc33efaf83e66187cda"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Dialog.tsx",
+    "sha256": "f58357652a7a935e2d7dc14a922dfde979d351397cec8df5ca2f990437c2a2e7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/FeedbackState.tsx",
+    "sha256": "45ebbf3080cd0ba79a4c9f9a7a8da4bffa83f705c3ff791d56b6a61157e73ade"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Field.tsx",
+    "sha256": "19990582b185ef8a3adb9bcca43d90ad7e65fe6f16f6ee7a940cb289afd617ef"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Pagination.tsx",
+    "sha256": "9b9e94d48fbfffa6d75d8c61da4aa2310315a39cfc28d54a35e23eb949c6d97b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/Table.tsx",
+    "sha256": "54a63d8c9c2ef04bbfea7e826f83cde52607a6fd7d049342a9720ea02252a0a8"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/TimePicker.tsx",
+    "sha256": "c575bf500ca224ab43c6ecac8182e260d45fc38ef53d7ca6e7916ab11df5733b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/components/ui/UserAvatar.tsx",
+    "sha256": "ff34192dfe758cc280d25087241406ea2bba47845178b1c06a4b0e0a346378cf"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/config/env.ts",
+    "sha256": "f5f65623f1069057fb367be4d7b57d92005a44adc35dd9c68fdb6f00c5c79a38"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/contexts/AuthContext.tsx",
+    "sha256": "6665e46096d2085c739a93e4a8ccb7de95c6a36a5e5bf0f3dde9610192bd361e"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/contexts/CartContext.tsx",
+    "sha256": "6a29e0e5b31f078c6d083acfacb2dd24094b42bd5adedf327253deef01929543"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/contexts/ThemeContext.tsx",
+    "sha256": "fbe0eeb902efeb911f4fef21ec61b52d5ef70f3cccc243289a01fd2db01adc90"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/booking/AgendaBlocksDialog.tsx",
+    "sha256": "8fd72d3f4d6e3a9d51e05eb972121ef65b45bcbcc1607eaeb689f8ca336967aa"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/booking/BookingHistory.tsx",
+    "sha256": "55fa645591905e55ce1bfcc05ff66dbf39af00b79d0d345313d56c5f16aca1b7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/booking/BookingReasonDialog.tsx",
+    "sha256": "a4ef9cbef814d8713a35c4586a0c29471c4c76a9037e05e4fb85531f25685935"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/booking/GroomingCheckIn.tsx",
+    "sha256": "6657a654225da4c9b19c41e4b1db4b9779177b6904d9db0b31fec3b2acad328c"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/booking/RescheduleBookingDialog.tsx",
+    "sha256": "b6252013c108182a7ec11c0a4a64f15d1afff5b1cb309d8bdd699f9e8b594217"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/booking/bookingUi.ts",
+    "sha256": "4916801957b908b896610bc4a1376ed13f3b40b5f3012941b444b9d4670d0bc0"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/CashierCharges.tsx",
+    "sha256": "0dd6f91bf324db79585f581149702c229cd24e93fc38255a933166bf3eb0b859"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/CashierCommandDialog.tsx",
+    "sha256": "5879ddf7f4e52756509aef230e39fb99a781feca07a1e6b3d74f6c8737d3ce1f"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/CashierLedger.tsx",
+    "sha256": "9af522bdcd43d0f681cd1a053b86bdee3d72731f1a9d8714b4d041257a40fd41"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/ChargeDetailsDialog.tsx",
+    "sha256": "e454a148f802751d8b98b382b3cdc2165d35c1483b5ce4dcc6c41553606e4bc1"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/CloseDayDialog.tsx",
+    "sha256": "3fdff5f641ad307ec37560dac18982e8f69cc214e206ee8841a2cce16f124abd"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/NewChargeDialog.tsx",
+    "sha256": "fa3fd31590dc70cd7205e2b6f0cef058574dc714b54200b26792cd5affbf2b89"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/format.ts",
+    "sha256": "105f2addf174406df17d3622bfc5c3c89128c4dc30314bed9592a58204763b4a"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/useCashierCommand.ts",
+    "sha256": "1a98e7521a4175b2d372148a28f7f74b1e99a8523411cf6acd0651fa587771e8"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/cashier/useCashierQuery.ts",
+    "sha256": "41611821e83e792444940df18a54836a2bfc10af6a652f7ee9f7d5eb5a3d80e7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/CustomerAccountDirectory.tsx",
+    "sha256": "c940933de649b73b9ce1a3764689bcb5ab98121ffbcb6dd28a466e033722a72b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/CustomerCreateForm.tsx",
+    "sha256": "179fd3d53c2b213d664188a8a8d8d23c66e94cf1fb011ee139ade409b5b02f86"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/CustomerDetail.tsx",
+    "sha256": "d6fc33077cb0ae21babee16c8100f284e5007f7747fe3b364a15988a1077e8b3"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/CustomerDirectory.tsx",
+    "sha256": "e013eb6105cc6efd9ebdf330c559c2e128f2bf37a008c11db8aa7a179e2a749e"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/CustomersPageContent.tsx",
+    "sha256": "19d5b2fea4a6ace5330809f22c97ca41875c2c0789697d3604d218191c162d36"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/ReceptionPetCreateForm.tsx",
+    "sha256": "567f1b11565e27f166db99f2061909ae50649975cd88231256c7d4b871a4b3f9"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/ReceptionPetDirectory.tsx",
+    "sha256": "0cd6b67829964445369ad066f20cb730ead02d471128a6f2fd1193a4cd764803"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/useCustomerQuery.ts",
+    "sha256": "49724f2abb4a8ca234a321d4b84f417fafbe34eb20616ffc8ff983b2af22a757"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/customers/useDirectoryFilter.ts",
+    "sha256": "f2dbaffb5fc23a025c9513cc4be1c6ed1a6032e05e85239ccaa1f52fc6ba6315"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/notifications/NotificationAttempts.tsx",
+    "sha256": "3ea29d216c634f9e7e450134b0932638a50a12745acb7983f06c8bc4329074c5"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/notifications/NotificationDeliveryTable.tsx",
+    "sha256": "856845461215688ac88b4407563613014906f710700e7d766f1a38873402674b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/notifications/NotificationHistoryDialog.tsx",
+    "sha256": "e20878c006ebec95b411de887783dea34c78a1d7793d7ce700ac60a28c036691"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/notifications/NotificationsPage.tsx",
+    "sha256": "bf600f7e41fad7590b318fe58cff1a39006c04978f4b2c54d47ccdf8fc45abf0"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/notifications/presentation.ts",
+    "sha256": "181487d1648c2f0e33fe9ec24a164b5ff995a94e6ec8ce4bdda8bbad6189107c"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/features/notifications/useNotificationQuery.ts",
+    "sha256": "042c8f456c6986db58b6b799e167ffee82b5df617525317c9fcce03a56928190"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/lib/api.ts",
+    "sha256": "cfc7e9e83f2cc32ac0b5a7d7cd3ba665b3b26743fb14dd62a50608674fef46f7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/LandingPage.tsx",
+    "sha256": "a5c91d9e8b19799c983ace25c5e118b2ded57c2263166606259ef325644306b7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/ClientesPage.tsx",
+    "sha256": "feb428e59bab2702aacf5ccea7602801a32500881c14dd70a1fd764885c9371b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/ParceiroDetailPage.tsx",
+    "sha256": "d392caff683cb82afecfac9b3811fe08415f6a851bbd9bfbc948d90031de9056"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/ParceirosPage.tsx",
+    "sha256": "1a25af4434c048c0f5eb4c57241f4918d8a715d8dae3e92b6dbe32552128bdfd"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/tabs/AgendamentosTab.tsx",
+    "sha256": "1fcddb348cbb605c0ce6fd32b0acaa9d2dfaa4178642ee3c5f5b18de011bac98"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/tabs/ColaboradoresTab.tsx",
+    "sha256": "43cfe122ec75a5aa4efe34b1046ed9be40aeebf6c145abbadd44ff5b0dfb0520"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/tabs/PacotesTab.tsx",
+    "sha256": "356bf3b138d55bee4510b9aea4faf0f9141f179683eef5c80c73d51391721a06"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/admin/tabs/ServicosTab.tsx",
+    "sha256": "4d5d86a58a0022205b5db8a2cfc4b8d92064acd24832c0d943c8125e54ce19df"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/CartPage.tsx",
+    "sha256": "4e30fb0f5cb04898c82c95fb4933c1df682fbf494c31efbc9549cace7e621d72"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/HomePage.tsx",
+    "sha256": "4ac73162d4b222275df6b69c601287d3ea95bafaabfb65da425ef8b0dfd378a3"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/MeusAgendamentosPage.tsx",
+    "sha256": "9ae23d447038bd53e9fb8baace76f3e2535fb4ad7c8b897821b4be3d7a7e0925"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PartnerDetailPage.tsx",
+    "sha256": "61918f5a05d1df781c49e0432d8c61f817bdf6226f1baf26d21e1a2b157a51f9"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PaymentFailurePage.tsx",
+    "sha256": "c353103ca0f5517f105dd566f4273e3f8de802510fe7d577ca7757a75772c5ea"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PaymentPendingPage.tsx",
+    "sha256": "e80b4d7f372c5d9adce996448aa15ab50221434b7139eedae773eea65668d469"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PaymentSuccessPage.tsx",
+    "sha256": "1ba9971e4ae1d34e7f4e4388e066525fe2c5b2f8733b5abdba3764698f40c830"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PetDetailPage.tsx",
+    "sha256": "1f0dd66851bf7cc0535dae8a102d5f7d63938f00730acd3c8a24363a0d57c10d"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PetFormPage.tsx",
+    "sha256": "1bed136f80dcd236d406a3856cfa8b03bd1404227666e93d42a334f91c68596c"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/app/PetsPage.tsx",
+    "sha256": "c2745378a06fffed2fe9746b2829217eefbdbc08a38d0af404c125a514ae3d37"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/AccountActionLayout.tsx",
+    "sha256": "6a919d862a0f5cc351ba3ce3d54d2ea8673acdbcc12631f715d8e4fd108fd1c8"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/ForgotPasswordPage.tsx",
+    "sha256": "a2f12574a0189e1ef68a2bd114e140f93d07f82db0386da656fba82aa38456bb"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/LoginPage.tsx",
+    "sha256": "6e6b5dffcc78ac48bbdcdbf15039bf6b24cf51361863c19cdede9d4d51e09cf6"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/LoginSuccessPage.tsx",
+    "sha256": "33986e0449bd3685298d7b02e38cc93eafc03bacf8333edf6b14c3b4c49dd6c7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/ResetPasswordPage.tsx",
+    "sha256": "c297c8a9f104e1d0692d0927778ac45ed98d191500eec6dff5ed27b44abe36b3"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/SejaParceiroPage.tsx",
+    "sha256": "95bbc180a98fbedff19049c3aff4811ef1304e9545b08f7a881e7bbe010a978f"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/auth/TeamInvitationPage.tsx",
+    "sha256": "39493c03f6b921f71f121e6e7d2e50e96b5b1cf07a71f3940e48f6a1d520118b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/design-system/ControlExamples.tsx",
+    "sha256": "ff02fa4adb00e830c394ddc21cdf98b32d61f49eb9e63229311675c82c9e3162"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/design-system/CustomerExamples.tsx",
+    "sha256": "1a81dcc0a2081409e8fa7a14fd6b934b22305b745ab30bcc65866086f4f05812"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/design-system/DataExamples.tsx",
+    "sha256": "61285641f8b96bca3f1be0db09e7024d2959d2e0121bc2c2ae7840c0afd20031"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/design-system/DesignSystemPage.tsx",
+    "sha256": "b314acb44de501a7dfae93f053644889a8dbc7bcda334421c76f00b81d8f5cd7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/design-system/ExampleCode.tsx",
+    "sha256": "ee610d1651c8cce4258c5b290b0234bcb473c287d913289f0a77bbffc21ed18f"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/design-system/FoundationExamples.tsx",
+    "sha256": "1395d30919db2d0620557ed2bd10517e03dbda9f25ff20bcf09be02fe4938b77"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/AgendamentosPage.tsx",
+    "sha256": "3a3b95cfcc7e3a17f62493b47e3c50b16d23f81cf46ac9e75f58413a789e1c3e"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/AtendimentoPage.tsx",
+    "sha256": "2fb469cea7b7f4ad7e44d7c42d9a297c5aae23fd6e8663b9cb85a4074b3b5a48"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/CadastroPage.tsx",
+    "sha256": "51ac5a8f223853344abeb47ec686f0586a1ece4da70581b0991c2b9f1545fb5a"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/CaixaPage.tsx",
+    "sha256": "a0ea50857e65625b4aec39b376875565c7ca25edb896b0237a14a9a4ca14977c"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/ClientesPage.tsx",
+    "sha256": "076d25b511eada7b901955fc9da5fb4b9fb9aa04c13163a2b7a6554cd38964b0"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/ColaboradorPage.tsx",
+    "sha256": "7a79dc08264037c5d5c64c5e7d33957020ba81586857b536047fa92f247b116f"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/ColaboradoresPage.tsx",
+    "sha256": "37162121f77cc540998edba62c47c4b854652188a9564d939e0250aec84781fb"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/DashboardPage.tsx",
+    "sha256": "623b16ff45cded40e377e39f9aacfb40181cb376af70db139ae0568c12234851"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/PacotesPage.tsx",
+    "sha256": "9640faf62359b4a8f8ad32f82840508d628c0fd24d3f6dd574fc19db86cffc61"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/PlaceholderPage.tsx",
+    "sha256": "d7144adb0af5180a98c4a0d43aea8d60874885f5aa89d0ee3dd9889b5c2435e5"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/ServicosPage.tsx",
+    "sha256": "e92ae522b1f5287c3e71a50a105e3f6e3d160f33a1436b58264e8b70ffa49495"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/tabs/EnderecoTab.tsx",
+    "sha256": "59fe5874fb80836cf427b8514bcf01ba44086533f2a6d0581001a6f99dfecc0d"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/pages/partner/tabs/HorarioTab.tsx",
+    "sha256": "020e6e630ddcef2c84405b2117984afd9badf58f789f52d6aa042cca9fa4b6ce"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/routes/DesignSystemRoute.tsx",
+    "sha256": "b53e98641b3bab414aebba6a34f421b58849271221d6e3e8cc053790dc39af18"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/routes/ProtectedRoute.tsx",
+    "sha256": "29094f6258bcb929f0f65fd38e46da9f859e225b255ebba78cb4671511d41cbd"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/routes/RoleRouter.tsx",
+    "sha256": "e34e463337d1666d8334b4427f973933c10b0a98d4a83dd844e245866d271a86"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/auth.service.ts",
+    "sha256": "0af354cae5d3e14360c66fb9f18ef0bb65782df4a1f94b0520a7e51ce33ce477"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/booking.service.ts",
+    "sha256": "fb2c8507fdbccd0f5335f3614666267257a83fda7a5227cb53f0e56f04ebdfb7"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/cashier.service.ts",
+    "sha256": "a28ff0580a74338b34efebb60d43ec22c0b8e5072662ecf76968458553679f6d"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/customer.service.ts",
+    "sha256": "83aaf1cd69f4a1807831e1965d4da36497286e6252411afe8d1df066bcc3fef2"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/notification.service.ts",
+    "sha256": "8c931f1028d7e1ec48260844f1e7602ec0125895f3172809733da4924fafa794"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/package.service.ts",
+    "sha256": "e773805fe1c9c75504df7c7180de4baf016b92479f29184f1bf91d756f3ce89b"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/partner.service.ts",
+    "sha256": "f8e5414d11af8224225c512bfbede4d9145684713624c61237b13c6e8cfc8933"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/payment.service.ts",
+    "sha256": "44ab8fd5cd559cdb8b3b501a73356b079cf1569b422ce6563a6d1204fd564114"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/pet.service.ts",
+    "sha256": "e90329678981bbcb7fde6385ee035f7a531f70da2a3aa4f101e5b01957625efc"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/staff.service.ts",
+    "sha256": "ecb60f92a806f2d29981bb9c0398e528b1c1baf1076f1f2189e0881db515c7ff"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/services/upload.service.ts",
+    "sha256": "d26d85a135f663d8ea853fa4475a16771f41a27aa67fc00379663d1044bbab2a"
+  },
+  {
+    "path": "C:/Projects/Easypet/Frontend/src/types/auth.types.ts",
+    "sha256": "ceaf6b4452d067f44c17cba8cd41d03ad83b6f1631bddfbe8eb9cdaf43d459f4"
+  }
+]
