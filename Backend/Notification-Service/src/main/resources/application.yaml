@@ -1,0 +1,52 @@
+server:
+  port: 8087
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
+  mail:
+    host: ${NOTIFICATION_MAIL_HOST:localhost}
+    port: ${NOTIFICATION_MAIL_PORT:1025}
+    username: ${NOTIFICATION_MAIL_USERNAME:}
+    password: ${NOTIFICATION_MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: ${NOTIFICATION_MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: ${NOTIFICATION_MAIL_STARTTLS_REQUIRED:true}
+      mail.smtp.ssl.checkserveridentity: true
+      mail.smtp.connectiontimeout: 3000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
+management:
+  server:
+    port: 8089
+    address: 127.0.0.1
+  health:
+    mail:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health, notificationqueue
+  endpoint:
+    health:
+      show-details: never
+
+notification:
+  booking-url: ${BOOKING_SERVICE_URL:http://localhost:8084/api/v1}
+  outbox-token: ${BOOKING_OUTBOX_TOKEN:}
+  auth-url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1}
+  booking-zone: ${NOTIFICATION_BOOKING_ZONE:America/Sao_Paulo}
+  transport: ${NOTIFICATION_TRANSPORT:LOCAL}
+  recipient-token: ${NOTIFICATION_RECIPIENT_TOKEN:}
+  mail-from: ${NOTIFICATION_MAIL_FROM:}
+  mail-allowed-domain: ${NOTIFICATION_MAIL_ALLOWED_DOMAIN:example.test}
+  poll-delay: ${NOTIFICATION_POLL_DELAY_MS:5000}
