@@ -1,0 +1,13 @@
+services:
+  booking-service:
+    environment:
+      PET_SERVICE_URL: http://pet-fault:8082/api/v1
+    depends_on:
+      pet-fault:
+        condition: service_started
+
+  pet-fault:
+    image: node:22-alpine
+    command: ["node", "/e2e/pet-fault.mjs"]
+    volumes:
+      - ./Frontend/e2e/pet-fault.mjs:/e2e/pet-fault.mjs:ro

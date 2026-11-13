@@ -1,0 +1,6 @@
+services:
+  frontend:
+    build: !reset null
+    image: nginx:stable-alpine
+    volumes:
+      - ./Frontend/nginx.homolog.conf:/etc/nginx/templates/default.conf.template:ro

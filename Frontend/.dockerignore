@@ -1,4 +1,8 @@
 node_modules
 dist
+playwright-report
+test-results
+e2e
+playwright.config.ts
 .env*
 .git

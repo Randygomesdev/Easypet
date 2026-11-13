@@ -1,10 +1,10 @@
 # Homologação interna do EasyPet
 
-A stack `easypet-homolog` compila o frontend e os seis serviços Java a partir do checkout na VPS. O frontend atende as páginas e encaminha a API ao gateway. O Docker publica apenas a porta do frontend em `127.0.0.1`. A rede e os volumes do EasyPet pertencem ao projeto Compose e ficam separados dos recursos do Setoriza.
+A stack `easypet-homolog` compila o frontend e os sete serviços Java do release aprovado, incluindo Notification. O Docker publica apenas a porta HTTP do frontend em `127.0.0.1`. O coletor SMTP, os bancos e o Redis ficam em redes próprias do projeto. Use exclusivamente contas e dados fictícios.
 
 ## Primeira instalação
 
-1. Na VPS, confirme o espaço em disco, a memória disponível e a porta local escolhida. Os limites padrão somam cerca de 4,5 GiB para os containers em execução. O build usa memória adicional. O limite de um build por vez com `--parallel 1` depende do Buildx 0.38 ou posterior. [Referência do Docker Compose](https://docs.docker.com/reference/cli/docker/compose/#configuring-parallelism)
+1. Na VPS, use o preflight local para conferir disco, memória, porta, certificado e rede. Os limites padrão somam cerca de 5,3 GiB para os containers em execução. Reserve margem para builds, backups e os outros projetos do host. Consulte o [roteiro de operação](../../../docs/production/operacao.md#preflight-e-manifesto-do-release).
 2. Na raiz do checkout, prepare a configuração.
 
    ```bash
@@ -13,7 +13,7 @@ A stack `easypet-homolog` compila o frontend e os seis serviços Java a partir d
    chmod 600 .env.homolog
    ```
 
-   Preencha `HOMOLOG_ORIGIN` com o endereço HTTPS do EasyPet, sem barra no final. Ajuste `HOMOLOG_PORT` se `18080` estiver ocupada. Para cada campo de segredo, gere um valor próprio com `openssl rand -hex 32`. Mantenha o arquivo na VPS. Os segredos dos bancos são usados na criação inicial dos volumes.
+   Preencha `HOMOLOG_ORIGIN` com a origem HTTPS do EasyPet, sem barra final. Ajuste `HOMOLOG_PORT` à porta verificada. Para cada segredo em branco, gere um valor próprio com `openssl rand -hex 32`. Use somente hexadecimal em `HOMOLOG_INGRESS_TOKEN`, que é interpolado na configuração do Nginx. Guarde os valores no host. Os segredos dos bancos são aplicados ao criar volumes novos. Se o operador tiver um canal interno HTTPS aprovado, informe sua URL pública para os usuários da homologação em `HOMOLOG_SUPPORT_URL`; o Vite incorpora esse valor no bundle.
 
 3. Valide a configuração e suba os serviços.
 
@@ -26,13 +26,14 @@ A stack `easypet-homolog` compila o frontend e os seis serviços Java a partir d
 
    Use a porta configurada se ela for diferente de `18080`. As migrations Flyway rodam no início dos serviços. O `--wait` aguarda os healthchecks.
 
-   Se o Buildx da VPS for anterior à versão 0.38, execute `docker compose --env-file .env.homolog -f compose.homolog.yml build <serviço>` para cada serviço separadamente. Compile `auth-service`, `pet-service`, `partner-service`, `booking-service`, `payment-service`, `gateway-service` e `frontend`. Em seguida, rode `up -d --no-build --wait` com o mesmo arquivo e ambiente. Aplique esse procedimento também nas atualizações.
+   Se o ambiente não suportar o build serial com `--parallel 1`, execute `docker compose --env-file .env.homolog -f compose.homolog.yml build <serviço>` para cada serviço separadamente. Compile `auth-service`, `pet-service`, `partner-service`, `booking-service`, `payment-service`, `notification-service`, `gateway-service` e `frontend`. Em seguida, rode `up -d --no-build --wait` com o mesmo arquivo e ambiente.
 
-4. No proxy existente, encaminhe o subdomínio dedicado inteiro para `http://127.0.0.1:18080`. Aplique HTTPS e restrinja todo o subdomínio, incluindo a API, por VPN ou rede privada. O cabeçalho `Authorization` precisa chegar à aplicação com o JWT. Se o proxy estiver em container, o loopback do proxy é diferente do loopback do host. Nesse caso, conecte apenas o frontend à rede de ingresso do proxy com um override local e use o endereço do frontend nessa rede.
+4. No proxy existente, encaminhe o subdomínio dedicado inteiro para a porta verificada em loopback. Aplique HTTPS e restrinja todo o subdomínio, incluindo a API, por VPN ou rede privada. Preserve `Authorization`. Se o proxy estiver em container, conecte somente o frontend à rede de ingresso e use o endereço do frontend nessa rede.
+5. Configure `HOMOLOG_TRUSTED_EDGE` com o IP exato do proxy visto pelo frontend na topologia escolhida. O padrão `unix:` desabilita confiança em cabeçalhos para conexões TCP diretas. No proxy confiável, sobrescreva `X-Easypet-Edge-IP` com o IP observado do cliente. Em Nginx, use `proxy_set_header X-Easypet-Edge-IP $remote_addr;`. Restrinja o caminho de rede ao proxy, especialmente se houver NAT compartilhado. O frontend remove `Forwarded` e `X-Forwarded-For`, sobrescreve os cabeçalhos internos e o Gateway verifica o segredo de ingresso antes de usar o IP. Revise também os logs do proxy externo para omitir a query das páginas de reset e convite.
 
 ## Contas e dados de teste
 
-Crie duas contas de parceiro com endereços fictícios. O comando solicita a senha no terminal. Execute o mesmo comando com o papel `CUSTOMER` para criar uma conta de tutor de teste.
+Crie duas contas de parceiro com endereços fictícios. O comando solicita a senha e confirmação no terminal. Execute com `CUSTOMER` para criar o tutor e com `ADMIN admin@example.test 'Admin de homologação'` para criar o administrador fictício. O provisionador usa o perfil `homolog` e recusa conta existente.
 
 ```bash
 docker compose --env-file .env.homolog -f compose.homolog.yml exec auth-service \
@@ -73,32 +74,22 @@ jq -n --arg petId "$PET_ID" --arg partnerId "$PARTNER_ID" --arg serviceId "$SERV
   --arg bookingDate "$BOOKING_DATE" \
   '{$petId, $partnerId, $serviceId, $bookingDate, type: "CONSULTATION", price: 50}' |
   curl --fail-with-body --silent --show-error -H "Authorization: Bearer $TOKEN" \
-    -H 'Content-Type: application/json' --data-binary @- "$API/bookings"
+    -H 'Content-Type: application/json' -H "Idempotency-Key: $(cat /proc/sys/kernel/random/uuid)" \
+    --data-binary @- "$API/bookings"
 unset TOKEN
 ```
 
-Abra a agenda do parceiro A, filtre pela data da reserva e confirme o agendamento. Para testar o atendimento, use uma reserva confirmada no dia corrente. Confirme que o parceiro B recebe `403` ou `404` ao consultar a agenda do parceiro A, o agendamento, o prontuário ou a escala de um colaborador desse estabelecimento. Verifique também a atualização direta de uma página do painel, a persistência dos dados após reiniciar os containers e a recusa de cadastro público, recuperação de senha, login Google e pagamentos. Use apenas dados fictícios nesta etapa.
+Use o preço vigente do serviço da fixture na reserva. Abra a agenda do parceiro A e confirme o agendamento. Para testar o atendimento, use uma reserva confirmada no dia corrente. Confirme que B recebe `403` ou `404` ao tentar acessar dados de A. Verifique também recarga direta, persistência após reinício, recuperação de senha, convite de equipe e as recusas de cadastro público, OAuth e checkout.
+
+Para ler uma captura fictícia no console autorizado do host, execute:
+
+```bash
+docker compose --env-file .env.homolog -f compose.homolog.yml exec -T smtp-capture \
+  node -e 'fetch("http://127.0.0.1:8025/messages?recipient=admin%40example.test").then(r=>r.json()).then(console.log)'
+```
+
+O conteúdo pode incluir códigos e URLs de uso único. Leia somente o destinatário necessário no terminal autorizado. O coletor guarda até 200 mensagens em memória, reinicia vazio e não encaminha e-mails. O acesso à captura e ao console Docker faz parte da operação restrita.
 
 ## Atualização manual
 
-Antes de atualizar uma versão que altera o banco, faça backup dos cinco bancos. O exemplo grava os dumps no diretório escolhido pelo operador.
-
-```bash
-umask 077
-BACKUP_DIR="$HOME/easypet-backups/$(date +%Y%m%d-%H%M%S)"
-mkdir -m 700 -p "$BACKUP_DIR"
-for service in auth pet partner booking payment; do
-  docker compose --env-file .env.homolog -f compose.homolog.yml exec -T "$service-db" \
-    pg_dump -Fc -U "$service" "${service}_db" > "$BACKUP_DIR/$service.dump" || break
-done
-```
-
-Verifique os arquivos e teste a restauração em bancos separados. Na raiz do checkout da VPS, registre a revisão atual e atualize o código.
-
-```bash
-git rev-parse HEAD
-git pull --ff-only &&
-  docker compose --parallel 1 --env-file .env.homolog -f compose.homolog.yml up -d --build --wait
-```
-
-Se a versão nova falhar, consulte `docker compose --env-file .env.homolog -f compose.homolog.yml logs --tail 100`. Para voltar à revisão anterior com schema compatível, faça checkout do commit anotado e repita o comando Compose. Se o schema for incompatível, use os backups da versão anterior e avalie o impacto sobre registros criados após a atualização. Os volumes guardam os dados entre recriações dos containers.
+Siga o [procedimento de operação](../../../docs/production/operacao.md) para preparar a revisão, criar o backup com manifesto, ensaiar a recuperação, verificar a publicação e escolher o procedimento de reversão conforme o schema.

@@ -31,6 +31,7 @@ spring:
               - "Authorization"
               - "Content-Type"
               - "X-Requested-With"
+              - "Idempotency-Key"
             allowCredentials: true
 
       default-filters:
@@ -42,6 +43,17 @@ spring:
             key-resolver: "#{@ipKeyResolver}"
 
       routes:
+        - id: auth-team-management
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth/team/accesses,/api/v1/auth/team/accesses/{id},/api/v1/auth/team/invitations
+
+        - id: auth-session
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth/session
+            - Method=GET
+
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
@@ -62,7 +74,85 @@ spring:
         - id: partner-service
           uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
           predicates:
-            - Path=/api/v1/partners/**
+            - Path=/api/v1/partners/me,/api/v1/partners/catalog,/api/v1/partners/catalog/{id},/api/v1/partners/staff/**,/api/v1/partners/{id}/staff,/api/v1/partners/{id}/services/**,/api/v1/partners/{id}/reviews
+
+        - id: partner-mutations
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners,/api/v1/partners/{id}
+            - Method=POST,PUT,DELETE
+
+        - id: admin-partners
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/admin/partners,/api/v1/admin/partners/{id}
+            - Method=GET,HEAD
+
+        - id: admin-partner-status
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/admin/partners/{id}/active
+            - Method=PATCH
+
+        - id: admin-partner-status-history
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/admin/partners/{id}/status-history
+            - Method=GET
+
+        - id: admin-auth-customers
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/admin/customers
+            - Method=GET,HEAD
+
+        - id: admin-auth-customer-status
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/admin/customers/{id}/active
+            - Method=PATCH
+
+        - id: reception-customers
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/customers
+            - Method=GET,HEAD,POST
+
+        - id: reception-customer-detail
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/customers/{id}
+            - Method=GET,HEAD
+
+        - id: reception-desk
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/desk
+            - Method=GET
+
+        - id: reception-claims
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/customers/{id}/claims,/api/v1/partners/customer-claims/redeem
+            - Method=POST
+
+        - id: staff-assignment
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/staff/{id}/team-member
+            - Method=PUT,DELETE
+
+        - id: staff-assignment-list
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/staff/team-members
+            - Method=GET
+
+        - id: admin-reception-customers
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/admin/reception-customers,/api/v1/admin/reception-customers/{id}
+            - Method=GET,HEAD
 
         - id: partner-categories
           uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
@@ -79,6 +169,18 @@ spring:
           predicates:
             - Path=/api/v1/payments/**
 
+        - id: admin-notifications-read
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/admin/notifications,/api/v1/admin/notifications/{id}/attempts
+            - Method=GET
+
+        - id: admin-notifications-retry
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/admin/notifications/{id}/retry
+            - Method=POST
+
 management:
   endpoints:
     web:
@@ -91,4 +193,10 @@ management:
       enabled: true
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:}
+
+gateway:
+  session:
+    enabled: ${GATEWAY_SESSION_ENABLED:false}
+    auth-url: ${AUTH_SERVICE_URL:http://localhost:8081}
+    timeout: ${GATEWAY_SESSION_TIMEOUT:3s}

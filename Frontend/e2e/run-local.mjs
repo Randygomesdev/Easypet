@@ -1,0 +1,183 @@
+import { spawnSync } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
+import { createServer } from 'node:net'
+import { fileURLToPath } from 'node:url'
+import { recoverFixtures } from './wave-b-recovery.mjs'
+import { snapshotWaveB } from './wave-b-snapshot.mjs'
+
+const root = fileURLToPath(new URL('../../', import.meta.url))
+const frontend = fileURLToPath(new URL('../', import.meta.url))
+const project = `easypet-e2e-${randomBytes(5).toString('hex')}`
+const secret = () => randomBytes(32).toString('hex')
+const password = secret()
+const waveB = process.env.E2E_WAVE_B === '1'
+const h1 = process.env.E2E_H1 === '1'
+const apiOnly = process.env.E2E_API_ONLY === '1'
+if (waveB && apiOnly) throw new Error('A onda B inclui cenários de navegador. Execute com E2E_API_ONLY desativado.')
+const review = waveB || process.env.E2E_R01 === '1'
+const composeFiles = ['-f', 'compose.homolog.yml']
+if (apiOnly) composeFiles.push('-f', 'Frontend/e2e/compose.api.yml')
+if (review) composeFiles.push('-f', 'Frontend/e2e/compose.r01.yml')
+if (waveB) composeFiles.push('-f', 'Frontend/e2e/compose.smtp-fixture.yml')
+const env = {
+  ...process.env,
+  COMPOSE_DISABLE_ENV_FILE: '1',
+  HOMOLOG_PORT: '0',
+  HOMOLOG_ORIGIN: 'http://127.0.0.1',
+  JWT_SECRET: secret(),
+  AUTH_DB_PASSWORD: secret(),
+  PET_DB_PASSWORD: secret(),
+  PARTNER_DB_PASSWORD: secret(),
+  BOOKING_DB_PASSWORD: secret(),
+  PAYMENT_DB_PASSWORD: secret(),
+  NOTIFICATION_DB_PASSWORD: secret(),
+  AUTH_TEAM_JWT_SECRET: secret(),
+  NOTIFICATION_RECIPIENT_TOKEN: secret(),
+  RECEPTION_CLAIM_TOKEN: secret(),
+  BOOKING_PET_SUMMARY_TOKEN: secret(),
+  BOOKING_OUTBOX_TOKEN: secret(),
+  HOMOLOG_INGRESS_TOKEN: secret(),
+  HOMOLOG_TRUSTED_EDGE: 'unix:',
+  HOMOLOG_SUPPORT_URL: '',
+  COMPOSE_PROFILES: '',
+}
+
+function verifyPublicationConfig() {
+  const result = spawnSync('docker', ['compose', '-p', project, '-f', 'compose.homolog.yml',
+    'config', '--format', 'json'], { cwd: root, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+  const config = JSON.parse(check(result, 'Validação do Compose de publicação').stdout)
+  const published = Object.entries(config.services).flatMap(([name, service]) =>
+    (service.ports ?? []).map(port => [name, port]))
+  const [[service, port] = []] = published
+  if (published.length !== 1 || service !== 'frontend' || port.host_ip !== '127.0.0.1'
+      || port.target !== 80 || config.networks.mail.internal !== true
+      || Object.keys(config.services['smtp-capture'].networks).join() !== 'mail'
+      || config.services['smtp-capture'].environment?.SMTP_CAPTURE_TEST_FAULTS) {
+    throw new Error('O Compose de publicação deve expor somente o frontend local e isolar o coletor SMTP.')
+  }
+  console.log(`Compose de publicação: ${Object.keys(config.services).length} serviços, frontend em loopback e SMTP interno.`)
+}
+
+function compose(args, options = {}) {
+  return spawnSync('docker', ['compose', '-p', project, ...composeFiles, ...args], {
+    cwd: root, env, encoding: 'utf8', stdio: 'inherit', ...options,
+  })
+}
+
+function check(result, operation) {
+  if (result.error) throw result.error
+  if (result.status !== 0) throw new Error(`${operation} falhou (código ${result.status}).`)
+  return result
+}
+
+async function availableLoopbackPort() {
+  const socket = createServer()
+  await new Promise((resolve, reject) => {
+    socket.once('error', reject)
+    socket.listen(0, '127.0.0.1', resolve)
+  })
+  const { port } = socket.address()
+  await new Promise((resolve, reject) => socket.close(error => error ? reject(error) : resolve()))
+  return port
+}
+
+function publishedAddress(service, port) {
+  const published = check(compose(['port', service, port], { stdio: ['ignore', 'pipe', 'inherit'] }), 'Consulta da porta')
+  const address = published.stdout.trim()
+  if (!/^127\.0\.0\.1:[1-9]\d*$/.test(address)) throw new Error(`Porta local inválida: ${address}`)
+  return address
+}
+
+let snapshot
+try {
+  if (h1 && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_H1=1.')
+  if (waveB) {
+    env.HOMOLOG_PORT = String(await availableLoopbackPort())
+    env.HOMOLOG_ORIGIN = `http://127.0.0.1:${env.HOMOLOG_PORT}`
+    if (process.env.E2E_SNAPSHOT_PREFIX) {
+      snapshot = await snapshotWaveB(root, process.env.E2E_SNAPSHOT_PREFIX + '-before.json')
+    }
+  }
+  if (h1) verifyPublicationConfig()
+  console.log(`Stack descartável: ${project}`)
+  check(compose(['up', '-d', '--build', '--wait', '--wait-timeout', '360']), 'Subida do Compose')
+  const address = publishedAddress('frontend', '80')
+  if (waveB && `http://${address}` !== env.HOMOLOG_ORIGIN) {
+    throw new Error('A porta do frontend difere da origem usada nos links SMTP.')
+  }
+  const smtpUrl = waveB ? `http://${publishedAddress('smtp-capture', '8025')}` : ''
+
+  const sql = `
+    CREATE EXTENSION IF NOT EXISTS pgcrypto;
+    INSERT INTO users (id, email, name, password, role)
+    SELECT gen_random_uuid(), email, name, crypt('${password}', gen_salt('bf')), role
+    FROM (VALUES
+      ('tutor@example.test', 'Tutor E2E', 'CUSTOMER'),
+      ('parceiro-a@example.test', 'Parceiro A E2E', 'PARTNER'),
+      ('parceiro-b@example.test', 'Parceiro B E2E', 'PARTNER'),
+      ('parceiro-onboarding@example.test', 'Parceiro Cadastro E2E', 'PARTNER'),
+      ('parceiro-admin-fixture@example.test', 'Parceiro Cadastro Admin E2E', 'PARTNER'),
+      ('parceiro-equipe@example.test', 'Parceiro Equipe E2E', 'PARTNER'),
+      ('parceiro-notificacao@example.test', 'Parceiro Notificação E2E', 'PARTNER'),
+      ('parceiro-retry@example.test', 'Parceiro Retry E2E', 'PARTNER'),
+      ('recuperacao@example.test', 'Recuperação E2E', 'CUSTOMER'),
+      ('inativacao@example.test', 'Inativação E2E', 'CUSTOMER'),
+      ('admin-conta-h1@example.test', 'Conta Admin H1', 'CUSTOMER'),
+      ('parceiro-escrita-h1@example.test', 'Parceiro Escrita H1', 'PARTNER'),
+      ('mobile-h1@example.test', 'Tutor Mobile H1', 'CUSTOMER'),
+      ('tutor-escrita-h1@example.test', 'Tutor Escrita H1', 'CUSTOMER'),
+      ('parceiro-mobile-h1@example.test', 'Parceiro Mobile H1', 'PARTNER'),
+      ('reivindicacao@example.test', 'Reivindicação E2E', 'CUSTOMER'),
+      ('notificacao@example.test', 'Notificação E2E', 'CUSTOMER'),
+      ('retry@example.test', 'Retry E2E', 'CUSTOMER'),
+      ('admin@example.test', 'Administrador E2E', 'ADMIN')
+    ) AS account(email, name, role);
+  `
+  check(compose(['exec', '-T', 'auth-db', 'psql', '-q', '-v', 'ON_ERROR_STOP=1', '-U', 'auth', '-d', 'auth_db'], {
+    input: sql, stdio: ['pipe', 'inherit', 'inherit'],
+  }), 'Criação de contas fictícias')
+  const tests = apiOnly ? ['--grep', '@api'] : []
+  const playwright = spawnSync(process.execPath, ['node_modules/@playwright/test/cli.js', 'test', ...tests, ...process.argv.slice(2)], {
+    cwd: frontend,
+    env: {
+      ...process.env,
+      E2E_BASE_URL: `http://${address}`,
+      E2E_TEST_PASSWORD: password,
+      E2E_REVIEW_PROJECT: review ? project : '',
+      E2E_SMTP_URL: smtpUrl,
+      E2E_NOTIFICATION_SMTP: waveB ? '1' : '',
+      E2E_H1: h1 ? '1' : '',
+    },
+    stdio: 'inherit',
+  })
+  if (playwright.error || playwright.status !== 0) {
+    console.error(playwright.error?.message ?? `Playwright falhou (código ${playwright.status}).`)
+    compose(['ps'])
+    process.exitCode = 1
+  }
+  if (!process.exitCode && waveB && process.argv.length === 2) {
+    await recoverFixtures(root, env, project, args => check(compose(args,
+      { stdio: ['ignore', 'pipe', 'inherit'] }), 'Ensaio de recuperação da onda B'))
+  }
+} catch (error) {
+  console.error(error.message)
+  compose(['ps'])
+  process.exitCode = 1
+} finally {
+  if (snapshot) {
+    try {
+      const after = await snapshotWaveB(root, process.env.E2E_SNAPSHOT_PREFIX + '-after.json')
+      if (JSON.stringify(snapshot) !== JSON.stringify(after)) {
+        throw new Error('O checkout mudou durante o aceite. Os snapshots identificam os arquivos afetados.')
+      }
+    } catch (error) {
+      console.error(error.message)
+      process.exitCode = 1
+    }
+  }
+  const cleanup = compose(['down', '--volumes', '--remove-orphans', '--rmi', 'local'])
+  if (cleanup && cleanup.status !== 0) {
+    console.error(`Não foi possível remover a stack descartável ${project}.`)
+    process.exitCode = 1
+  }
+}

@@ -1,0 +1,14 @@
+services:
+  smtp-capture:
+    environment:
+      SMTP_CAPTURE_TEST_FAULTS: '1'
+    networks: [mail, capture-fixture]
+    ports:
+      - "127.0.0.1:0:8025"
+
+  notification-service:
+    environment:
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_TIMEOUT: '15000'
+
+networks:
+  capture-fixture:
