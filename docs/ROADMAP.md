@@ -6,7 +6,7 @@ A primeira versão é para testes internos. A base do P0 já passou pelos testes
 
 - [x] **P0 — Base da primeira versão interna.** Preparar o Compose, provisionar contas de teste, isolar dados entre parceiros e validar a stack em localhost.
 - [x] **Unificação — Auditoria.** Comparar os oito repositórios com os commits importados e identificar mudanças que ficaram de fora.
-- [ ] **Unificação — Integração.** Recuperar as versões de Partner, Pet, Booking, Payment e Frontend no monorepo, preservando o P0.
+- [x] **Unificação — Integração.** Recuperar as versões de Partner, Pet, Booking, Payment e Frontend no monorepo, preservando o P0.
 - [ ] **P0 — Aceite em localhost.** Percorrer cadastro, agenda e atendimento pelo navegador e corrigir os bloqueadores encontrados.
 - [ ] **Deploy de teste — HOMOLOG.** Publicar manualmente na VPS compartilhada após o aceite local.
 - [ ] **P1 — Operação do parceiro.** Completar o cadastro de parceiros e reduzir a dependência da API para a rotina do estabelecimento.
@@ -18,7 +18,7 @@ A primeira versão é para testes internos. A base do P0 já passou pelos testes
 
 ### Unificação — recuperar o trabalho dos repositórios separados
 
-**Estado:** código recuperado na branch `codex/unificar-develop`. A validação da versão combinada em localhost está em andamento. Auth, Gateway e Infra não têm mudanças funcionais adicionais nas branches remotas atuais.
+**Estado:** código integrado na branch `codex/unificar-develop` e fluxo combinado validado pela API em `localhost:18082`. O aceite no navegador permanece pendente. Auth, Gateway e Infra não têm mudanças funcionais adicionais nas branches remotas atuais.
 
 - [x] Identificar as revisões de origem: Partner `bcaaa44` e `cf16577`, Pet `37b63f5`, Booking `8373d26`, Payment `c58c482` e Frontend `7e51ce9`.
 - [x] Preservar a base local do P0 em um commit e trabalhar em uma branch de integração.
@@ -27,11 +27,11 @@ A primeira versão é para testes internos. A base do P0 já passou pelos testes
 - [x] Recuperar checkout e carteira no Payment. O checkout fica desligado por padrão, e as rotas de concessão e estorno de crédito ficam bloqueadas até receberem autenticação entre serviços e proteção contra repetição.
 - [x] Integrar as telas do Frontend. No piloto, o tutor pode consultar a vitrine, criar um pet e solicitar uma reserva sem passar pelo checkout.
 - [ ] Validar a jornada do tutor e do parceiro no navegador e mapear as permissões e rotas necessárias para testar a área administrativa.
-- [ ] Compilar os serviços e o frontend, aplicar migrations em banco de teste e validar agenda, atendimento e isolamento entre parceiros.
+- [x] Compilar os serviços e o frontend, aplicar migrations em banco de teste e validar pela API catálogo, serviço com equipe, pet, reserva, estados do atendimento e isolamento entre parceiros.
 
 ### P0 — Aceite da primeira versão em localhost
 
-**Estado:** base anterior validada pela API. O aceite no navegador será feito sobre a versão unificada. [Roteiro de testes e dados fictícios](../Backend/Infra/docs/homologacao.md#contas-e-dados-de-teste).
+**Estado:** versão unificada validada pela API. O aceite no navegador segue pendente. [Roteiro de testes e dados fictícios](../Backend/Infra/docs/homologacao.md#contas-e-dados-de-teste).
 
 - [x] Subir a stack local, aplicar as 31 migrations em PostgreSQL 15 e verificar a saúde dos 13 containers.
 - [x] Criar uma conta `PARTNER` pelo comando interativo e validar seu login pela API.

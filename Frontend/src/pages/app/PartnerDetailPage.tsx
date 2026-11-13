@@ -346,6 +346,7 @@ function BookingModal({
           type: meta.bookingType,
           price: isDaily ? dailyNights * service.price : service.price,
           staffId: staffId ?? undefined,
+          requestFitting: !isDaily && requestFitting,
           ...(isDaily
             ? { checkIn: meta.checkIn, checkOut: meta.checkOut }
             : { bookingDate: `${date}T${selectedSlot?.time}:00` }),

@@ -255,19 +255,16 @@ public class PartnerService {
                 .active(true)
                 .build();
 
-        if (partner.getServices() == null) {
-            partner.setServices(new java.util.ArrayList<>());
-        }
-        partner.getServices().add(service);
-        partnerRepository.save(partner);
-
         if (request.staffIds() != null && !request.staffIds().isEmpty()) {
             List<Staff> staffMembers = resolveStaff(partnerId, request.staffIds());
+            serviceOfferRepository.saveAndFlush(service);
             for (Staff staff : staffMembers) {
                 if (staff.getServices() == null) staff.setServices(new HashSet<>());
                 staff.getServices().add(service);
             }
             staffRepository.saveAll(staffMembers);
+        } else {
+            serviceOfferRepository.save(service);
         }
 
         return partnerMapper.toServiceResponse(service);

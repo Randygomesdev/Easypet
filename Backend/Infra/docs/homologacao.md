@@ -43,7 +43,7 @@ docker compose --env-file .env.homolog -f compose.homolog.yml exec auth-service 
 
 Entre no painel com cada parceiro. Preencha o cadastro do estabelecimento, crie um serviço e habilite um colaborador com uma escala para o horário que será testado. Use os IDs de parceiro e serviço retornados por `GET /api/v1/partners/me` com o token de cada parceiro.
 
-A interface do tutor está fora desta versão. Prepare o pet e a reserva pela API a partir da VPS. O exemplo usa `jq` para extrair o JWT e mantém a senha fora do histórico do shell.
+Entre com a conta `CUSTOMER`, cadastre um pet em **Meus Pets** e solicite um horário pela vitrine do estabelecimento. A reserva entra como pendente para o parceiro confirmar. O piloto não exige pagamento. Para testar o mesmo caminho pela API, o exemplo abaixo usa `jq` para extrair o JWT e mantém a senha fora do histórico do shell.
 
 ```bash
 API=http://127.0.0.1:18080/api/v1
