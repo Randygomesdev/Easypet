@@ -1,1 +1,19 @@
 .env.homolog
+Frontend/playwright-report/
+Frontend/test-results/
+/graphify-out/
+
+# Local Java compilation output
+Backend/*/bin/
+*.class
+
+# Local environment and credential files
+.env
+.env.*
+!.env*.example
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
