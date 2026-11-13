@@ -59,6 +59,9 @@ public class User extends BaseEntity implements UserDetails{
     @Column(nullable = false)
     private int sessionVersion;
 
+    @Column(name = "google_subject", length = 255)
+    private String googleSubject;
+
     public void invalidateSessions() {
         sessionVersion++;
     }

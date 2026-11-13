@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState('')
+  const googleError = env.googleAuthEnabled && searchParams.get('error')
 
   const { login } = useAuth()
   const navigate  = useNavigate()
@@ -130,7 +131,6 @@ export default function LoginPage() {
 
           {/* Toggle Login / Registrar */}
           {!env.internalPilot && (
-            <>
               <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
                 {(['login', 'register'] as Mode[]).map((m) => (
                   <button
@@ -146,8 +146,16 @@ export default function LoginPage() {
                   </button>
                 ))}
               </div>
+          )}
 
-              {/* Google */}
+          {env.googleAuthEnabled && mode === 'login' && (
+            <>
+              {googleError === 'google_cancelled' && (
+                <p role="status" className="mb-4 text-sm text-gray-600">Login com Google cancelado. Você pode tentar novamente ou entrar com sua senha.</p>
+              )}
+              {googleError === 'google_failed' && (
+                <p role="alert" className="mb-4 text-sm text-text-danger">Não foi possível entrar com Google. Tente novamente ou entre com sua senha.</p>
+              )}
               <button
                 type="button"
                 onClick={() => window.location.href = env.googleAuthUrl}

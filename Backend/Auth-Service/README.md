@@ -66,8 +66,7 @@ AUTH_DB_PASSWORD=sua_senha
 JWT_SECRET=sua_chave_secreta_compartilhada
 JWT_EXPIRATION=86400000
 
-GOOGLE_CLIENT_ID=seu_google_client_id
-GOOGLE_CLIENT_SECRET=seu_google_client_secret
+GOOGLE_AUTH_ENABLED=false
 
 AUTH_MAIL_ENABLED=false
 ```
@@ -104,6 +103,10 @@ java -Dloader.main=br.com.innkercode.auth.ProvisionPilotUser -cp /app/app.jar \
 ```
 
 Os papéis `PARTNER` e `CUSTOMER` também podem ser provisionados. E-mails já cadastrados são recusados, preservando a conta e suas credenciais. Consulte a [matriz H1 do Auth](../../docs/sprints/S02-identidade/contracts.md#h1-02--homologação-interna-13112026) para coletor interno, flags, URLs e operação de contas.
+
+## Google OAuth
+
+Habilite com `GOOGLE_AUTH_ENABLED=true` e configure credenciais, origem, callback e a lista de e-mails autorizados no ambiente do Auth. A conta EasyPet deve existir antes do login. Consulte o [contrato de Google OAuth](../../docs/sprints/S02-identidade/contracts.md#google-oauth--13112026) para URLs, elegibilidade, cookies e troca de código.
 
 ## Migrações do Banco de Dados
 

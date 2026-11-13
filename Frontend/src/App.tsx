@@ -57,7 +57,7 @@ const router = createBrowserRouter([
   { path: '/forgot-password', element: recoveryEnabled ? <ForgotPasswordPage /> : <Navigate to="/login" replace /> },
   { path: '/reset-password', element: recoveryEnabled ? <ResetPasswordPage /> : <Navigate to="/login" replace /> },
   { path: '/team/invitation', element: waveBEnabled ? <TeamInvitationPage /> : <Navigate to="/login" replace /> },
-  { path: '/login-success',  element: env.internalPilot ? <Navigate to="/login" replace /> : <LoginSuccessPage /> },
+  { path: '/login-success',  element: env.googleAuthEnabled ? <LoginSuccessPage /> : <Navigate to="/login" replace /> },
   { path: '/seja-parceiro',  element: env.internalPilot ? <Navigate to="/login" replace /> : <SejaParceiroPage /> },
   { path: '/unauthorized',   element: <Navigate to="/painel" replace /> },
   { path: '/design-system',  element: <DesignSystemRoute /> },

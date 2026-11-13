@@ -7,16 +7,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where lower(u.email) = :email order by u.id")
+    List<User> findGoogleAccountsForUpdate(String email);
+
+    boolean existsByGoogleSubject(String subject);
 
     @Query("select u.email from User u where u.id = :id and u.role = :role and u.active = true")
     Optional<String> findActiveEmailByIdAndRole(UUID id, UserRole role);
@@ -43,14 +48,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
               and (select count(other) from User other where lower(other.email) = lower(:email)) = 1
             """)
     Optional<User> findUniqueLegacyEmail(String email);
-
-    @Modifying
-    @Transactional
-    @Query("""
-            update User u set u.name = :name, u.pictureUrl = :picture
-            where u.id = :id and u.active = true
-            """)
-    void updateSocialProfile(UUID id, String name, String picture);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :id")

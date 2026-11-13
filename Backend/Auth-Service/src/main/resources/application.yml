@@ -2,6 +2,14 @@ server:
   port: ${SERVER_PORT:8081} # padrão 8081, sobrescreve via env
   servlet:
     context-path: /api/v1
+    session:
+      timeout: 5m
+      tracking-modes: cookie
+      cookie:
+        name: EASYPET_OAUTH
+        path: /api/v1
+        http-only: true
+        same-site: lax
 
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
@@ -10,6 +18,9 @@ app:
   notification-recipient-token: ${NOTIFICATION_RECIPIENT_TOKEN:}
   reception-claim-token: ${RECEPTION_CLAIM_TOKEN:}
   s02-enabled: ${AUTH_S02_ENABLED:false}
+  google-auth:
+    enabled: ${GOOGLE_AUTH_ENABLED:false}
+    allowed-emails: ${GOOGLE_ALLOWED_EMAILS:}
   mail:
     enabled: ${AUTH_MAIL_ENABLED:false}
     from: ${MAIL_FROM:${MAIL_USERNAME:no-reply@easypet.test}}
@@ -67,21 +78,3 @@ spring:
     jwt:
       secret: ${JWT_SECRET}
       expiration: ${JWT_EXPIRATION:86400000}
-
----
-
-spring:
-  config:
-    activate:
-      on-profile: "!homolog"
-
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id: ${GOOGLE_CLIENT_ID}
-            client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope:
-              - email
-              - profile

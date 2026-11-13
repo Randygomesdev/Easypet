@@ -31,7 +31,7 @@ src/
 │       └── UserAvatar.tsx       # Avatar de usuário
 │
 ├── config/
-│   └── env.ts                   # VITE_API_URL, VITE_GOOGLE_AUTH_URL
+│   └── env.ts                   # VITE_API_URL, VITE_GOOGLE_AUTH_ENABLED
 │
 ├── contexts/
 │   ├── AuthContext.tsx           # user, token, login(), logout()
@@ -133,8 +133,10 @@ O Gateway injeta `X-User-Id`, `X-User-Role` e `X-User-Email` nos headers downstr
 ```env
 # .env
 VITE_API_URL=http://localhost:8080/api/v1
-VITE_GOOGLE_AUTH_URL=http://localhost:8081/api/v1/oauth2/authorization/google
+VITE_GOOGLE_AUTH_ENABLED=false
 ```
+
+Com `VITE_GOOGLE_AUTH_ENABLED=true`, a interface usa `/api/v1/oauth2/authorization/google` na origem que serviu o frontend. Use um ingresso que encaminhe esse caminho, o callback do Google e a troca do código ao Auth. O piloto interno pode habilitar o Google mantendo os bloqueios de cadastro público, checkout e créditos.
 
 ---
 

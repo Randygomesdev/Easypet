@@ -1,9 +1,7 @@
 package br.com.innkercode.auth.config;
 
-import br.com.innkercode.auth.security.CustomOAuth2UserService;
 import br.com.innkercode.auth.security.CustomUserDetailsService;
 import br.com.innkercode.auth.security.JwtAuthenticationFilter;
-import br.com.innkercode.auth.security.OAuth2SuccessHandler;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -37,8 +35,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2SuccessHandler oauth2SuccessHandler;
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
     private final Environment environment;
@@ -48,9 +44,7 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/login/**",
-            "/oauth2/**"
+            "/swagger-ui.html"
     };
 
     private static final String[] ACCOUNT_ACCESS_POST = {
@@ -60,6 +54,9 @@ public class SecurityConfig {
 
     @Value("${app.s02-enabled}")
     private boolean s02Enabled;
+
+    @Value("${app.google-auth.enabled}")
+    private boolean googleEnabled;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
@@ -74,6 +71,9 @@ public class SecurityConfig {
                             .requestMatchers(HttpMethod.GET, "/internal/notification-recipients/{userId}",
                                     "/internal/reception-claim-customers/{userId}").permitAll()
                             .requestMatchers("/internal/**").denyAll();
+                    if (googleEnabled) {
+                        auth.requestMatchers(HttpMethod.POST, "/auth/oauth2/exchange").permitAll();
+                    }
                     if (!homolog || s02Enabled) {
                         auth.requestMatchers(HttpMethod.POST, ACCOUNT_ACCESS_POST).permitAll()
                                 .requestMatchers(HttpMethod.POST, "/auth/team/invitations").hasRole("PARTNER")
@@ -86,8 +86,7 @@ public class SecurityConfig {
                         auth.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                                 .anyRequest().denyAll();
                     } else {
-                        auth.requestMatchers(HttpMethod.POST, "/auth/register", "/auth/register/partner",
-                                        "/auth/oauth2/exchange").permitAll()
+                        auth.requestMatchers(HttpMethod.POST, "/auth/register", "/auth/register/partner").permitAll()
                                 .requestMatchers(WHITE_LIST_URL).permitAll()
                                 .anyRequest().authenticated();
                     }
@@ -106,13 +105,6 @@ public class SecurityConfig {
                             response.getWriter().write("{\"status\":403,\"message\":\"Acesso negado.\"}");
                         })
                 );
-
-        if (!homolog) {
-            http.oauth2Login(oauth2 -> oauth2
-                    .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                    .successHandler(oauth2SuccessHandler)
-            );
-        }
 
         return http.build();
     }

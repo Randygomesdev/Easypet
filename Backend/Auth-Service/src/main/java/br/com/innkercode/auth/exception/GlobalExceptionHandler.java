@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
@@ -55,6 +56,12 @@ public class GlobalExceptionHandler {
             MissingRequestHeaderException.class, MissingServletRequestParameterException.class})
     public ResponseEntity<ErrorResponse> handleMalformedRequest() {
         return ResponseEntity.badRequest().body(new ErrorResponse(400, "Requisição inválida."));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleUnsupportedContentType() {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+                .body(new ErrorResponse(415, "Formato de requisição não suportado."));
     }
 
     // Trata erros específicos de envio de e-mail

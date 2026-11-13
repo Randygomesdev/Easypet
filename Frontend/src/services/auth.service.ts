@@ -79,5 +79,5 @@ export const authService = {
     api.patch<AdminCustomer>(`/admin/customers/${encodeURIComponent(id)}/active`, { active }).then(r => r.data),
 
   exchangeOAuthCode: (code: string) =>
-    publicAuthApi.post<{ token: string }>('/auth/oauth2/exchange', undefined, { params: { code } }).then(r => r.data),
+    publicAuthApi.post<User>('/auth/oauth2/exchange', { code }).then(r => r.data),
 }

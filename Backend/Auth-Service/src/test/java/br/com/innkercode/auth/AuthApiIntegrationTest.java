@@ -120,6 +120,10 @@ class AuthApiIntegrationTest {
                     .content(credentials("Escalada", "escalada@example.test"))).andExpect(status().isUnauthorized());
         }
         assertThat(users.findByEmail("escalada@example.test")).isEmpty();
+        for (String path : new String[] {"/oauth2/authorization/google", "/login/oauth2/code/google"}) {
+            mvc.perform(get(path).servletPath(path)).andExpect(status().isUnauthorized())
+                    .andExpect(header().doesNotExist(HttpHeaders.LOCATION));
+        }
         assertThat(authService.register(new RegisterRequest("Tutor web", "web@example.test", PASSWORD)).role())
                 .isEqualTo("CUSTOMER");
         assertThat(authService.registerPartner(new RegisterRequest("Parceiro web", "partner-web@example.test", PASSWORD)).role())

@@ -19,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import br.com.innkercode.auth.service.OAuth2TokenExchangeService;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,7 +28,6 @@ import br.com.innkercode.auth.service.OAuth2TokenExchangeService;
 public class AuthController {
 
     private final AuthService authService;
-    private final OAuth2TokenExchangeService tokenExchangeService;
     private final PasswordRecoveryService passwordRecovery;
 
     @PostMapping("/register")
@@ -78,16 +76,4 @@ public class AuthController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(session);
     }
 
-    @PostMapping("/oauth2/exchange")
-    @Operation(summary = "Trocar código OAuth2 por JWT",
-               description = "Recebe o código de troca efêmero gerado pelo fluxo OAuth2 e retorna o JWT real. Código expira em 2 minutos e só pode ser usado uma vez.")
-    public ResponseEntity<AuthenticationResponse> exchangeOAuth2Code(@RequestParam String code) {
-        log.info("Recebida solicitação de troca de código OAuth2.");
-        String jwt = tokenExchangeService.exchangeCodeForToken(code);
-        if (jwt == null) {
-            log.warn("Código OAuth2 inválido ou expirado.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        return ResponseEntity.ok(new AuthenticationResponse(jwt, null, null, null, null, null));
-    }
 }
