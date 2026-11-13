@@ -19,18 +19,21 @@ public class PasswordResetToken {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String token;
+    @Column(name = "token", nullable = false, unique = true)
+    private String tokenHash;
 
-    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 
+    private LocalDateTime usedAt;
+    private LocalDateTime replacedAt;
+
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiryDate);
+        return !expiryDate.isAfter(LocalDateTime.now());
     }
 
 }

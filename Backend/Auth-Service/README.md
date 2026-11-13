@@ -11,6 +11,7 @@ Microsserviço de autenticação da plataforma [Easypet](https://github.com/rand
 | `ADMIN` | Administrador da plataforma |
 | `PARTNER` | Dono de estabelecimento pet (clínica, petshop, hotel) |
 | `CUSTOMER` | Tutor de pet utilizando o app Easypet |
+| `TEAM_MEMBER` | Colaborador com acesso individual por estabelecimento |
 | `USER` | Usuário autenticado genérico |
 
 ## Parte do Ecossistema Easypet
@@ -29,7 +30,7 @@ O Easypet é uma plataforma de gestão de cuidados pet baseada em microsserviço
      └────────────┘   └─────────────┘   └──────────────┘
 ```
 
-Os tokens JWT emitidos por este serviço são validados em todos os outros serviços através do `JWT_SECRET` compartilhado.
+Gateway e serviços protegidos consultam `GET /api/v1/auth/session` com o bearer original. A assinatura de equipe usa `AUTH_TEAM_JWT_SECRET` exclusivamente no Auth. A consulta verifica o estado da conta e do vínculo a cada chamada.
 
 ## Tecnologias
 
@@ -68,10 +69,7 @@ JWT_EXPIRATION=86400000
 GOOGLE_CLIENT_ID=seu_google_client_id
 GOOGLE_CLIENT_SECRET=seu_google_client_secret
 
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=seu_email@gmail.com
-MAIL_PASSWORD=sua_app_password
+AUTH_MAIL_ENABLED=false
 ```
 
 ### 3. Executar
@@ -91,8 +89,21 @@ Swagger UI: `http://localhost:8081/api/v1/swagger-ui.html`
 | POST | `/auth/login` | Autenticar e receber JWT |
 | POST | `/auth/forgot-password` | Enviar e-mail de redefinição de senha |
 | POST | `/auth/reset-password` | Redefinir senha com token |
-| POST | `/auth/exchange` | Trocar código OAuth2 por JWT |
+| POST | `/auth/oauth2/exchange` | Trocar código OAuth2 por JWT fora do perfil homolog |
+| GET | `/auth/session` | Verificar sessão e retornar papel, escopo e permissões |
 | GET | `/users/{id}` | Buscar usuário por ID (autenticado) |
+
+## Contas e e-mail na homologação interna
+
+Depois de aplicar as migrations no banco da homologação, o operador pode criar uma conta fictícia com o CLI executado no contêiner Auth do próprio ambiente. O comando exige o perfil `homolog` e lê a senha e a confirmação no terminal.
+
+```bash
+java -Dloader.main=br.com.innkercode.auth.ProvisionPilotUser -cp /app/app.jar \
+  org.springframework.boot.loader.launch.PropertiesLauncher \
+  ADMIN admin@example.test 'Admin de homologação'
+```
+
+Os papéis `PARTNER` e `CUSTOMER` também podem ser provisionados. E-mails já cadastrados são recusados, preservando a conta e suas credenciais. Consulte a [matriz H1 do Auth](../../docs/sprints/S02-identidade/contracts.md#h1-02--homologação-interna-13112026) para coletor interno, flags, URLs e operação de contas.
 
 ## Migrações do Banco de Dados
 

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record ResetPasswordRequest(
         @NotBlank(message = "O token é obrigatório")
+        @Size(max = 255)
         String token,
         @NotBlank(message = "A nova senha é obrigatória")
         @Size(min = 6, message = "A nova senha deve ter no mínimo 6 caracteres")

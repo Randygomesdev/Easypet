@@ -3,18 +3,59 @@ package br.com.innkercode.auth.exception;
 import br.com.innkercode.auth.dto.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
+import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.TransactionException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({DataAccessException.class, TransactionException.class, AuthenticationServiceException.class})
+    public ResponseEntity<ErrorResponse> handleStorageUnavailable() {
+        log.warn("Banco do Auth indisponível para a operação solicitada.");
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .cacheControl(CacheControl.noStore())
+                .body(new ErrorResponse(503, "Serviço temporariamente indisponível."));
+    }
+
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(ApiException ex) {
+        return ResponseEntity.status(ex.getStatus()).cacheControl(CacheControl.noStore()).body(
+                new ErrorResponse(ex.getStatus().value(), ex.getMessage(), LocalDateTime.now(), null, ex.getCode()));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(401, "E-mail ou senha inválidos."));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(403, "Acesso negado."));
+    }
+
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
+            MissingRequestHeaderException.class, MissingServletRequestParameterException.class})
+    public ResponseEntity<ErrorResponse> handleMalformedRequest() {
+        return ResponseEntity.badRequest().body(new ErrorResponse(400, "Requisição inválida."));
+    }
 
     // Trata erros específicos de envio de e-mail
     @ExceptionHandler(EmailException.class)
@@ -44,8 +85,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
+        ex.getBindingResult().getFieldErrors().forEach((error) -> {
+            String fieldName = error.getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
@@ -54,7 +95,8 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Erro de validação nos campos",
                 java.time.LocalDateTime.now(),
-                errors
+                errors,
+                null
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }

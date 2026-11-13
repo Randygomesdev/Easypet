@@ -2,23 +2,24 @@ package br.com.innkercode.auth.controller;
 
 import br.com.innkercode.auth.dto.request.AuthenticationRequest;
 import br.com.innkercode.auth.dto.request.ForgotPasswordRequest;
+import br.com.innkercode.auth.dto.request.OneTimeTokenRequest;
 import br.com.innkercode.auth.dto.request.ResetPasswordRequest;
 import br.com.innkercode.auth.dto.response.AuthenticationResponse;
+import br.com.innkercode.auth.dto.response.SessionResponse;
 import br.com.innkercode.auth.dto.request.RegisterRequest;
 
 import br.com.innkercode.auth.service.AuthService;
+import br.com.innkercode.auth.service.PasswordRecoveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import br.com.innkercode.auth.service.OAuth2TokenExchangeService;
-
-import java.net.URI;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,18 +30,17 @@ public class AuthController {
 
     private final AuthService authService;
     private final OAuth2TokenExchangeService tokenExchangeService;
+    private final PasswordRecoveryService passwordRecovery;
 
     @PostMapping("/register")
     @Operation(summary = "Registrar um novo usuário", description = "Cria um novo usuário no sistema e retorna um token JWT")
     public ResponseEntity<AuthenticationResponse> register(@Valid @RequestBody RegisterRequest request) {
-        log.info("Recebida requisição de registro.");
-        AuthenticationResponse response = authService.register(request);
-        URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand("me")
-                .toUri();
-        log.info("Usuário registrado com sucesso.");
-        return ResponseEntity.created(uri).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(request));
+    }
+
+    @PostMapping("/register/partner")
+    public ResponseEntity<AuthenticationResponse> registerPartner(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerPartner(request));
     }
 
     @PostMapping("/login")
@@ -55,17 +55,27 @@ public class AuthController {
     @PostMapping("/forgot-password")
     @Operation(summary = "Solicitar recuperação de senha", description = "Gera um token de recuperação e envia por e-mail para o usuário, caso o e-mail esteja cadastrado.")
     public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        log.info("Recebida requisição REST para forgot-password: {}", request.email());
-        authService.forgotPassword(request.email());
+        passwordRecovery.request(request.email());
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/reset-password/validate")
+    public ResponseEntity<Void> validateReset(@Valid @RequestBody OneTimeTokenRequest request) {
+        passwordRecovery.validate(request.token());
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).build();
+    }
+
     @PostMapping("/reset-password")
     @Operation(summary = "Resetar senha do usuário", description = "Valida o token de recuperação e atualiza a senha do usuário no banco de dados.")
     public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        log.info("Solicitação de reset de senha recebida com token");
-        authService.resetPassword(request.token(), request.newPassword());
-        log.info("Senha alterada com sucesso via reset de senha");
+        passwordRecovery.reset(request.token(), request.newPassword());
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/session")
+    public ResponseEntity<SessionResponse> session(
+            @RequestAttribute(SessionResponse.REQUEST_ATTRIBUTE) SessionResponse session) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(session);
     }
 
     @PostMapping("/oauth2/exchange")

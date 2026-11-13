@@ -11,6 +11,7 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -44,7 +45,6 @@ public class SecurityConfig {
 
     // 1. Lista de rotas públicas (incluindo Swagger)
     private static final String[] WHITE_LIST_URL = {
-            "/auth/**",
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/swagger-ui/**",
@@ -53,30 +53,57 @@ public class SecurityConfig {
             "/oauth2/**"
     };
 
+    private static final String[] ACCOUNT_ACCESS_POST = {
+            "/auth/forgot-password", "/auth/reset-password", "/auth/reset-password/validate",
+            "/auth/team/invitations/accept"
+    };
+
+    @Value("${app.s02-enabled}")
+    private boolean s02Enabled;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
         boolean homolog = environment.acceptsProfiles(Profiles.of("homolog"));
         http
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
+                    auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/auth/session").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/internal/notification-recipients/{userId}",
+                                    "/internal/reception-claim-customers/{userId}").permitAll()
+                            .requestMatchers("/internal/**").denyAll();
+                    if (!homolog || s02Enabled) {
+                        auth.requestMatchers(HttpMethod.POST, ACCOUNT_ACCESS_POST).permitAll()
+                                .requestMatchers(HttpMethod.POST, "/auth/team/invitations").hasRole("PARTNER")
+                                .requestMatchers(HttpMethod.GET, "/auth/team/accesses").hasRole("PARTNER")
+                                .requestMatchers(HttpMethod.DELETE, "/auth/team/accesses/{id}").hasRole("PARTNER")
+                                .requestMatchers(HttpMethod.GET, "/admin/customers").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/admin/customers/{id}/active").hasRole("ADMIN");
+                    }
                     if (homolog) {
-                        auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        auth.requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                                 .anyRequest().denyAll();
                     } else {
-                        auth.requestMatchers(WHITE_LIST_URL).permitAll()
+                        auth.requestMatchers(HttpMethod.POST, "/auth/register", "/auth/register/partner",
+                                        "/auth/oauth2/exchange").permitAll()
+                                .requestMatchers(WHITE_LIST_URL).permitAll()
                                 .anyRequest().authenticated();
                     }
                 })
-                .authenticationProvider(authenticationProvider())
+                .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"status\":401,\"message\":\"Token de autenticação ausente ou inválido.\"}");
+                        })
+                        .accessDeniedHandler((request, response, denied) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\":403,\"message\":\"Acesso negado.\"}");
                         })
                 );
 
@@ -106,10 +133,10 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(passwordEncoder);
         return authProvider;
     }
 
@@ -119,7 +146,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public static PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

@@ -1,14 +1,17 @@
 package br.com.innkercode.auth;
 
+import br.com.innkercode.auth.config.HomologAuthConfiguration;
 import br.com.innkercode.auth.domain.model.UserRole;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.io.Console;
 import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.UUID;
 
 /** Console command for the operators of the internal pilot. */
@@ -28,22 +31,7 @@ public final class ProvisionPilotUser {
     }
 
     private static void provision(String[] args) throws SQLException {
-        if (Arrays.stream(requiredEnv("SPRING_PROFILES_ACTIVE").split(","))
-                .map(String::trim).noneMatch("homolog"::equals)) {
-            throw new IllegalStateException("Comando disponível apenas no ambiente de homologação.");
-        }
-        if (args.length != 3 || (!args[0].equals("PARTNER") && !args[0].equals("CUSTOMER"))) {
-            throw new IllegalArgumentException("Informe: PARTNER|CUSTOMER e-mail 'Nome de teste'.");
-        }
-
-        UserRole role = UserRole.valueOf(args[0]);
-        String email = args[1].trim();
-        String name = args[2].trim();
-        if (email.length() > 255 || !email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")
-                || name.isBlank() || name.length() > 255) {
-            throw new IllegalArgumentException("Informe e-mail e nome válidos.");
-        }
-
+        PilotAccount account = validateArgs(System.getenv("SPRING_PROFILES_ACTIVE"), args);
         Console console = System.console();
         if (console == null) {
             throw new IllegalStateException("Execute em um terminal interativo para digitar a senha.");
@@ -66,25 +54,64 @@ public final class ProvisionPilotUser {
             if (confirmation != null) Arrays.fill(confirmation, '\0');
         }
 
-        UUID id = UUID.randomUUID();
         try (var connection = DriverManager.getConnection(
-                requiredEnv("AUTH_DB_URL"), requiredEnv("AUTH_DB_USERNAME"), requiredEnv("AUTH_DB_PASSWORD"));
-             var statement = connection.prepareStatement("""
+                requiredEnv("AUTH_DB_URL"), requiredEnv("AUTH_DB_USERNAME"), requiredEnv("AUTH_DB_PASSWORD"))) {
+            UUID id = insert(connection, account, passwordHash);
+            System.out.printf("Conta de teste criada. ID: %s (%s)%n", id, account.role());
+        }
+    }
+
+    static PilotAccount validateArgs(String profiles, String[] args) {
+        if (profiles == null || Arrays.stream(profiles.split(",")).map(String::trim).noneMatch("homolog"::equals)) {
+            throw new IllegalStateException("Comando disponível apenas no ambiente de homologação.");
+        }
+        if (args.length != 3) {
+            throw usage();
+        }
+        UserRole role = switch (args[0]) {
+            case "PARTNER" -> UserRole.PARTNER;
+            case "CUSTOMER" -> UserRole.CUSTOMER;
+            case "ADMIN" -> UserRole.ADMIN;
+            default -> throw usage();
+        };
+        String email = args[1].trim().toLowerCase(Locale.ROOT);
+        String name = args[2].trim();
+        if (email.length() > 255 || !email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+")
+                || name.isBlank() || name.length() > 255) {
+            throw new IllegalArgumentException("Informe e-mail e nome válidos.");
+        }
+        if (role == UserRole.ADMIN && !HomologAuthConfiguration.isFixtureAddress(email)) {
+            throw new IllegalArgumentException("Use um e-mail fictício @example.test para o ADMIN de homologação.");
+        }
+        return new PilotAccount(role, email, name);
+    }
+
+    static UUID insert(Connection connection, PilotAccount account, String passwordHash) throws SQLException {
+        UUID id = UUID.randomUUID();
+        try (var statement = connection.prepareStatement("""
                      INSERT INTO users (id, email, name, password, role)
-                     VALUES (?, ?, ?, ?, ?)
+                     SELECT ?, ?, ?, ?, ?
+                     WHERE NOT EXISTS (SELECT 1 FROM users WHERE lower(email) = ?)
                      ON CONFLICT (email) DO NOTHING
                      """)) {
             statement.setObject(1, id);
-            statement.setString(2, email);
-            statement.setString(3, name);
+            statement.setString(2, account.email());
+            statement.setString(3, account.name());
             statement.setString(4, passwordHash);
-            statement.setString(5, role.name());
+            statement.setString(5, account.role().name());
+            statement.setString(6, account.email());
             if (statement.executeUpdate() == 0) {
                 throw new IllegalStateException("Já existe uma conta com este e-mail.");
             }
         }
-        System.out.printf("Conta de teste criada. ID: %s (%s)%n", id, role);
+        return id;
     }
+
+    private static IllegalArgumentException usage() {
+        return new IllegalArgumentException("Informe: PARTNER|CUSTOMER|ADMIN e-mail 'Nome de teste'.");
+    }
+
+    record PilotAccount(UserRole role, String email, String name) {}
 
     private static String requiredEnv(String name) {
         String value = System.getenv(name);

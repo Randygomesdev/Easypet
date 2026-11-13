@@ -3,6 +3,22 @@ server:
   servlet:
     context-path: /api/v1
 
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  partner-service-url: ${PARTNER_SERVICE_URL:http://localhost:8083/api/v1}
+  team-jwt-secret: ${AUTH_TEAM_JWT_SECRET:}
+  notification-recipient-token: ${NOTIFICATION_RECIPIENT_TOKEN:}
+  reception-claim-token: ${RECEPTION_CLAIM_TOKEN:}
+  s02-enabled: ${AUTH_S02_ENABLED:false}
+  mail:
+    enabled: ${AUTH_MAIL_ENABLED:false}
+    from: ${MAIL_FROM:${MAIL_USERNAME:no-reply@easypet.test}}
+
+management:
+  health:
+    mail:
+      enabled: ${AUTH_MAIL_ENABLED:false}
+
 spring:
   application:
     name: auth-service
@@ -19,10 +35,13 @@ spring:
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:true}
+          connectiontimeout: 3000
+          timeout: 5000
+          writetimeout: 5000
           starttls:
-            enable: true
-            required: true
+            enable: ${MAIL_STARTTLS_ENABLED:true}
+            required: ${MAIL_STARTTLS_ENABLED:true}
           ssl:
             trust: ${MAIL_HOST:smtp.gmail.com}
 

@@ -52,8 +52,16 @@ public class User extends BaseEntity implements UserDetails{
     @Column(nullable = false)
     private UserRole role;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
+
+    @Column(nullable = false)
+    private int sessionVersion;
+
+    public void invalidateSessions() {
+        sessionVersion++;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
