@@ -1,7 +1,13 @@
 import { composeClient, databases, notificationDatabase, readOptions } from './compose.mjs'
 
 try {
-  const { project, 'env-file': envFile } = readOptions(process.argv.slice(2), ['project', 'env-file'])
+  const { project, 'env-file': envFile, fixtures } = readOptions(process.argv.slice(2), ['project', 'env-file'], ['fixtures'])
+  if (fixtures && (fixtures !== 'oauth' || !/^easypet-e2e-[a-f0-9]{10}$/.test(project))) {
+    throw new Error('A opção --fixtures oauth requer um projeto descartável de aceite.')
+  }
+  const allowedPorts = fixtures === 'oauth'
+    ? { frontend: 80, 'smtp-capture': 8025, 'oauth-edge': 443, 'oauth-provider': 8090 }
+    : { frontend: 80 }
   const compose = composeClient({ project, envFile })
   const running = compose(['ps', '--all', '--format', 'json'])
   const containers = running.startsWith('[')
@@ -22,8 +28,8 @@ try {
   let address
   for (const container of containers) {
     const published = (container.Publishers ?? []).filter(port => port.PublishedPort > 0)
-    if (published.some(port => container.Service !== 'frontend'
-      || port.URL !== '127.0.0.1' || port.TargetPort !== 80 || port.Protocol !== 'tcp')) {
+    if (published.some(port => port.URL !== '127.0.0.1'
+      || port.TargetPort !== allowedPorts[container.Service] || port.Protocol !== 'tcp')) {
       console.error(`Publicação inesperada de porta em ${container.Service}.`)
       process.exitCode = 1
     }

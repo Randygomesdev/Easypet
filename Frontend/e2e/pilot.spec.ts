@@ -2,6 +2,7 @@ import { expect, test, type APIRequestContext, type Page } from '@playwright/tes
 import { randomUUID } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { authenticate } from './authenticate'
+import { ignoreHTTPSErrors } from './wave-b-fixtures'
 
 const tutorEmail = 'tutor@example.test'
 const partnerAEmail = 'parceiro-a@example.test'
@@ -138,7 +139,7 @@ test('tutor cadastra pet e reserva; parceiro registra e conclui o atendimento', 
   expect(stillPending.ok()).toBeTruthy()
   expect((await stillPending.json()).status).toBe('PENDING')
 
-  const partnerPage = await browser.newPage({ baseURL, timezoneId: 'America/Sao_Paulo' })
+  const partnerPage = await browser.newPage({ baseURL, ignoreHTTPSErrors, timezoneId: 'America/Sao_Paulo' })
   try {
     // A fila mostra o dia atual do navegador. Simula a chegada do dia da consulta.
     await partnerPage.clock.setFixedTime(new Date(`${date}T10:00:00-03:00`))

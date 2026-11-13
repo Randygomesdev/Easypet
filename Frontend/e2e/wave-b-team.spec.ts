@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
-import { bearer, capturedLink, directStatus, futureDate, json, openAuthPage, password, prepareConsultation, signIn, smtpUrl, sql, submitAuthForm, token } from './wave-b-fixtures'
+import { bearer, capturedLink, directStatus, futureDate, ignoreHTTPSErrors, json, openAuthPage, password, prepareConsultation, signIn, smtpUrl, sql, submitAuthForm, token } from './wave-b-fixtures'
 
 test.skip(!smtpUrl, 'Requer o ambiente descartável da onda B.')
 
@@ -27,7 +27,7 @@ test('equipe opera por permissão e o tutor reivindica somente seu cadastro', as
     const link = await capturedLink(email, origin, '/team/invitation')
     const input = { token: link.searchParams.get('token'), name: `Equipe E2E ${role}`, password: password() }
     if (role === 'RECEPTION' || process.env.E2E_H1 === '1') {
-      const guest = await page.context().browser()!.newPage({ baseURL })
+      const guest = await page.context().browser()!.newPage({ baseURL, ignoreHTTPSErrors })
       try {
         await guest.goto(link.href)
         await guest.getByLabel('Nome completo').fill(input.name)
@@ -112,7 +112,7 @@ test('equipe opera por permissão e o tutor reivindica somente seu cadastro', as
   await json(request, 'GET', `/bookings/${booking.id}`, 200, professional.headers)
   await json(request, 'GET', `/bookings/${other.id}`, 404, professional.headers)
   await json(request, 'PATCH', `/bookings/${booking.id}/status?status=CONFIRMED`, 200, reception.headers)
-  const practitioner = await page.context().browser()!.newPage({ baseURL, timezoneId: 'America/Sao_Paulo' })
+  const practitioner = await page.context().browser()!.newPage({ baseURL, ignoreHTTPSErrors, timezoneId: 'America/Sao_Paulo' })
   try {
     await practitioner.clock.setFixedTime(new Date(`${futureDate(4)}T11:00:00-03:00`))
     await signIn(practitioner, professional.email)
@@ -177,7 +177,7 @@ test('equipe opera por permissão e o tutor reivindica somente seu cadastro', as
   const close = `${cashier}/days/${day.businessDate}/close`
   await json(request, 'POST', close, 403, { ...reception.headers, 'Idempotency-Key': randomUUID() })
   const managerPage = await page.context().browser()!.newPage({
-    baseURL, viewport: process.env.E2E_H1 === '1' ? { width: 390, height: 844 } : undefined,
+    baseURL, ignoreHTTPSErrors, viewport: process.env.E2E_H1 === '1' ? { width: 390, height: 844 } : undefined,
   })
   try {
     await signIn(managerPage, manager.email)
@@ -242,7 +242,7 @@ test('equipe opera por permissão e o tutor reivindica somente seu cadastro', as
     claim = await json(request, 'POST', claimIssue, 201, reception.headers, { userId: tutorSession.userId })
   }
   await json(request, 'POST', claimPath, 404, wrongTutor, { token: claim.token })
-  const claimPage = await page.context().browser()!.newPage({ baseURL })
+  const claimPage = await page.context().browser()!.newPage({ baseURL, ignoreHTTPSErrors })
   try {
     await signIn(claimPage, 'reivindicacao@example.test')
     await expect(claimPage).toHaveURL(/\/app\/home$/)
@@ -261,7 +261,7 @@ test('equipe opera por permissão e o tutor reivindica somente seu cadastro', as
   })
   expect(fresh).toMatchObject({ userId: tutorSession.userId, petId: pet.id })
   await json(request, 'PATCH', `/bookings/${fresh.id}/status?status=CONFIRMED`, 200, owner)
-  const tutorVisit = await page.context().browser()!.newPage({ baseURL, timezoneId: 'America/Sao_Paulo' })
+  const tutorVisit = await page.context().browser()!.newPage({ baseURL, ignoreHTTPSErrors, timezoneId: 'America/Sao_Paulo' })
   try {
     await tutorVisit.clock.setFixedTime(new Date(`${futureDate(4)}T13:00:00-03:00`))
     await signIn(tutorVisit, professional.email)
@@ -272,7 +272,7 @@ test('equipe opera por permissão e o tutor reivindica somente seu cadastro', as
     await expect(tutorVisit.getByRole('heading', { name: 'Pet Balcão Onda B' })).toBeVisible()
   } finally { await tutorVisit.close() }
 
-  const ownerPage = await page.context().browser()!.newPage({ baseURL })
+  const ownerPage = await page.context().browser()!.newPage({ baseURL, ignoreHTTPSErrors })
   try {
     await signIn(ownerPage, ownerEmail)
     await expect(ownerPage).toHaveURL(/\/partner\/dashboard$/)

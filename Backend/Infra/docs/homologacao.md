@@ -31,6 +31,14 @@ A stack `easypet-homolog` compila o frontend e os sete serviços Java do release
 4. No proxy existente, encaminhe o subdomínio dedicado inteiro para a porta verificada em loopback. Aplique HTTPS e restrinja todo o subdomínio, incluindo a API, por VPN ou rede privada. Preserve `Authorization`. Se o proxy estiver em container, conecte somente o frontend à rede de ingresso e use o endereço do frontend nessa rede.
 5. Configure `HOMOLOG_TRUSTED_EDGE` com o IP exato do proxy visto pelo frontend na topologia escolhida. O padrão `unix:` desabilita confiança em cabeçalhos para conexões TCP diretas. No proxy confiável, sobrescreva `X-Easypet-Edge-IP` com o IP observado do cliente. Em Nginx, use `proxy_set_header X-Easypet-Edge-IP $remote_addr;`. Restrinja o caminho de rede ao proxy, especialmente se houver NAT compartilhado. O frontend remove `Forwarded` e `X-Forwarded-For`, sobrescreve os cabeçalhos internos e o Gateway verifica o segredo de ingresso antes de usar o IP. Revise também os logs do proxy externo para omitir a query das páginas de reset e convite.
 
+## Login Google
+
+O padrão `GOOGLE_AUTH_ENABLED=false` mantém login por senha. Para habilitar Google, preencha no ambiente protegido do host `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `GOOGLE_ALLOWED_EMAILS` (e-mails autorizados separados por vírgula). Use `HOMOLOG_ORIGIN=https://easypet.innker.com.br` e `GOOGLE_REDIRECT_URI=https://easypet.innker.com.br/api/v1/login/oauth2/code/google`. Cadastre essa origem HTTPS e o callback exato no cliente Web do Google. Confirme DNS, certificado e restrição de acesso antes de testar.
+
+Com a configuração pronta, aplique `GOOGLE_AUTH_ENABLED=true` e faça o build e a subida do Compose. A flag é incorporada ao frontend no build e lida pelo Nginx, Gateway e Auth na inicialização. O Auth valida a configuração e exige uma conta EasyPet previamente provisionada, ativa e autorizada. O proxy externo deve preservar cookies e redirecionamentos e omitir queries e cookies dos logs de OAuth. O retorno `/login-success` usa o fragmento da URL e troca o código por uma sessão do EasyPet na mesma origem.
+
+Para verificar, entre com uma conta autorizada e confira o destino e o papel após o retorno. Cancele outra tentativa no Google e confira a mensagem de cancelamento. Confirme a recusa com uma conta fora da lista e com a flag desligada. A verificação publicada usa o Google real e fica registrada separadamente do ensaio com provedor simulado. Para voltar ao login por senha, desabilite a flag e reconstrua o frontend com o Compose.
+
 ## Contas e dados de teste
 
 Crie duas contas de parceiro com endereços fictícios. O comando solicita a senha e confirmação no terminal. Execute com `CUSTOMER` para criar o tutor e com `ADMIN admin@example.test 'Admin de homologação'` para criar o administrador fictício. O provisionador usa o perfil `homolog` e recusa conta existente.
@@ -79,7 +87,7 @@ jq -n --arg petId "$PET_ID" --arg partnerId "$PARTNER_ID" --arg serviceId "$SERV
 unset TOKEN
 ```
 
-Use o preço vigente do serviço da fixture na reserva. Abra a agenda do parceiro A e confirme o agendamento. Para testar o atendimento, use uma reserva confirmada no dia corrente. Confirme que B recebe `403` ou `404` ao tentar acessar dados de A. Verifique também recarga direta, persistência após reinício, recuperação de senha, convite de equipe e as recusas de cadastro público, OAuth e checkout.
+Use o preço vigente do serviço da fixture na reserva. Abra a agenda do parceiro A e confirme o agendamento. Para testar o atendimento, use uma reserva confirmada no dia corrente. Confirme que B recebe `403` ou `404` ao tentar acessar dados de A. Verifique também recarga direta, persistência após reinício, recuperação de senha, convite de equipe e as recusas de cadastro público e checkout. Verifique OAuth conforme o [estado da flag Google](#login-google).
 
 Para ler uma captura fictícia no console autorizado do host, execute:
 

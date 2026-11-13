@@ -1,6 +1,9 @@
 import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { createServer } from 'node:net'
+import { mkdtempSync, rmSync, rmdirSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { recoverFixtures } from './wave-b-recovery.mjs'
 import { snapshotWaveB } from './wave-b-snapshot.mjs'
@@ -12,6 +15,7 @@ const secret = () => randomBytes(32).toString('hex')
 const password = secret()
 const waveB = process.env.E2E_WAVE_B === '1'
 const h1 = process.env.E2E_H1 === '1'
+const oauth = process.env.E2E_GOOGLE_OAUTH === '1'
 const apiOnly = process.env.E2E_API_ONLY === '1'
 if (waveB && apiOnly) throw new Error('A onda B inclui cenários de navegador. Execute com E2E_API_ONLY desativado.')
 const review = waveB || process.env.E2E_R01 === '1'
@@ -19,6 +23,7 @@ const composeFiles = ['-f', 'compose.homolog.yml']
 if (apiOnly) composeFiles.push('-f', 'Frontend/e2e/compose.api.yml')
 if (review) composeFiles.push('-f', 'Frontend/e2e/compose.r01.yml')
 if (waveB) composeFiles.push('-f', 'Frontend/e2e/compose.smtp-fixture.yml')
+if (oauth) composeFiles.push('-f', 'Frontend/e2e/compose.oauth-fixture.yml')
 const env = {
   ...process.env,
   COMPOSE_DISABLE_ENV_FILE: '1',
@@ -39,7 +44,31 @@ const env = {
   HOMOLOG_INGRESS_TOKEN: secret(),
   HOMOLOG_TRUSTED_EDGE: 'unix:',
   HOMOLOG_SUPPORT_URL: '',
+  GOOGLE_AUTH_ENABLED: oauth ? 'true' : 'false',
+  GOOGLE_CLIENT_ID: oauth ? 'easypet-fixture' : '',
+  GOOGLE_CLIENT_SECRET: oauth ? secret() : '',
+  GOOGLE_REDIRECT_URI: '',
+  GOOGLE_ALLOWED_EMAILS: oauth ? 'tutor@gmail.com,admin@gmail.com,inativo@gmail.com,equipe@gmail.com,desconhecido@gmail.com' : '',
   COMPOSE_PROFILES: '',
+}
+
+let tlsDir
+async function configureOAuthFixture() {
+  do {
+    env.E2E_OAUTH_HTTPS_PORT = String(await availableLoopbackPort())
+  } while (env.E2E_OAUTH_HTTPS_PORT === env.HOMOLOG_PORT)
+  do {
+    env.E2E_OAUTH_PROVIDER_PORT = String(await availableLoopbackPort())
+  } while ([env.E2E_OAUTH_HTTPS_PORT, env.HOMOLOG_PORT].includes(env.E2E_OAUTH_PROVIDER_PORT))
+  env.HOMOLOG_ORIGIN = `https://127.0.0.1:${env.E2E_OAUTH_HTTPS_PORT}`
+  env.GOOGLE_REDIRECT_URI = `${env.HOMOLOG_ORIGIN}/api/v1/login/oauth2/code/google`
+  tlsDir = mkdtempSync(join(tmpdir(), 'easypet-e2e-oauth-'))
+  env.E2E_OAUTH_TLS_DIR = tlsDir.replaceAll('\\', '/')
+  const openssl = process.env.E2E_OPENSSL ?? 'openssl'
+  check(spawnSync(openssl, ['req', '-x509', '-newkey', 'rsa:2048', '-sha256', '-nodes', '-days', '1',
+    '-subj', '/CN=127.0.0.1', '-addext', 'subjectAltName=IP:127.0.0.1',
+    '-keyout', join(tlsDir, 'key.pem'), '-out', join(tlsDir, 'cert.pem')],
+  { stdio: ['ignore', 'ignore', 'pipe'] }), 'Certificado HTTPS da fixture')
 }
 
 function verifyPublicationConfig() {
@@ -91,18 +120,30 @@ function publishedAddress(service, port) {
 let snapshot
 try {
   if (h1 && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_H1=1.')
+  if (oauth && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_GOOGLE_OAUTH=1.')
   if (waveB) {
     env.HOMOLOG_PORT = String(await availableLoopbackPort())
     env.HOMOLOG_ORIGIN = `http://127.0.0.1:${env.HOMOLOG_PORT}`
+    if (oauth) await configureOAuthFixture()
     if (process.env.E2E_SNAPSHOT_PREFIX) {
       snapshot = await snapshotWaveB(root, process.env.E2E_SNAPSHOT_PREFIX + '-before.json')
     }
   }
   if (h1) verifyPublicationConfig()
   console.log(`Stack descartável: ${project}`)
-  check(compose(['up', '-d', '--build', '--wait', '--wait-timeout', '360']), 'Subida do Compose')
+  if (oauth) {
+    check(compose(['up', '-d', '--wait', '--wait-timeout', '420',
+      'auth-db', 'pet-db', 'partner-db', 'booking-db', 'payment-db', 'notification-db']), 'Inicialização dos bancos OAuth')
+  }
+  check(compose(['up', '-d', '--build', '--wait', '--wait-timeout', '420']), 'Subida do Compose')
+  if (oauth) {
+    const envFile = join(tlsDir, 'diagnose.env')
+    writeFileSync(envFile, '', { flag: 'wx' })
+    check(spawnSync(process.execPath, ['scripts/production/diagnose.mjs', '--project', project,
+      '--env-file', envFile, '--fixtures', 'oauth'], { cwd: root, env, stdio: 'inherit' }), 'Diagnóstico OAuth')
+  }
   const address = publishedAddress('frontend', '80')
-  if (waveB && `http://${address}` !== env.HOMOLOG_ORIGIN) {
+  if (waveB && !oauth && `http://${address}` !== env.HOMOLOG_ORIGIN) {
     throw new Error('A porta do frontend difere da origem usada nos links SMTP.')
   }
   const smtpUrl = waveB ? `http://${publishedAddress('smtp-capture', '8025')}` : ''
@@ -132,6 +173,16 @@ try {
       ('retry@example.test', 'Retry E2E', 'CUSTOMER'),
       ('admin@example.test', 'Administrador E2E', 'ADMIN')
     ) AS account(email, name, role);
+    ${oauth ? `
+    INSERT INTO users (id, email, name, password, role, active)
+    SELECT gen_random_uuid(), email, name, crypt('${password}', gen_salt('bf')), role, active
+    FROM (VALUES
+      ('tutor@gmail.com', 'Tutor Google', 'CUSTOMER', true),
+      ('admin@gmail.com', 'Admin Google', 'ADMIN', true),
+      ('inativo@gmail.com', 'Inativo Google', 'CUSTOMER', false),
+      ('equipe@gmail.com', 'Equipe Google', 'TEAM_MEMBER', true)
+    ) AS account(email, name, role, active);
+    ` : ''}
   `
   check(compose(['exec', '-T', 'auth-db', 'psql', '-q', '-v', 'ON_ERROR_STOP=1', '-U', 'auth', '-d', 'auth_db'], {
     input: sql, stdio: ['pipe', 'inherit', 'inherit'],
@@ -141,7 +192,9 @@ try {
     cwd: frontend,
     env: {
       ...process.env,
-      E2E_BASE_URL: `http://${address}`,
+      E2E_BASE_URL: oauth ? env.HOMOLOG_ORIGIN : `http://${address}`,
+      E2E_GOOGLE_OAUTH: oauth ? '1' : '',
+      E2E_OAUTH_PROVIDER_URL: oauth ? `http://localhost:${env.E2E_OAUTH_PROVIDER_PORT}` : '',
       E2E_TEST_PASSWORD: password,
       E2E_REVIEW_PROJECT: review ? project : '',
       E2E_SMTP_URL: smtpUrl,
@@ -179,5 +232,11 @@ try {
   if (cleanup && cleanup.status !== 0) {
     console.error(`Não foi possível remover a stack descartável ${project}.`)
     process.exitCode = 1
+  }
+  if (tlsDir) {
+    rmSync(join(tlsDir, 'key.pem'), { force: true })
+    rmSync(join(tlsDir, 'cert.pem'), { force: true })
+    rmSync(join(tlsDir, 'diagnose.env'), { force: true })
+    rmdirSync(tlsDir)
   }
 }

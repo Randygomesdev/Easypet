@@ -28,11 +28,14 @@ public class JwtGlobalFilter implements GlobalFilter, Ordered {
 
     private final AuthSessionClient sessions;
     private final boolean verifySession;
+    private final boolean googleEnabled;
 
     public JwtGlobalFilter(AuthSessionClient sessions,
-                           @Value("${gateway.session.enabled}") boolean verifySession) {
+                           @Value("${gateway.session.enabled}") boolean verifySession,
+                           @Value("${GOOGLE_AUTH_ENABLED:false}") String googleEnabled) {
         this.sessions = sessions;
         this.verifySession = verifySession;
+        this.googleEnabled = "true".equals(googleEnabled);
     }
 
     @Value("${jwt.secret}")
@@ -45,9 +48,13 @@ public class JwtGlobalFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/forgot-password",
             "/api/v1/auth/reset-password",
             "/api/v1/auth/reset-password/validate",
-            "/api/v1/auth/team/invitations/accept",
-            "/api/v1/auth/oauth2/exchange"
+            "/api/v1/auth/team/invitations/accept"
     );
+    private static final Set<String> GOOGLE_BROWSER_PATHS = Set.of(
+            "/api/v1/oauth2/authorization/google",
+            "/api/v1/login/oauth2/code/google"
+    );
+    private static final String GOOGLE_EXCHANGE = "/api/v1/auth/oauth2/exchange";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -61,6 +68,13 @@ public class JwtGlobalFilter implements GlobalFilter, Ordered {
             headers.remove(RateLimiterConfig.CLIENT_IP);
             headers.remove(RateLimiterConfig.INGRESS_TOKEN);
         }).build()).build();
+        if (GOOGLE_BROWSER_PATHS.contains(path) || GOOGLE_EXCHANGE.equals(path)) {
+            HttpMethod allowed = GOOGLE_EXCHANGE.equals(path) ? HttpMethod.POST : HttpMethod.GET;
+            if (googleEnabled && request.getMethod() == allowed) {
+                return chain.filter(sanitized);
+            }
+            return respond(exchange, HttpStatus.NOT_FOUND, "Rota indisponível.");
+        }
         if (request.getMethod() == HttpMethod.POST && PUBLIC_AUTH_PATHS.contains(path)) {
             return chain.filter(sanitized);
         }

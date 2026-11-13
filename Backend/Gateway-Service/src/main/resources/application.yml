@@ -43,6 +43,12 @@ spring:
             key-resolver: "#{@ipKeyResolver}"
 
       routes:
+        - id: auth-google-browser
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/oauth2/authorization/google,/api/v1/login/oauth2/code/google,false
+            - Method=GET
+
         - id: auth-team-management
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:

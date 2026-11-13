@@ -15,7 +15,9 @@ test('proxy identifica requisições e protege a entrada da homologação', { ta
   for (const path of [
     '/api/v1/auth/register',
     '/api/v1/auth/register/partner',
-    '/api/v1/auth/oauth2/exchange',
+    ...(process.env.E2E_GOOGLE_OAUTH === '1' ? [] : ['/api/v1/auth/oauth2/exchange']),
+    '/api/v1/oauth2/authorization/google',
+    '/api/v1/login/oauth2/code/google',
     '/api/v1/internal/booking-events',
     '/api/v1/internal/notification-recipients/00000000-0000-4000-8000-000000000099',
     '/api/v1/payments/checkout',
@@ -40,7 +42,7 @@ test('proxy identifica requisições e protege a entrada da homologação', { ta
   const sameOrigin = await request.post('/api/v1/bookings', { headers: { Origin: new URL(baseURL).origin, ...forged } })
   expect(sameOrigin.status()).toBe(401)
 
-  for (const path of ['/reset-password', '/team/invitation']) {
+  for (const path of ['/reset-password', '/team/invitation', '/login-success']) {
     const response = await request.get(path)
     expect(response.headers()['referrer-policy']).toBe('no-referrer')
     expect(response.headers()['cache-control']).toBe('no-store')

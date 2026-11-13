@@ -9,6 +9,7 @@ export default defineConfig({
   use: {
     ...devices['Desktop Chrome'],
     baseURL: process.env.E2E_BASE_URL,
+    ignoreHTTPSErrors: process.env.E2E_GOOGLE_OAUTH === '1',
     actionTimeout: 15_000,
     timezoneId: 'America/Sao_Paulo',
     trace: 'retain-on-failure',

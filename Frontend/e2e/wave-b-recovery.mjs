@@ -67,6 +67,12 @@ export async function recoverFixtures(root, env, project, compose) {
         FROM notification_event e JOIN notification_delivery d ON d.event_id = e.id
         WHERE e.id = ${outbox} AND e.booking_id = ${booked} ORDER BY d.id`],
     }
+    if (env.E2E_GOOGLE_OAUTH === '1') {
+      queries.auth.push(
+        "SELECT id, role, session_version, google_subject FROM users WHERE email = 'tutor@gmail.com' AND google_subject = 'fixture-tutor'",
+        "SELECT id, role, session_version, google_subject FROM users WHERE email = 'admin@gmail.com' AND google_subject = 'fixture-admin'",
+      )
+    }
     const evidence = {}
     for (const [name, checks] of Object.entries(queries)) {
       evidence[name] = checks.map(query => {

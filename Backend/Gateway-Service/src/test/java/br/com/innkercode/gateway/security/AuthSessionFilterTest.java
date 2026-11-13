@@ -62,6 +62,32 @@ class AuthSessionFilterTest {
         assertDenied(Mono.never(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
+    @Test
+    void permitsOnlyExactEnabledGoogleRequestsWithoutBearer() {
+        var client = WebClient.builder().exchangeFunction(request -> fail("Consulta indevida de sessão"));
+        var sessions = new AuthSessionClient(client, "http://auth.test", Duration.ofMillis(500));
+        for (var request : new MockServerHttpRequest[] {
+                MockServerHttpRequest.get("/api/v1/oauth2/authorization/google").build(),
+                MockServerHttpRequest.get("/api/v1/login/oauth2/code/google?code=ficticio").build(),
+                MockServerHttpRequest.post("/api/v1/auth/oauth2/exchange").build()
+        }) {
+            var disabled = MockServerWebExchange.from(request);
+            new JwtGlobalFilter(sessions, true, "false").filter(disabled, ignored -> fail("Google desligado")).block();
+            assertEquals(HttpStatus.NOT_FOUND, disabled.getResponse().getStatusCode());
+            var enabled = MockServerWebExchange.from(request);
+            var forwarded = new AtomicInteger();
+            new JwtGlobalFilter(sessions, true, "true").filter(enabled, ignored -> {
+                forwarded.incrementAndGet();
+                return Mono.empty();
+            }).block();
+            assertEquals(1, forwarded.get());
+        }
+        var wrongMethod = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/api/v1/auth/oauth2/exchange").build());
+        new JwtGlobalFilter(sessions, true, "true").filter(wrongMethod, ignored -> fail("Método indevido")).block();
+        assertEquals(HttpStatus.NOT_FOUND, wrongMethod.getResponse().getStatusCode());
+    }
+
     private static void assertDenied(Mono<ClientResponse> auth, HttpStatus expected) {
         var exchange = exchange("/api/v1/bookings");
         filter(WebClient.builder().exchangeFunction(request -> auth))
@@ -72,7 +98,7 @@ class AuthSessionFilterTest {
     }
 
     private static JwtGlobalFilter filter(WebClient.Builder client) {
-        return new JwtGlobalFilter(new AuthSessionClient(client, "http://auth.test", Duration.ofMillis(500)), true);
+        return new JwtGlobalFilter(new AuthSessionClient(client, "http://auth.test", Duration.ofMillis(500)), true, "false");
     }
 
     private static MockServerWebExchange exchange(String path) {

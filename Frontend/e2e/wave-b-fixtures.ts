@@ -3,6 +3,7 @@ import { expect, type APIRequestContext, type Locator, type Page } from '@playwr
 import { authenticate, retryRateLimited } from './authenticate'
 
 export const smtpUrl = process.env.E2E_SMTP_URL
+export const ignoreHTTPSErrors = process.env.E2E_GOOGLE_OAUTH === '1'
 const project = process.env.E2E_REVIEW_PROJECT ?? ''
 
 export function password() {
