@@ -1,0 +1,8 @@
+# Apply together with compose.homolog.yml, from the repository root.
+# Recheck host routes before creating this network; never attach Setoriza services.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.80.0/24
+          gateway: 172.30.80.1

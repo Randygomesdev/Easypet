@@ -1,6 +1,6 @@
 # Operação do EasyPet
 
-Use estes procedimentos no host Docker do ambiente, com Node.js 24 e Docker Compose. A configuração de homologação publica apenas o Nginx em loopback. A entrada compartilhada da VPS termina HTTPS e restringe o acesso à rede de homologação. [Configuração da homologação](../../Backend/Infra/docs/homologacao.md)
+Use estes procedimentos no host Docker do ambiente, com Node.js 24 e Docker Compose. A configuração de homologação publica apenas o Nginx em loopback. A entrada compartilhada da VPS termina HTTPS. Para `easypet.innker.com.br`, o usuário autorizou site acessível pela internet com autenticação restrita a convidados (`public-invited`); outros ambientes podem manter VPN/rede privada. [Configuração da homologação](../../Backend/Infra/docs/homologacao.md) e [preparação da VPS Setoriza](setoriza-homolog.md).
 
 ## Preflight e manifesto do release
 

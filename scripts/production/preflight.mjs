@@ -31,8 +31,8 @@ try {
   const port = number('port')
   if (port > 65535) throw new Error('Porta fora do intervalo TCP.')
   if (args['edge-ip'] && !isIP(args['edge-ip'])) throw new Error('--edge-ip precisa ser um endereço IP exato.')
-  if (!['vpn', 'private-network'].includes(args['access-policy'])) {
-    throw new Error('Informe --access-policy vpn ou private-network.')
+  if (!['vpn', 'private-network', 'public-invited'].includes(args['access-policy'])) {
+    throw new Error('Informe --access-policy vpn, private-network ou public-invited.')
   }
   const context = local('docker', ['context', 'show'])
   const endpoint = local('docker', ['context', 'inspect', '--format', '{{.Endpoints.docker.Host}}', context])
@@ -67,7 +67,10 @@ try {
   } else {
     check('certificado local informado', false)
   }
-  console.log(`PENDENTE verificação do acesso por ${args['access-policy']}, cadeia HTTPS e smoke no endereço publicado.`)
+  if (args['access-policy'] === 'public-invited') {
+    console.log('PENDENTE confirmar contas convidadas, allowlist Google, recusa de cadastro público e autorização das APIs no endereço publicado.')
+  }
+  console.log(`PENDENTE verificação da política ${args['access-policy']}, cadeia HTTPS e smoke no endereço publicado.`)
 } catch (error) {
   console.error(error.message)
   process.exitCode = 1
