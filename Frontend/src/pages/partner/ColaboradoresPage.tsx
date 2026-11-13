@@ -1,5 +1,8 @@
+import { isAxiosError } from 'axios'
+import { Button } from '../../components/ui/Button'
+import { EmptyState, ErrorState, LoadingState } from '../../components/ui/FeedbackState'
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Loader2, Plus, UserRound, Pencil, Trash2, Users } from 'lucide-react'
 import { partnerService } from '../../services/partner.service'
 import { staffService, type StaffResponse } from '../../services/staff.service'
@@ -11,38 +14,58 @@ export default function ColaboradoresPage() {
   const [partnerId, setPartnerId] = useState<string | null>(null)
   const [removing, setRemoving]   = useState<string | null>(null)
 
+  const [loadError, setLoadError] = useState('')
+  const [missingPartner, setMissingPartner] = useState(false)
+  const [writeError, setWriteError] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+
   useEffect(() => {
+    let current = true
     partnerService.getMe()
       .then(async p => {
-        setPartnerId(p.id)
         const members = await staffService.getByPartner(p.id)
+        if (!current) return
+        setPartnerId(p.id)
         setStaff(members.filter(s => s.status === 'ACTIVE'))
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
+      .catch(cause => {
+        if (!current) return
+        if (isAxiosError(cause) && cause.response?.status === 404 && cause.config?.url === '/partners/me') {
+          setMissingPartner(true)
+        } else setLoadError('Não foi possível carregar os colaboradores.')
+      })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [attempt])
 
   async function handleRemove(id: string) {
+    if (!partnerId) return
     if (!confirm('Deseja desativar este colaborador?')) return
+    setWriteError(false)
     setRemoving(id)
     try {
-      await staffService.remove(id)
+      await staffService.remove(id, partnerId)
       setStaff(prev => prev.filter(s => s.id !== id))
+    } catch {
+      setWriteError(true)
     } finally {
       setRemoving(null)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingState label="Carregando colaboradores…" />
+
+  if (missingPartner) return <EmptyState icon={Users} title="Cadastre seu estabelecimento"
+    description="O cadastro é necessário para adicionar colaboradores."
+    action={<Link className="font-semibold underline text-text-heading" to="/partner/cadastro">Abrir cadastro</Link>} />
+
+  if (loadError) return <ErrorState message={loadError} action={<Button variant="secondary" onClick={() => {
+    setLoadError(''); setLoading(true); setAttempt(value => value + 1)
+  }}>Tentar novamente</Button>} />
 
   return (
     <div>
+      {writeError && <p role="alert" className="mb-4 text-sm text-text-danger">Não foi possível desativar o colaborador. Tente novamente.</p>}
       {/* Header */}
       <div className="flex items-start justify-between mb-4 lg:mb-6 gap-4">
         <div>

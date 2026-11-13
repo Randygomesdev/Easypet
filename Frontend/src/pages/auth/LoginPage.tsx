@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { Mail, Lock, Eye, EyeOff, User, CheckCircle, Building2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { authService } from '../../services/auth.service'
+import { authRetryMessage, authService, getAuthError } from '../../services/auth.service'
 import { env } from '../../config/env'
 import LogoEasypet from '../../assets/LogoEasypet.svg'
 
@@ -33,8 +33,12 @@ export default function LoginPage() {
           email:    form.get('email')    as string,
           password: form.get('password') as string,
         })
-        login(data)
-        navigate('/')
+        if (data.role === 'USER') {
+          setError('O painel ainda não está disponível para este tipo de conta.')
+          return
+        }
+        login({ ...data, role: data.role })
+        navigate('/painel', { replace: true })
       } else {
         const data = await authService.register({
           name:     form.get('name')     as string,
@@ -42,11 +46,10 @@ export default function LoginPage() {
           password: form.get('password') as string,
         })
         login(data)
-        navigate('/')
+        navigate('/painel', { replace: true })
       }
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })
-        ?.response?.data?.message
+      const msg = authRetryMessage(err) ?? getAuthError(err)?.message
       setError(msg || 'Algo deu errado. Tente novamente.')
     } finally {
       setLoading(false)
@@ -190,12 +193,14 @@ export default function LoginPage() {
             />
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
+              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
               <div className="flex items-center border border-gray-200 rounded-xl px-3 gap-2
                               focus-within:ring-2 focus-within:ring-blue-200 transition-shadow">
                 <Lock size={16} className="text-gray-400 shrink-0" />
                 <input
+                  id="login-password"
                   name="password"
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                   type={showPassword ? 'text' : 'password'}
                   placeholder={mode === 'register' ? 'No mínimo 6 caracteres' : '••••••••'}
                   required
@@ -205,6 +210,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   className="text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -212,13 +218,8 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Lembrar-me + Esqueceu — só no login */}
-            {!env.internalPilot && mode === 'login' && (
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-                  <input type="checkbox" name="remember" className="accent-(--color-primary-700) w-4 h-4" />
-                  Lembrar-me
-                </label>
+            {mode === 'login' && (!env.internalPilot || import.meta.env.VITE_AUTH_RECOVERY_ENABLED === 'true') && (
+              <div className="flex items-center justify-end">
                 <Link to="/forgot-password" className="text-sm text-(--color-primary-600) hover:underline">
                   Esqueceu a senha?
                 </Link>
@@ -227,7 +228,7 @@ export default function LoginPage() {
 
             {/* Erro */}
             {error && (
-              <p className="text-sm text-red-500 text-center bg-red-50 py-2 px-3 rounded-lg">
+              <p role="alert" className="text-sm text-red-500 text-center bg-red-50 py-2 px-3 rounded-lg">
                 {error}
               </p>
             )}
@@ -285,12 +286,14 @@ function InputField({ name, type, placeholder, label, icon, required }: {
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <label htmlFor={`login-${name}`} className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
       <div className="flex items-center border border-gray-200 rounded-xl px-3 gap-2
                       focus-within:ring-2 focus-within:ring-blue-200 transition-shadow">
         {icon}
         <input
+          id={`login-${name}`}
           name={name}
+          autoComplete={name}
           type={type}
           placeholder={placeholder}
           required={required}

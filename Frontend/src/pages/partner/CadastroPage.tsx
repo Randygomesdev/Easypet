@@ -1,30 +1,16 @@
+import { isAxiosError } from 'axios'
+import { Button } from '../../components/ui/Button'
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
+import { customerApiError } from '../../services/customer.service'
 import { useState, useEffect } from 'react'
 import { Camera, Save, Loader2 } from 'lucide-react'
 import EnderecoTab from './tabs/EnderecoTab'
 import HorarioTab from './tabs/HorarioTab'
-import { partnerService, type PartnerPayload, type PartnerResponse } from '../../services/partner.service'
+import { formatCnpj, formatPhone } from './partnerForm'
+import { partnerService, buildPayload, type PartnerPayload, type PartnerResponse } from '../../services/partner.service'
 
 type Tab = 'dados' | 'endereco' | 'horario'
 export type FormErrors = Partial<Record<keyof PartnerPayload, string>>
-
-/* ─── Máscaras ─── */
-export function formatCnpj(v: string) {
-  const d = v.replace(/\D/g, '').slice(0, 14)
-  if (d.length <=  2) return d
-  if (d.length <=  5) return `${d.slice(0, 2)}.${d.slice(2)}`
-  if (d.length <=  8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`
-  if (d.length <= 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`
-  return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`
-}
-
-export function formatPhone(v: string) {
-  const d = v.replace(/\D/g, '').slice(0, 11)
-  if (!d.length)      return ''
-  if (d.length <=  2) return `(${d}`
-  if (d.length <=  6) return `(${d.slice(0, 2)}) ${d.slice(2)}`
-  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`
-  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
-}
 
 /* ─── Validação ─── */
 const DADOS_FIELDS:    (keyof PartnerPayload)[] = ['legalName', 'name', 'cnpj', 'email', 'contactPhone', 'description']
@@ -34,6 +20,8 @@ export default function CadastroPage() {
   const [activeTab, setActiveTab] = useState<Tab>('dados')
   const [partner, setPartner]     = useState<PartnerResponse | null>(null)
   const [loading, setLoading]     = useState(true)
+  const [loadError, setLoadError] = useState(false)
+  const [attempt, setAttempt] = useState(0)
   const [saving, setSaving]       = useState(false)
   const [success, setSuccess]     = useState(false)
   const [error, setError]         = useState('')
@@ -49,8 +37,10 @@ export default function CadastroPage() {
   })
 
   useEffect(() => {
+    let current = true
     partnerService.getMe()
       .then((data) => {
+        if (!current) return
         setPartner(data)
         setForm({
           name:                        data.name                        ?? '',
@@ -58,6 +48,7 @@ export default function CadastroPage() {
           cnpj:                        data.cnpj                        ?? '',
           email:                       data.email                       ?? '',
           contactPhone:                data.contactPhone                ?? '',
+          phone:                       data.phone                       ?? '',
           description:                 data.description                 ?? '',
           stateRegistration:           data.stateRegistration           ?? '',
           stateRegistrationExempt:     data.stateRegistrationExempt     ?? false,
@@ -70,12 +61,19 @@ export default function CadastroPage() {
           complement:                  data.complement                  ?? '',
           city:                        data.city                        ?? '',
           state:                       data.state                       ?? '',
+          latitude: data.latitude,
+          longitude: data.longitude,
           businessHours:               data.businessHours               ?? [],
         })
       })
-      .catch(() => setPartner(null))
-      .finally(() => setLoading(false))
-  }, [])
+      .catch(cause => {
+        if (!current) return
+        if (isAxiosError(cause) && cause.response?.status === 404) setPartner(null)
+        else setLoadError(true)
+      })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [attempt])
 
   function handleChange(field: keyof PartnerPayload, value: string | boolean) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -118,7 +116,7 @@ export default function CadastroPage() {
     setSuccess(false)
     try {
       if (partner) {
-        const updated = await partnerService.updateMe(form)
+        const updated = await partnerService.updateMe(buildPayload(partner, form))
         setPartner(updated)
       } else {
         const created = await partnerService.create(form)
@@ -126,8 +124,8 @@ export default function CadastroPage() {
       }
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch {
-      setError('Erro ao salvar. Verifique os dados e tente novamente.')
+    } catch (cause) {
+      setError(customerApiError(cause, 'Erro ao salvar. Verifique os dados e tente novamente.').message)
     } finally {
       setSaving(false)
     }
@@ -145,13 +143,11 @@ export default function CadastroPage() {
     return false
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingState label="Carregando cadastro…" />
+  if (loadError) return <ErrorState message="Não foi possível carregar o cadastro do estabelecimento."
+    action={<Button variant="secondary" onClick={() => {
+      setLoadError(false); setLoading(true); setAttempt(value => value + 1)
+    }}>Tentar novamente</Button>} />
 
   return (
     <div>
@@ -257,9 +253,7 @@ function DadosCadastrais({ form, onChange, errors }: {
         <div className="w-24 h-24 xl:w-32 xl:h-32 rounded-full bg-(--color-bg) flex items-center justify-center border-2 border-dashed border-(--color-border)">
           <Camera size={28} className="text-(--color-icon-default)" />
         </div>
-        <button className="text-sm text-primary-600 hover:text-primary-500 transition-colors">
-          Carregar Foto
-        </button>
+        <p className="text-center text-xs text-text-muted">Upload de foto indisponível.</p>
       </div>
 
       {/* Colunas */}

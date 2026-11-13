@@ -66,24 +66,24 @@ export const staffService = {
   getByPartner:   (partnerId: string) =>
     api.get<StaffResponse[]>(`/partners/${partnerId}/staff`).then(r => r.data),
 
-  getById:        (staffId: string) =>
-    api.get<StaffResponse>(`/partners/staff/${staffId}`).then(r => r.data),
+  getById:        (staffId: string, partnerId?: string) =>
+    api.get<StaffResponse>(`/partners/staff/${staffId}`, { params: { partnerId } }).then(r => r.data),
 
-  update:         (staffId: string, data: StaffRequest) =>
-    api.put<StaffResponse>(`/partners/staff/${staffId}`, data).then(r => r.data),
+  update:         (staffId: string, data: StaffRequest, partnerId?: string) =>
+    api.put<StaffResponse>(`/partners/staff/${staffId}`, data, { params: { partnerId } }).then(r => r.data),
 
-  remove:         (staffId: string) =>
-    api.delete(`/partners/staff/${staffId}`),
+  remove:         (staffId: string, partnerId?: string) =>
+    api.delete(`/partners/staff/${staffId}`, { params: { partnerId } }),
 
-  getSchedule:    (staffId: string) =>
-    api.get<StaffScheduleResponse[]>(`/partners/staff/${staffId}/schedule`).then(r => r.data),
+  getSchedule:    (staffId: string, partnerId?: string) =>
+    api.get<StaffScheduleResponse[]>(`/partners/staff/${staffId}/schedule`, { params: { partnerId } }).then(r => r.data),
 
-  updateSchedule: (staffId: string, data: StaffScheduleRequest[]) =>
-    api.put<StaffScheduleResponse[]>(`/partners/staff/${staffId}/schedule`, data).then(r => r.data),
+  updateSchedule: (staffId: string, data: StaffScheduleRequest[], partnerId?: string) =>
+    api.put<StaffScheduleResponse[]>(`/partners/staff/${staffId}/schedule`, data, { params: { partnerId } }).then(r => r.data),
 
-  getAbsences:    (staffId: string) =>
-    api.get<StaffAbsenceResponse[]>(`/partners/staff/${staffId}/absences`).then(r => r.data),
+  getAbsences:    (staffId: string, partnerId?: string) =>
+    api.get<StaffAbsenceResponse[]>(`/partners/staff/${staffId}/absences`, { params: { partnerId } }).then(r => r.data),
 
-  createAbsence:  (staffId: string, data: StaffAbsenceRequest) =>
-    api.post<StaffAbsenceResponse>(`/partners/staff/${staffId}/absences`, data).then(r => r.data),
+  createAbsence:  (staffId: string, data: StaffAbsenceRequest, partnerId?: string) =>
+    api.post<StaffAbsenceResponse>(`/partners/staff/${staffId}/absences`, data, { params: { partnerId } }).then(r => r.data),
 }

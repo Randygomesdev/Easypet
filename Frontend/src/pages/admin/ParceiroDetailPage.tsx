@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Loader2, Camera } from 'lucide-react'
+import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
+import { Dialog } from '../../components/ui/Dialog'
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
+import { Pagination } from '../../components/ui/Pagination'
+import { useCustomerQuery } from '../../features/customers/useCustomerQuery'
+import { customerApiError } from '../../services/customer.service'
 import EnderecoTab from '../partner/tabs/EnderecoTab'
 import HorarioTab from '../partner/tabs/HorarioTab'
 import ServicosTab from './tabs/ServicosTab'
@@ -13,7 +20,8 @@ import {
   type PartnerPayload,
   type PartnerResponse,
 } from '../../services/partner.service'
-import { formatCnpj, formatPhone, type FormErrors } from '../partner/CadastroPage'
+import type { FormErrors } from '../partner/CadastroPage'
+import { formatCnpj, formatPhone } from '../partner/partnerForm'
 
 type Tab = 'dados' | 'endereco' | 'horario' | 'servicos' | 'pacotes' | 'colaboradores' | 'agendamentos'
 
@@ -21,7 +29,12 @@ const DADOS_FIELDS:    (keyof PartnerPayload)[] = ['legalName', 'name', 'cnpj', 
 const ENDERECO_FIELDS: (keyof PartnerPayload)[] = ['zipCode', 'address', 'neighborhood', 'city', 'state']
 
 export default function ParceiroDetailPage() {
-  const { id }   = useParams<{ id: string }>()
+  const { id } = useParams<{ id: string }>()
+  if (!id) return <ErrorState message="Estabelecimento não encontrado." />
+  return <ParceiroEditor key={id} id={id} />
+}
+
+function ParceiroEditor({ id }: { id: string }) {
   const navigate = useNavigate()
 
   const [partner,    setPartner]    = useState<PartnerResponse | null>(null)
@@ -31,7 +44,9 @@ export default function ParceiroDetailPage() {
   const [error,      setError]      = useState('')
   const [errors,     setErrors]     = useState<FormErrors>({})
   const [activeTab,  setActiveTab]  = useState<Tab>('dados')
-  const [active,     setActive]     = useState(true)
+  const [showStatus, setShowStatus] = useState(false)
+  const [loadAttempt, retryLoad] = useState(0)
+  const [loadError, setLoadError] = useState(false)
 
   const [form, setForm] = useState<PartnerPayload>({
     name: '', legalName: '', cnpj: '',
@@ -43,17 +58,18 @@ export default function ParceiroDetailPage() {
   })
 
   useEffect(() => {
-    if (!id) return
-    partnerService.getById(id)
+    let current = true
+    partnerService.getAdminPartner(id)
       .then(data => {
+        if (!current) return
         setPartner(data)
-        setActive(data.active)
         setForm({
           name:                        data.name                        ?? '',
           legalName:                   data.legalName                   ?? '',
           cnpj:                        data.cnpj                        ?? '',
           email:                       data.email                       ?? '',
           contactPhone:                data.contactPhone                ?? '',
+          phone:                       data.phone                       ?? '',
           description:                 data.description                 ?? '',
           stateRegistration:           data.stateRegistration           ?? '',
           stateRegistrationExempt:     data.stateRegistrationExempt     ?? false,
@@ -71,9 +87,10 @@ export default function ParceiroDetailPage() {
           businessHours:               data.businessHours               ?? [],
         })
       })
-      .catch(() => setError('Não foi possível carregar os dados do parceiro.'))
-      .finally(() => setLoading(false))
-  }, [id])
+      .catch(() => { if (current) setLoadError(true) })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [id, loadAttempt])
 
   function handleChange(field: keyof PartnerPayload, value: string | boolean) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -117,12 +134,12 @@ export default function ParceiroDetailPage() {
     setSuccess(false)
     try {
       const payload = buildPayload(partner, form)
-      const updated = await partnerService.updateById(id, { ...payload, active })
+      const updated = await partnerService.updateById(id, payload)
       setPartner(updated)
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-    } catch {
-      setError('Erro ao salvar. Verifique os dados e tente novamente.')
+    } catch (cause) {
+      setError(customerApiError(cause, 'Erro ao salvar. Verifique os dados e tente novamente.').message)
     } finally {
       setSaving(false)
     }
@@ -144,13 +161,11 @@ export default function ParceiroDetailPage() {
     return false
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingState label="Carregando estabelecimento…" />
+  if (loadError || !partner) return <ErrorState message="Não foi possível carregar o estabelecimento."
+    action={<Button variant="secondary" onClick={() => {
+      setLoadError(false); setLoading(true); retryLoad(value => value + 1)
+    }}>Tentar novamente</Button>} />
 
   return (
     <div className="space-y-5">
@@ -175,24 +190,13 @@ export default function ParceiroDetailPage() {
           </div>
         </div>
 
-        {/* Toggle ativo */}
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-(--color-text-muted)">Status:</span>
-          <button
-            onClick={() => setActive(v => !v)}
-            className={`relative w-11 h-6 rounded-full transition-colors ${
-              active ? 'bg-(--color-primary-700)' : 'bg-(--color-border)'
-            }`}
-          >
-            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${
-              active ? 'left-6' : 'left-1'
-            }`} />
-          </button>
-          <span className={`text-sm font-semibold ${active ? 'text-emerald-600' : 'text-pink-500'}`}>
-            {active ? 'Ativo' : 'Inativo'}
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge tone={partner.active ? 'success' : 'neutral'}>{partner.active ? 'Ativo' : 'Inativo'}</Badge>
+          <Button variant="secondary" disabled={saving} onClick={() => setShowStatus(true)}>Situação e histórico</Button>
         </div>
       </div>
+      {showStatus && <PartnerStatusDialog partner={partner} onClose={() => setShowStatus(false)}
+        onChange={setPartner} />}
 
       {/* Form */}
       <div className="bg-(--color-surface) rounded-xl shadow-md border border-(--color-border)">
@@ -295,9 +299,7 @@ function DadosCadastrais({ form, onChange, errors }: {
         <div className="w-24 h-24 xl:w-32 xl:h-32 rounded-full bg-(--color-bg) flex items-center justify-center border-2 border-dashed border-(--color-border)">
           <Camera size={28} className="text-(--color-icon-default)" />
         </div>
-        <button className="text-sm text-(--color-primary-600) hover:text-(--color-primary-500) transition-colors">
-          Carregar Foto
-        </button>
+        <p className="text-center text-xs text-text-muted">Upload de foto indisponível.</p>
       </div>
 
       {/* Colunas */}
@@ -430,5 +432,73 @@ function InscricaoField({ label, value, isento, onChange, setIsento, placeholder
                    disabled:opacity-60 disabled:cursor-not-allowed"
       />
     </div>
+  )
+}
+
+
+function PartnerStatusDialog({ partner, onClose, onChange }: {
+  partner: PartnerResponse
+  onClose: () => void
+  onChange: (partner: PartnerResponse) => void
+}) {
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [page, setPage] = useState(0)
+  const load = useCallback((signal: AbortSignal) => partnerService.statusHistory(partner.id, page, signal), [partner.id, page])
+  const history = useCustomerQuery(load, 'Não foi possível consultar o histórico.')
+  const action = partner.active ? 'Desativar estabelecimento' : 'Reativar estabelecimento'
+
+  async function update(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!reason.trim() || busy) return
+    setBusy(true); setError(''); setNotice('')
+    try {
+      const updated = await partnerService.setActive(partner.id, !partner.active, reason.trim())
+      onChange(updated)
+      setNotice(updated.active ? 'Estabelecimento reativado.' : 'Estabelecimento desativado.')
+      setReason('')
+      if (page > 0) setPage(0)
+      else history.reload()
+    } catch (cause) {
+      setError(customerApiError(cause, 'Não foi possível alterar a situação. Tente novamente.').message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Dialog open title="Situação do estabelecimento" description={partner.name}
+      onOpenChange={open => { if (!open && !busy) onClose() }}>
+      <form className="mt-4 space-y-3" onSubmit={update}>
+        <label className="block space-y-1 text-sm text-text-body">
+          <span>Motivo da alteração</span>
+          <textarea className="w-full rounded-xl border border-border bg-bg p-3 text-text-body" required maxLength={500}
+            value={reason} onChange={event => setReason(event.target.value)} disabled={busy} />
+        </label>
+        {error && <p role="alert" className="text-sm text-text-danger">{error}</p>}
+        {notice && <p role="status" className="text-sm text-text-body">{notice}</p>}
+        <Button type="submit" variant={partner.active ? 'danger' : 'primary'} disabled={busy || !reason.trim()}>
+          {busy ? 'Salvando…' : action}
+        </Button>
+      </form>
+      <section className="mt-5 space-y-2 border-t border-border pt-4">
+        <h3 className="text-sm font-semibold text-text-heading">Histórico de situação</h3>
+        {history.loading && <LoadingState label="Carregando histórico…" />}
+        {history.error && <ErrorState message={history.error}
+          action={<Button variant="secondary" onClick={history.reload}>Tentar novamente</Button>} />}
+        {history.data?.content.length === 0 && <p className="text-sm text-text-body">Nenhuma alteração registrada.</p>}
+        {history.data && history.data.content.length > 0 && <ul className="space-y-2 text-sm text-text-body">
+          {history.data.content.map(change => <li key={change.id} className="rounded-xl border border-border p-3">
+            <p className="font-semibold">{change.active ? 'Reativado' : 'Desativado'}</p>
+            <p>{change.reason}</p>
+            <p className="break-all text-xs">{new Date(change.changedAt).toLocaleString('pt-BR')} · Operador {change.actorId}</p>
+          </li>)}
+        </ul>}
+        {history.data && <Pagination page={page + 1} totalPages={history.data.totalPages}
+          onPageChange={next => setPage(next - 1)} label="Paginação do histórico" />}
+      </section>
+    </Dialog>
   )
 }

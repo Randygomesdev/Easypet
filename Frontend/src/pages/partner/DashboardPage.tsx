@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Loader2, Star, Users, CalendarCheck,
+  Star, Users, CalendarCheck,
   Wrench, DollarSign, UserPlus, Clock, ArrowUpRight,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from 'recharts'
-import { partnerService, type PartnerResponse } from '../../services/partner.service'
-import { staffService, type StaffResponse } from '../../services/staff.service'
+import { Button } from '../../components/ui/Button'
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
+import PartnerSetupChecklist from '../../features/onboarding/PartnerSetupChecklist'
+import { usePartnerSetup } from '../../features/onboarding/usePartnerSetup'
 import {
   bookingService,
   type BookingResponse,
@@ -31,6 +33,7 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
   IN_PROGRESS: '#2563eb',
   COMPLETED:   '#059669',
   CANCELLED:   '#db2777',
+  NO_SHOW:     '#9d174d',
 }
 
 const STATUS_STYLE: Record<BookingStatus, string> = {
@@ -39,6 +42,7 @@ const STATUS_STYLE: Record<BookingStatus, string> = {
   IN_PROGRESS: 'bg-blue-100    text-blue-700',
   PENDING:     'bg-amber-100   text-amber-700',
   CANCELLED:   'bg-pink-100    text-pink-600',
+  NO_SHOW:     'bg-pink-100    text-pink-600',
 }
 
 /* ─────────────────────────────────────────────
@@ -95,48 +99,65 @@ function StatusBadge({ status }: { status: BookingStatus }) {
    Página
 ───────────────────────────────────────────── */
 export default function DashboardPage() {
-  const navigate = useNavigate()
+  const setup = usePartnerSetup()
+  const partner = setup.partner.status === 'ready' ? setup.partner.data : null
 
-  const [partner,       setPartner]       = useState<PartnerResponse | null>(null)
-  const [staff,         setStaff]         = useState<StaffResponse[]>([])
-  const [todayBookings, setTodayBookings] = useState<BookingResponse[]>([])
-  const [dailyStats,    setDailyStats]    = useState<DailyStatsEntry[]>([])
-  const [revenue,       setRevenue]       = useState<number>(0)
-  const [newClients,    setNewClients]    = useState<number>(0)
-  const [loading,       setLoading]       = useState(true)
+  return (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-bold text-text-heading lg:text-3xl">
+          {getGreeting()}, {partner?.name?.split(' ')[0] ?? 'parceiro'}!
+        </h1>
+        <p className="mt-1 text-sm text-text-body first-letter:uppercase">{formatDatePT(new Date())}</p>
+      </div>
+      <PartnerSetupChecklist setup={setup} />
+      {partner && setup.staff.status === 'ready' && (
+        <DashboardMetrics key={partner.id} partnerId={partner.id} rating={partner.rating}
+          serviceCount={partner.services.length} staffCount={setup.staff.data.length}
+          activeStaff={setup.staff.data.filter(person => person.status === 'ACTIVE').length} />
+      )}
+    </div>
+  )
+}
+
+type DashboardStats = {
+  todayBookings: BookingResponse[]
+  dailyStats: DailyStatsEntry[]
+  revenue: number
+  newClients: number
+}
+
+function DashboardMetrics({ partnerId, rating, serviceCount, staffCount, activeStaff }: {
+  partnerId: string; rating: number; serviceCount: number; staffCount: number; activeStaff: number
+}) {
+  const navigate = useNavigate()
+  const [stats, setStats] = useState<DashboardStats | 'error'>()
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
-    partnerService.getMe()
-      .then(async p => {
-        setPartner(p)
-        const today = toDateKey(new Date())
-        const month = toMonthKey(new Date())
+    let current = true
+    const today = toDateKey(new Date())
+    const month = toMonthKey(new Date())
+    Promise.all([
+      bookingService.getByPartner(partnerId, { date: today, size: 50 }),
+      bookingService.getDailyStats(partnerId, 7),
+      bookingService.getRevenueStats(partnerId, month),
+      bookingService.getClientStats(partnerId, month),
+    ]).then(([bookings, dailyStats, revenue, clients]) => {
+      if (current) setStats({ todayBookings: bookings.content, dailyStats, revenue: Number(revenue.revenue), newClients: clients.newClients })
+    }).catch(() => { if (current) setStats('error') })
+    return () => { current = false }
+  }, [partnerId, attempt])
 
-        const results = await Promise.allSettled([
-          staffService.getByPartner(p.id),
-          bookingService.getByPartner(p.id, { date: today, size: 50 }),
-          bookingService.getDailyStats(p.id, 7),
-          bookingService.getRevenueStats(p.id, month),
-          bookingService.getClientStats(p.id, month),
-        ])
-
-        if (results[0].status === 'fulfilled') setStaff(results[0].value)
-        if (results[1].status === 'fulfilled') setTodayBookings(results[1].value.content)
-        if (results[2].status === 'fulfilled') setDailyStats(results[2].value)
-        if (results[3].status === 'fulfilled') setRevenue(Number(results[3].value.revenue))
-        if (results[4].status === 'fulfilled') setNewClients(results[4].value.newClients)
-      })
-      .catch(err => {
-        if (err?.response?.status === 404) navigate('/partner/cadastro', { replace: true })
-      })
-      .finally(() => setLoading(false))
-  }, [])
+  if (!stats) return <LoadingState label="Carregando indicadores…" />
+  if (stats === 'error') return <ErrorState message="Não foi possível carregar os indicadores do painel."
+    action={<Button variant="secondary" onClick={() => { setStats(undefined); setAttempt(value => value + 1) }}>
+      Recarregar indicadores
+    </Button>} />
 
   /* ── Dados derivados ─────────────────────── */
-  const firstName        = partner?.name?.split(' ')[0] ?? 'parceiro'
-  const activeStaff      = staff.filter(s => s.status === 'ACTIVE').length
-  const avaliacaoMedia   = partner?.rating ?? 0
-  const servicosCad      = partner?.services?.length ?? 0
+  const { todayBookings, dailyStats, revenue, newClients } = stats
+  const avaliacaoMedia   = rating ?? 0
   const agendamentosHoje = todayBookings.length
 
   const statusCount = todayBookings.reduce<Record<string, number>>((acc, b) => {
@@ -210,7 +231,7 @@ export default function DashboardPage() {
     {
       label:     'Colaboradores Ativos',
       value:     String(activeStaff),
-      sub:       `de ${staff.length} cadastrado${staff.length !== 1 ? 's' : ''}`,
+      sub:       `de ${staffCount} cadastrado${staffCount !== 1 ? 's' : ''}`,
       icon:      <Users size={20} />,
       iconBg:    'bg-teal-100',
       iconColor: 'text-teal-600',
@@ -225,7 +246,7 @@ export default function DashboardPage() {
     },
     {
       label:     'Serviços Cadastrados',
-      value:     String(servicosCad),
+      value:     String(serviceCount),
       sub:       'serviços no catálogo',
       icon:      <Wrench size={20} />,
       iconBg:    'bg-pink-100',
@@ -233,28 +254,9 @@ export default function DashboardPage() {
     },
   ]
 
-  /* ── Loading ─────────────────────────────── */
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-      </div>
-    )
-  }
-
   /* ── Render ──────────────────────────────── */
   return (
-    <div className="space-y-5">
-
-      {/* Cabeçalho */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-(--color-text-heading)">
-          {getGreeting()}, {firstName}!
-        </h1>
-        <p className="text-sm text-(--color-text-muted) mt-1 first-letter:uppercase">
-          {formatDatePT(new Date())}
-        </p>
-      </div>
+    <>
 
       {/* ══════════════════════════════════════
           KPIs
@@ -469,6 +471,6 @@ export default function DashboardPage() {
         </div>
 
       </div>
-    </div>
+    </>
   )
 }

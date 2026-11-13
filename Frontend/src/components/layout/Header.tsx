@@ -1,22 +1,23 @@
 import { env } from '../../config/env'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, type Ref } from 'react'
 import { Bell, BellOff, ChevronDown, LogOut, Menu, Moon, ShoppingCart, Sun, UserPen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCart } from '../../contexts/CartContext'
+import { EmptyState } from '../ui/FeedbackState'
 import UserAvatar from '../ui/UserAvatar'
 
 type Panel = 'notif' | 'user' | null
 
-type Props = { onMenuClick: () => void }
+type Props = { onMenuClick: () => void; menuOpen: boolean; menuButtonRef: Ref<HTMLButtonElement> }
 
 // Placeholder — substituir por dados reais quando a feature existir
 const NOTIFICATIONS: never[] = []
 const UNREAD_COUNT = 0
 
-export default function Header({ onMenuClick }: Props) {
-  const { user, logout }       = useAuth()
+export default function Header({ onMenuClick, menuOpen, menuButtonRef }: Props) {
+  const { user, session, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { itemCount }          = useCart()
   const navigate               = useNavigate()
@@ -53,16 +54,22 @@ export default function Header({ onMenuClick }: Props) {
 
       {/* Hamburguer — só mobile */}
       <button
+        type="button"
+        ref={menuButtonRef}
+        aria-label="Abrir menu"
+        aria-expanded={menuOpen}
+        aria-controls="painel-navegacao"
         onClick={onMenuClick}
-        className="md:hidden p-2 text-(--color-icon-default) hover:text-(--color-icon-active) transition-colors"
+        className="min-h-11 min-w-11 rounded-lg p-2 text-icon-default transition-colors hover:text-icon-active
+                   focus-visible:outline-2 focus-visible:outline-primary-400 md:hidden"
       >
-        <Menu size={22} />
+        <Menu size={22} aria-hidden="true" />
       </button>
 
       <div className="flex-1" />
 
       {/* ── Carrinho (só CUSTOMER) ── */}
-      {!env.internalPilot && user?.role === 'CUSTOMER' && (
+      {!env.internalPilot && session?.role === 'CUSTOMER' && (
         <button
           onClick={() => navigate('/app/carrinho')}
           className="relative p-2 rounded-lg text-(--color-icon-default) hover:text-(--color-icon-active)
@@ -83,18 +90,21 @@ export default function Header({ onMenuClick }: Props) {
       {/* ── Notificações ── */}
       <div className="relative" ref={notifRef}>
         <button
+          type="button"
+          aria-label="Notificações"
+          aria-expanded={panel === 'notif'}
           onClick={() => toggle('notif')}
           className="relative p-2 rounded-lg text-(--color-icon-default) hover:text-(--color-icon-active)
                      hover:bg-(--color-bg) transition-colors"
         >
-          <Bell size={20} />
+          <Bell size={20} aria-hidden="true" />
           {UNREAD_COUNT > 0 && (
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-(--color-secondary-500) rounded-full" />
           )}
         </button>
 
         {panel === 'notif' && (
-          <div className="absolute right-0 top-full mt-2 w-80 bg-(--color-surface) border border-(--color-border)
+          <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-7rem)] bg-(--color-surface) border border-(--color-border)
                           rounded-xl shadow-lg z-50 overflow-hidden">
 
             {/* Header */}
@@ -109,17 +119,12 @@ export default function Header({ onMenuClick }: Props) {
 
             {/* Lista / Empty state */}
             {NOTIFICATIONS.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center">
-                <div className="w-12 h-12 rounded-full bg-(--color-bg) flex items-center justify-center">
-                  <BellOff size={22} className="text-(--color-text-muted)" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-(--color-text-body)">Tudo em dia por aqui!</p>
-                  <p className="text-xs text-(--color-text-muted) mt-0.5">
-                    Suas notificações aparecerão aqui.
-                  </p>
-                </div>
-              </div>
+              <EmptyState
+                size="sm"
+                icon={BellOff}
+                title="Tudo em dia por aqui!"
+                description="Suas notificações aparecerão aqui."
+              />
             ) : (
               <div className="max-h-80 overflow-y-auto divide-y divide-(--color-border)">
                 {/* itens de notificação virão aqui */}
@@ -163,14 +168,16 @@ export default function Header({ onMenuClick }: Props) {
 
             {/* Ações */}
             <div className="py-1">
-              <button
-                onClick={handleEditProfile}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm
-                           text-(--color-text-body) hover:bg-(--color-bg) transition-colors text-left"
-              >
-                <UserPen size={16} className="text-(--color-icon-default) shrink-0" />
-                Editar Perfil
-              </button>
+              {session?.role === 'PARTNER' && (
+                <button
+                  onClick={handleEditProfile}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm
+                             text-(--color-text-body) hover:bg-(--color-bg) transition-colors text-left"
+                >
+                  <UserPen size={16} className="text-(--color-icon-default) shrink-0" />
+                  Editar Perfil
+                </button>
+              )}
 
               <button
                 onClick={toggleTheme}

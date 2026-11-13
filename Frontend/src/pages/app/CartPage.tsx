@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ShoppingCart, Trash2, ArrowLeft, CalendarDays,
@@ -6,8 +6,10 @@ import {
   Wallet, ChevronDown, ChevronUp, CheckCircle2, Package,
 } from 'lucide-react'
 import { useCart, type CartItem } from '../../contexts/CartContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { paymentService, creditService } from '../../services/payment.service'
-import { bookingService } from '../../services/booking.service'
+import { acknowledgeBookingIntent, bookingIntentScope, readBookingIntent, submitBookingIntent } from '../../features/booking/bookingIntent'
+import { bookingError } from '../../features/booking/bookingUi'
 import { packageService } from '../../services/package.service'
 import type { EasypetCartMeta, EasypetPackageMeta } from '../../services/payment.service'
 
@@ -110,6 +112,7 @@ const MP_SANDBOX = import.meta.env.VITE_MP_SANDBOX !== 'false'
 
 export default function CartPage() {
   const { items, removeItem, clearCart, total, itemCount } = useCart()
+  const { user } = useAuth()
   const navigate    = useNavigate()
   const [paying,         setPaying]         = useState(false)
   const [payError,       setPayError]       = useState('')
@@ -117,6 +120,7 @@ export default function CartPage() {
   const [useCredit,      setUseCredit]      = useState(false)
   const [creditLoading,  setCreditLoading]  = useState(true)
   const [creditExpanded, setCreditExpanded] = useState(false)
+  const submitting = useRef(false)
 
   useEffect(() => {
     creditService.getBalance()
@@ -128,22 +132,23 @@ export default function CartPage() {
   const appliedCredit    = useCredit ? Math.min(creditBalance, total) : 0
   const remainingTotal   = Math.max(0, total - appliedCredit)
   const paidFullByCredit = remainingTotal === 0 && appliedCredit > 0
+  const [resuming, setResuming] = useState(() => !!user && items.some(item =>
+    readBookingIntent(bookingIntentScope(user.id, 'cart', item.cartItemId))))
 
   async function handleCheckoutWithCredit() {
+    if (!user || submitting.current) return
+    submitting.current = true
     setPaying(true)
     setPayError('')
     try {
       let created = 0
+      const booked = []
       for (const item of items) {
-        const pkgMeta = item.metadata as EasypetPackageMeta | undefined
-        if (pkgMeta?.isPackage) {
-          await packageService.purchase(item.productId, 'CARD')
-          created++
-          continue
-        }
+        if ((item.metadata as EasypetPackageMeta | undefined)?.isPackage) continue
         const meta = item.metadata as EasypetCartMeta | undefined
         if (!meta?.petId || !meta?.partnerId) continue
-        await bookingService.create({
+        const scope = bookingIntentScope(user.id, 'cart', item.cartItemId)
+        const booking = await submitBookingIntent(scope, {
           petId:         meta.petId,
           partnerId:     meta.partnerId,
           serviceId:     item.productId,
@@ -155,21 +160,35 @@ export default function CartPage() {
             ? { checkIn: meta.checkIn, checkOut: meta.checkOut }
             : { bookingDate: `${meta.scheduledDate}T${meta.scheduledTime}:00` }
           ),
-        })
+        }, item.cartItemId)
+        booked.push({ scope, id: booking.id })
+        created++
+      }
+      for (const item of items) {
+        if (!(item.metadata as EasypetPackageMeta | undefined)?.isPackage) continue
+        await packageService.purchase(item.productId, 'CARD')
         created++
       }
       clearCart()
+      booked.forEach(({ scope, id }) => acknowledgeBookingIntent(scope, id))
       navigate(`/app/pagamento/sucesso?source=credit&count=${created}`)
-    } catch (err: any) {
-      console.error('Checkout credit error:', err?.response?.data ?? err)
-      setPayError('Não foi possível confirmar o agendamento. Tente novamente.')
+    } catch (err) {
+      setResuming(items.some(item => readBookingIntent(bookingIntentScope(user.id, 'cart', item.cartItemId))))
+      setPayError(bookingError(err, 'Não foi possível confirmar o agendamento. Tente novamente.'))
       setPaying(false)
+    } finally {
+      submitting.current = false
     }
   }
 
   async function handleCheckout() {
-    if (items.length === 0) return
+    if (items.length === 0 || submitting.current) return
+    if (resuming) {
+      void handleCheckoutWithCredit()
+      return
+    }
     if (paidFullByCredit) { handleCheckoutWithCredit(); return }
+    submitting.current = true
     setPaying(true)
     setPayError('')
     try {
@@ -185,10 +204,10 @@ export default function CartPage() {
       })
       const url = MP_SANDBOX ? result.sandboxInitPoint : result.initPoint
       window.location.href = url
-    } catch (err: any) {
-      console.error('Checkout error:', err?.response?.data ?? err)
-      setPayError('Não foi possível iniciar o pagamento. Tente novamente.')
+    } catch (err) {
+      setPayError(bookingError(err, 'Não foi possível iniciar o pagamento. Tente novamente.'))
       setPaying(false)
+      submitting.current = false
     }
   }
 
@@ -329,7 +348,7 @@ export default function CartPage() {
 
           {/* Actions */}
           {payError && (
-            <p className="text-xs text-red-500 font-medium text-center">{payError}</p>
+            <p role="alert" className="text-xs text-text-danger font-medium text-center">{payError}</p>
           )}
           <div className="flex gap-3">
             <button
@@ -351,8 +370,10 @@ export default function CartPage() {
             >
               {paying && <Loader2 size={15} className="animate-spin" />}
               {paying
-                ? (paidFullByCredit ? 'Confirmando...' : 'Redirecionando...')
-                : paidFullByCredit
+                ? (paidFullByCredit || resuming ? 'Confirmando...' : 'Redirecionando...')
+                : resuming
+                  ? 'Retomar reservas'
+                  : paidFullByCredit
                   ? 'Confirmar com créditos'
                   : 'Finalizar pedido'
               }

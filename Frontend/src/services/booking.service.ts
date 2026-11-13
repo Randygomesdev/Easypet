@@ -1,13 +1,14 @@
 import { api } from '../lib/api'
+import { petService, type PetResponse } from './pet.service'
 
-export type BookingStatus  = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED'
+export type BookingStatus  = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
 export type BookingType    = 'CONSULTATION' | 'VACCINATION' | 'GROOMING' | 'BOARDING' | 'OTHER'
 
 export interface BookingResponse {
   id:                string
   petId:             string
   partnerId:         string
-  userId:            string
+  userId:            string | null
   bookingDate?:      string   // ISO LocalDateTime
   type:              BookingType
   status:            BookingStatus
@@ -22,6 +23,11 @@ export interface BookingResponse {
   isFittingRequest?: boolean
   createdAt:         string
   updatedAt?:        string
+  scheduledEnd?:     string | null
+  cancellationReason?: string | null
+  noShowReason?:     string | null
+  readyAt?:          string | null
+  receptionCustomerId?: string | null
 }
 
 export interface PageResponse<T> {
@@ -58,7 +64,72 @@ export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
   IN_PROGRESS: 'Em Andamento',
   CANCELLED:   'Cancelado',
   COMPLETED:   'Finalizado',
+  NO_SHOW:     'Falta',
 }
+
+export interface RescheduleRequest {
+  bookingDate?: string
+  staffId?: string
+  checkIn?: string
+  checkOut?: string
+}
+
+export interface BookingCheckIn {
+  petIdentified: boolean
+  instructionsConfirmed: boolean
+  allergies?: string | null
+  behavior?: string | null
+  authorizedExtras?: string | null
+  observations?: string | null
+}
+
+export interface AgendaBlockRequest {
+  start: string
+  end: string
+  reason: string
+  staffId?: string
+}
+
+export interface AgendaBlock extends AgendaBlockRequest {
+  id: string
+  partnerId: string
+}
+
+export interface BookingHistoryEntry {
+  action: string
+  recordedAt: string
+  previousStatus?: BookingStatus | null
+  status: BookingStatus
+  previousBookingDate?: string | null
+  bookingDate: string
+  previousScheduledEnd?: string | null
+  scheduledEnd?: string | null
+  previousStaffId?: string | null
+  staffId?: string | null
+  reason?: string | null
+}
+
+export interface BookingAccess {
+  partnerId: string
+  canManage: boolean
+  canAttend: boolean
+  staffId: string | null
+  teamMember: boolean
+}
+
+export interface BookingPolicy {
+  tutorNoticeMinutes: number
+  defaultAppointmentDurationMinutes: number
+}
+
+export interface TutorBookingActions {
+  canCancel: boolean
+  canReschedule: boolean
+  tutorNoticeMinutes: number
+}
+
+export type BookingPet = Pick<PetResponse, 'id' | 'name' | 'species'> &
+  Partial<Pick<PetResponse, 'breed' | 'gender' | 'weight' | 'birthDate' | 'microchipNumber'>>
 
 // ── Stats types ────────────────────────────────────────────────────────────
 
@@ -109,18 +180,40 @@ export interface BookingRequest {
   staffId?:           string
   requestFitting?:    boolean
   customerPackageId?: string
+  receptionCustomerId?: string
 }
 
 export const bookingService = {
-  create: (data: BookingRequest): Promise<BookingResponse> =>
-    api.post('/bookings', data).then(r => r.data),
+  create: (data: BookingRequest, idempotencyKey?: string): Promise<BookingResponse> =>
+    api.post('/bookings', data, idempotencyKey
+      ? { headers: { 'Idempotency-Key': idempotencyKey } }
+      : undefined).then(r => r.data),
 
-  myBookings: (page = 0, size = 10): Promise<PageResponse<BookingResponse>> =>
-    api.get('/bookings/my-bookings', { params: { page, size, sort: 'bookingDate,desc' } }).then(r => r.data),
+  myBookings: (page = 0, size = 10, status?: BookingStatus): Promise<PageResponse<BookingResponse>> =>
+    api.get('/bookings/my-bookings', { params: { page, size, status, sort: 'bookingDate,desc' } }).then(r => r.data),
 
-  getAvailability: (partnerId: string, date: string, serviceId?: string): Promise<AvailabilitySlot[]> =>
+  agendaAccess: (): Promise<BookingAccess> =>
+    api.get('/bookings/agenda-access').then(r => r.data),
+
+  policy: (): Promise<BookingPolicy> =>
+    api.get('/bookings/policy').then(r => r.data),
+
+  tutorActions: (id: string): Promise<TutorBookingActions> =>
+    api.get(`/bookings/${id}/tutor-actions`).then(r => r.data),
+
+  partnerSummary: (partnerId: string): Promise<{ id: string; name: string; services: { id: string; name: string }[] }> =>
+    api.get(`/bookings/partner/${partnerId}/summary`).then(r => r.data),
+
+  getPet: (booking: BookingResponse, summaryOnly = false): Promise<BookingPet> => {
+    if (summaryOnly) return api.get<BookingPet>(`/bookings/${booking.id}/pet-summary`).then(r => r.data)
+    return booking.receptionCustomerId
+      ? api.get<BookingPet>(`/pets/reception/customers/${booking.receptionCustomerId}/${booking.petId}`).then(r => r.data)
+      : petService.getById(booking.petId)
+  },
+
+  getAvailability: (partnerId: string, date: string, serviceId?: string, excludeBookingId?: string): Promise<AvailabilitySlot[]> =>
     api.get('/bookings/availability', {
-      params: { partnerId, date, ...(serviceId ? { serviceId } : {}) },
+      params: { partnerId, date, serviceId, excludeBookingId },
     }).then(r => r.data),
 
   getByPartner: (partnerId: string, params: BookingQueryParams = {}): Promise<PageResponse<BookingResponse>> => {
@@ -137,8 +230,38 @@ export const bookingService = {
     return api.get(`/bookings/partner/${partnerId}?${q}`).then(r => r.data)
   },
 
-  updateStatus: (id: string, status: BookingStatus): Promise<BookingResponse> =>
-    api.patch(`/bookings/${id}/status?status=${status}`).then(r => r.data),
+  updateStatus: (id: string, status: BookingStatus, reason?: string): Promise<BookingResponse> =>
+    api.patch(`/bookings/${id}/status`, reason ? { reason } : undefined, { params: { status } }).then(r => r.data),
+
+  updateAdminStatus: (partnerId: string, id: string, status: BookingStatus, reason?: string): Promise<BookingResponse> =>
+    api.patch(`/bookings/partner/${partnerId}/${id}/status`, reason ? { reason } : undefined, { params: { status } }).then(r => r.data),
+
+  adminFittingDecision: (partnerId: string, id: string, decision: 'APPROVE' | 'REJECT'): Promise<unknown> =>
+    api.post(`/bookings/partner/${partnerId}/${id}/fitting-decision`, { decision }).then(r => r.data),
+
+  reschedule: (id: string, input: RescheduleRequest): Promise<BookingResponse> =>
+    api.post(`/bookings/${id}/reschedule`, input).then(r => r.data),
+
+  history: (id: string): Promise<BookingHistoryEntry[]> =>
+    api.get(`/bookings/${id}/history`).then(r => r.data),
+
+  getCheckIn: (id: string): Promise<BookingCheckIn | null> =>
+    api.get(`/bookings/${id}/check-in`).then(r => r.status === 204 ? null : r.data),
+
+  saveCheckIn: (id: string, input: BookingCheckIn): Promise<BookingCheckIn> =>
+    api.put(`/bookings/${id}/check-in`, input).then(r => r.data),
+
+  markReady: (id: string): Promise<BookingResponse> =>
+    api.post(`/bookings/${id}/ready`).then(r => r.data),
+
+  getBlocks: (partnerId: string): Promise<AgendaBlock[]> =>
+    api.get(`/bookings/partner/${partnerId}/blocks`).then(r => r.data),
+
+  createBlock: (partnerId: string, input: AgendaBlockRequest): Promise<AgendaBlock> =>
+    api.post(`/bookings/partner/${partnerId}/blocks`, input).then(r => r.data),
+
+  removeBlock: (partnerId: string, id: string): Promise<void> =>
+    api.delete(`/bookings/partner/${partnerId}/blocks/${id}`).then(() => undefined),
 
   processFittingDecision: (bookingId: string, decision: 'APPROVE' | 'REJECT'): Promise<unknown> =>
     api.post(`/bookings/${bookingId}/fitting-decision`, { decision }).then(r => r.data),

@@ -190,7 +190,7 @@ export default function PacotesTab({ partnerId }: { partnerId: string }) {
   const [formError, setFormError] = useState('')
 
   useEffect(() => {
-    partnerService.getById(partnerId)
+    partnerService.getAdminPartner(partnerId)
       .then(async p => {
         setServices((p.services ?? []).filter(s => s.active !== false))
         const pkgs = await packageService.getByPartner(partnerId)

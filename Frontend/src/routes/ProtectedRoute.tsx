@@ -1,20 +1,19 @@
-import { Navigate } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import type { UserRole } from '../types/auth.types'
+import { canAccess, type AccessPolicy } from './access'
+import SessionBoundary from './SessionBoundary'
 
 type Props = {
-  children: React.ReactNode
-  roles?: UserRole[]
+  children?: React.ReactNode
+  policy: AccessPolicy
 }
 
-export default function ProtectedRoute({ children, roles }: Props) {
-  const { user, isAuthenticated } = useAuth()
+export default function ProtectedRoute({ children, policy }: Props) {
+  const { session } = useAuth()
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />
-
-  if (roles && user && !roles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />
-  }
-
-  return <>{children}</>
+  return (
+    <SessionBoundary>
+      {canAccess(session, policy) ? children ?? <Outlet /> : <Navigate to="/painel" replace />}
+    </SessionBoundary>
+  )
 }

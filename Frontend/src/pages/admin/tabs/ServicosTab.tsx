@@ -1,10 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { Button } from '../../../components/ui/Button'
+import { ErrorState, LoadingState } from '../../../components/ui/FeedbackState'
+import { useState, useEffect } from 'react'
 import {
-  Loader2, Wrench, Plus, Pencil, Trash2,
+  Loader2, Wrench, Plus, Pencil,
   Clock, Tag, CheckCircle2, XCircle, X,
 } from 'lucide-react'
 import {
-  partnerService, buildPayload,
+  partnerService,
   type PartnerResponse, type ServiceOffer, type ServiceOfferRequest,
 } from '../../../services/partner.service'
 
@@ -126,8 +128,8 @@ function ServiceModal({ open, editingId, form, saving, formError, onChange, onSa
 }
 
 /* ─── Card ─── */
-function ServiceCard({ service, isRemoving, onEdit, onRemove }: {
-  service: ServiceOffer; isRemoving: boolean; onEdit: () => void; onRemove: () => void
+function ServiceCard({ service, onEdit }: {
+  service: ServiceOffer; onEdit: () => void
 }) {
   return (
     <div className="bg-(--color-surface) border border-(--color-border) rounded-2xl p-5 shadow-sm flex flex-col gap-4 hover:shadow-md transition-all">
@@ -152,10 +154,7 @@ function ServiceCard({ service, isRemoving, onEdit, onRemove }: {
         <button onClick={onEdit} className="flex-1 flex items-center justify-center gap-1.5 border border-(--color-border) hover:border-(--color-primary-700)/40 hover:text-(--color-primary-700) text-(--color-text-muted) font-semibold text-xs py-2 rounded-xl transition-colors">
           <Pencil size={13} /> Editar
         </button>
-        <button onClick={onRemove} disabled={isRemoving} className="flex-1 flex items-center justify-center gap-1.5 border border-(--color-border) hover:border-red-300 hover:text-red-500 hover:bg-red-50 text-(--color-text-muted) font-semibold text-xs py-2 rounded-xl transition-colors disabled:opacity-50">
-          {isRemoving ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-          Remover
-        </button>
+
       </div>
     </div>
   )
@@ -163,31 +162,35 @@ function ServiceCard({ service, isRemoving, onEdit, onRemove }: {
 
 /* ─── Tab principal ─── */
 export default function ServicosTab({ partnerId }: { partnerId: string }) {
+  return <AdminServiceEditor key={partnerId} partnerId={partnerId} />
+}
+
+function AdminServiceEditor({ partnerId }: { partnerId: string }) {
   const [partner,   setPartner]   = useState<PartnerResponse | null>(null)
   const [services,  setServices]  = useState<ServiceOffer[]>([])
   const [loading,   setLoading]   = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [saving,    setSaving]    = useState(false)
-  const [removing,  setRemoving]  = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form,      setForm]      = useState<ServiceOfferRequest>(EMPTY_FORM)
   const [formError, setFormError] = useState('')
-  const initialized = useRef(false)
+  const [attempt, setAttempt] = useState(0)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
-    partnerService.getById(partnerId)
-      .then(p => { setPartner(p); setServices(p.services ?? []) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [partnerId])
+    let current = true
+    partnerService.getAdminPartner(partnerId)
+      .then(p => { if (current) { setPartner(p); setServices(p.services ?? []) } })
+      .catch(() => { if (current) setLoadError('Não foi possível carregar os serviços.') })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [partnerId, attempt])
 
   function openNew() { setEditingId(null); setForm(EMPTY_FORM); setFormError(''); setModalOpen(true) }
 
   function openEdit(s: ServiceOffer) {
     setEditingId(s.id)
-    setForm({ name: s.name, description: s.description ?? '', price: s.price, durationMinutes: s.durationMinutes, billingUnit: s.billingUnit })
+    setForm({ name: s.name, description: s.description ?? '', price: s.price, durationMinutes: s.durationMinutes, billingUnit: s.billingUnit, categoryId: s.categoryId })
     setFormError('')
     setModalOpen(true)
   }
@@ -218,38 +221,18 @@ export default function ServicosTab({ partnerId }: { partnerId: string }) {
         const nextServices = [...services, created]
         setServices(nextServices); setPartner({ ...partner, services: nextServices })
       } else {
-        const updatedServices: ServiceOfferRequest[] = services.map(s =>
-          s.id === editingId
-            ? { name: form.name, description: form.description, price: form.price, durationMinutes: form.durationMinutes, billingUnit: form.billingUnit }
-            : { name: s.name,    description: s.description,    price: s.price,    durationMinutes: s.durationMinutes,    billingUnit: s.billingUnit }
-        )
-        const updated = await partnerService.updateById(partnerId, buildPayload(partner, { services: updatedServices }))
-        setPartner(updated); setServices(updated.services ?? [])
+        const updated = await partnerService.updateService(partnerId, editingId, form)
+        setServices(prev => prev.map(service => service.id === updated.id ? updated : service))
       }
       closeModal()
     } catch { setFormError('Erro ao salvar. Tente novamente.') }
     finally  { setSaving(false) }
   }
 
-  async function handleRemove(id: string) {
-    if (!confirm('Deseja remover este serviço?')) return
-    if (!partner) return
-    setRemoving(id)
-    try {
-      const updatedServices: ServiceOfferRequest[] = services
-        .filter(s => s.id !== id)
-        .map(s => ({ name: s.name, description: s.description, price: s.price, durationMinutes: s.durationMinutes, billingUnit: s.billingUnit }))
-      const updated = await partnerService.updateById(partnerId, buildPayload(partner, { services: updatedServices }))
-      setPartner(updated); setServices(updated.services ?? [])
-    } catch { alert('Erro ao remover serviço.') }
-    finally  { setRemoving(null) }
-  }
-
-  if (loading) return (
-    <div className="flex items-center justify-center h-48">
-      <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-    </div>
-  )
+  if (loading) return <LoadingState label="Carregando serviços…" />
+  if (loadError) return <ErrorState message={loadError} action={<Button variant="secondary" onClick={() => {
+    setLoadError(''); setLoading(true); setAttempt(value => value + 1)
+  }}>Tentar novamente</Button>} />
 
   return (
     <div>
@@ -268,6 +251,10 @@ export default function ServicosTab({ partnerId }: { partnerId: string }) {
         </button>
       </div>
 
+      {services.length > 0 && (
+        <p className="mb-4 text-sm text-(--color-text-muted)">A remoção de serviços está indisponível na homologação.</p>
+      )}
+
       {services.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-20 text-center border-2 border-dashed border-(--color-border) rounded-2xl">
           <div className="w-16 h-16 rounded-full bg-(--color-surface) border border-(--color-border) flex items-center justify-center">
@@ -281,8 +268,8 @@ export default function ServicosTab({ partnerId }: { partnerId: string }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {services.map(s => (
-            <ServiceCard key={s.id} service={s} isRemoving={removing === s.id}
-              onEdit={() => openEdit(s)} onRemove={() => handleRemove(s.id)} />
+            <ServiceCard key={s.id} service={s}
+              onEdit={() => openEdit(s)} />
           ))}
         </div>
       )}

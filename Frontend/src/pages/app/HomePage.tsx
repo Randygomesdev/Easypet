@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Search, MapPin, Star, StarHalf, Loader2, Store,
+  Search, MapPin, Star, StarHalf, Store,
   ChevronLeft, ChevronRight, PawPrint, ArrowUpDown, Clock,
 } from 'lucide-react'
 import { partnerService, type PartnerResponse } from '../../services/partner.service'
 import { petService, type PetResponse, SPECIES_LABEL } from '../../services/pet.service'
 import { useAuth } from '../../contexts/AuthContext'
+import { Button } from '../../components/ui/Button'
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
+import { bookingError } from '../../features/booking/bookingUi'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -230,13 +233,6 @@ const CATEGORIES = [
 
 type SortMode = '' | 'open' | 'alpha'
 
-const SEARCH_PLACEHOLDERS = [
-  'Buscar clínicas veterinárias…',
-  'Buscar petshops…',
-  'Encontrar banho & tosa…',
-  'Buscar hotéis para pets…',
-]
-
 export default function HomePage() {
   const { user }       = useAuth()
   const [input,        setInput]        = useState('')
@@ -246,31 +242,32 @@ export default function HomePage() {
   const [page,         setPage]         = useState(0)
   const [partners,     setPartners]     = useState<PartnerResponse[]>([])
   const [total,        setTotal]        = useState(0)
-  const [loading,      setLoading]      = useState(false)
+  const [loadedQuery, setLoadedQuery] = useState('')
+  const [catalogError, setCatalogError] = useState('')
+  const [retry, setRetry] = useState(0)
   const [pets,         setPets]         = useState<PetResponse[]>([])
-  const [placeholder,  setPlaceholder]  = useState(SEARCH_PLACEHOLDERS[0])
-
-  // rotating placeholder
-  useEffect(() => {
-    let i = 0
-    const t = setInterval(() => { i = (i + 1) % SEARCH_PLACEHOLDERS.length; setPlaceholder(SEARCH_PLACEHOLDERS[i]) }, 3000)
-    return () => clearInterval(t)
-  }, [])
+  const [petError, setPetError] = useState(false)
+  const [petRetry, setPetRetry] = useState(0)
 
   // load pets
   useEffect(() => {
-    petService.list().then(p => setPets(Array.isArray(p) ? p : (p.content ?? []))).catch(() => {})
-  }, [])
+    let active = true
+    petService.list().then(p => {
+      if (active) { setPets(Array.isArray(p) ? p : (p.content ?? [])); setPetError(false) }
+    }).catch(() => { if (active) setPetError(true) })
+    return () => { active = false }
+  }, [petRetry])
 
   // debounce search
   useEffect(() => {
-    const t = setTimeout(() => { setSearch(input); setPage(0) }, 400)
+    const t = setTimeout(() => { setSearch(input.trim()); setPage(0) }, 300)
     return () => clearTimeout(t)
   }, [input])
 
-  const load = useCallback(() => {
+  const queryKey = JSON.stringify([search, category, page, sort, retry])
+  const loading = loadedQuery !== queryKey
+  useEffect(() => {
     let cancelled = false
-    setLoading(true)
     partnerService
       .listCatalog({ name: search || undefined, category: category || undefined, page, size: 12 })
       .then(data => {
@@ -280,15 +277,14 @@ export default function HomePage() {
         if (sort === 'alpha') list = [...list].sort((a, b) => a.name.localeCompare(b.name))
         setPartners(list)
         setTotal(data.totalPages)
+        setCatalogError('')
       })
-      .catch(() => { if (!cancelled) setPartners([]) })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .catch(err => { if (!cancelled) setCatalogError(bookingError(err, 'Não foi possível carregar o catálogo.')) })
+      .finally(() => { if (!cancelled) setLoadedQuery(queryKey) })
     return () => { cancelled = true }
-  }, [search, category, page, sort])
+  }, [search, category, page, sort, queryKey])
 
-  useEffect(() => { const cancel = load(); return cancel }, [load])
-
-  function handleCategory(val: string) { setCategory(val); setPage(0) }
+  function handleCategory(val: string) { setInput(''); setSearch(''); setCategory(val); setPage(0) }
   function handleSort(val: SortMode)   { setSort(s => s === val ? '' : val); setPage(0) }
 
   return (
@@ -308,30 +304,34 @@ export default function HomePage() {
       <PromoBanners />
 
       {/* Pet Carousel */}
-      <PetCarousel pets={pets} />
+      {petError ? <ErrorState message="Não foi possível carregar seus pets." action={
+        <Button variant="secondary" onClick={() => setPetRetry(value => value + 1)}>Tentar novamente</Button>
+      } /> : <PetCarousel pets={pets} />}
 
       {/* Busca + sort */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted)" />
           <input
+            type="search"
+            aria-label="Buscar no catálogo"
             value={input}
-            onChange={e => setInput(e.target.value)}
-            placeholder={placeholder}
+            onChange={e => { setInput(e.target.value); setCategory('') }}
+            placeholder="Buscar por estabelecimento ou cidade"
             className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-(--color-border)
                        bg-(--color-surface) text-(--color-text-body)
                        placeholder:text-(--color-text-muted) outline-none
                        focus:ring-2 focus:ring-(--color-primary-500)"
           />
         </div>
-        <button onClick={() => handleSort('open')}
+        <button onClick={() => handleSort('open')} aria-label="Priorizar estabelecimentos abertos" aria-pressed={sort === 'open'}
                 className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm border transition-colors
                   ${sort === 'open'
                     ? 'bg-(--color-secondary-500) border-(--color-secondary-500) text-white'
                     : 'border-(--color-border) bg-(--color-surface) text-(--color-text-body) hover:border-(--color-secondary-400)'}`}>
           <Clock size={14} /><span className="hidden sm:inline">Abertos</span>
         </button>
-        <button onClick={() => handleSort('alpha')}
+        <button onClick={() => handleSort('alpha')} aria-label="Ordenar por nome" aria-pressed={sort === 'alpha'}
                 className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-sm border transition-colors
                   ${sort === 'alpha'
                     ? 'bg-(--color-secondary-500) border-(--color-secondary-500) text-white'
@@ -343,7 +343,7 @@ export default function HomePage() {
       {/* Categoria chips */}
       <div className="flex flex-wrap gap-2">
         {CATEGORIES.map(c => (
-          <button key={c.value} onClick={() => handleCategory(c.value)}
+          <button key={c.value} onClick={() => handleCategory(c.value)} aria-pressed={category === c.value}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors
                     ${category === c.value
                       ? 'bg-(--color-secondary-500) border-(--color-secondary-500) text-white'
@@ -355,7 +355,11 @@ export default function HomePage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 size={28} className="animate-spin text-(--color-primary-700)" /></div>
+        <LoadingState label="Carregando catálogo…" />
+      ) : catalogError ? (
+        <ErrorState message={catalogError} action={
+          <Button variant="secondary" onClick={() => setRetry(value => value + 1)}>Tentar novamente</Button>
+        } />
       ) : partners.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16">
           <div className="w-14 h-14 rounded-full bg-(--color-bg) border border-(--color-border) flex items-center justify-center">

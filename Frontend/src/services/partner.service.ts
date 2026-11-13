@@ -65,6 +65,10 @@ export interface PartnerPayload {
   latitude?:                    number
   longitude?:                   number
   pictureUrl?:                  string
+  categories?:                  PartnerCategory[]
+  activeModules?:               string[]
+  galleryPictures?:             string[]
+  boardingCapacity?:            number
   businessHours?:               BusinessHour[]
   services?:                    ServiceOfferRequest[]
 }
@@ -116,6 +120,15 @@ export interface PartnerResponse extends PartnerPayload {
   boardingCapacity?: number
 }
 
+export interface PartnerStatusChange {
+  id: string
+  actorId: string
+  previousActive: boolean
+  active: boolean
+  reason: string
+  changedAt: string
+}
+
 export const partnerService = {
   getMe: (): Promise<PartnerResponse> =>
     api.get('/partners/me').then(r => r.data),
@@ -144,17 +157,21 @@ export const partnerService = {
     api.get(`/partners/catalog/${id}`).then(r => r.data),
 
   // ── Admin ──────────────────────────────────────────────────
-  listAll: (params: { name?: string; category?: string; page: number; size: number }): Promise<Page<PartnerResponse>> =>
-    api.get('/partners', { params }).then(r => r.data),
+  listAdminPartners: (params: { name?: string; category?: string; active?: boolean; page: number; size: number },
+    signal?: AbortSignal): Promise<Page<PartnerResponse>> =>
+    api.get('/admin/partners', { params, signal }).then(r => r.data),
 
-  getById: (id: string): Promise<PartnerResponse> =>
-    api.get(`/partners/${id}`).then(r => r.data),
+  getAdminPartner: (id: string): Promise<PartnerResponse> =>
+    api.get(`/admin/partners/${id}`).then(r => r.data),
 
-  updateById: (id: string, data: Partial<PartnerPayload> & { active?: boolean }): Promise<PartnerResponse> =>
+  updateById: (id: string, data: PartnerPayload): Promise<PartnerResponse> =>
     api.put(`/partners/${id}`, data).then(r => r.data),
 
-  deleteById: (id: string): Promise<void> =>
-    api.delete(`/partners/${id}`).then(() => undefined),
+  setActive: (id: string, active: boolean, reason: string): Promise<PartnerResponse> =>
+    api.patch(`/admin/partners/${id}/active`, { active, reason }).then(r => r.data),
+
+  statusHistory: (id: string, page: number, signal?: AbortSignal): Promise<Page<PartnerStatusChange>> =>
+    api.get(`/admin/partners/${id}/status-history`, { params: { page, size: 10 }, signal }).then(r => r.data),
 
   // Reviews
   getReviews: (partnerId: string): Promise<ReviewResponse[]> =>
@@ -188,6 +205,10 @@ export function buildPayload(partner: PartnerResponse, overrides: Partial<Partne
     latitude:                    partner.latitude,
     longitude:                   partner.longitude,
     pictureUrl:                  partner.pictureUrl,
+    categories:                  partner.categories,
+    activeModules:               partner.activeModules,
+    galleryPictures:             partner.galleryPictures,
+    boardingCapacity:            partner.boardingCapacity,
     businessHours:               partner.businessHours,
     ...overrides,
   }

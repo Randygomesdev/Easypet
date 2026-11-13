@@ -3,12 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import {
   CalendarDays, ChevronLeft, ChevronRight, Loader2, MapPin,
   Clock, RefreshCw, X, PawPrint, CreditCard, FileText, Tag,
-  Ban, Wallet, AlertCircle,
+  Ban, Wallet,
 } from 'lucide-react'
 import { bookingService, type BookingResponse, BOOKING_STATUS_LABEL, BOOKING_TYPE_LABEL } from '../../services/booking.service'
 import { partnerService, type PartnerResponse } from '../../services/partner.service'
 import { petService, type PetResponse } from '../../services/pet.service'
 import { creditService } from '../../services/payment.service'
+import { Button } from '../../components/ui/Button'
+import { BookingHistory } from '../../features/booking/BookingHistory'
+import { BookingReasonDialog } from '../../features/booking/BookingReasonDialog'
+import { RescheduleBookingDialog } from '../../features/booking/RescheduleBookingDialog'
+import { bookingError, bookingStatusLabel, isEditableBooking, noticeDuration } from '../../features/booking/bookingUi'
+import type { TutorBookingActions } from '../../services/booking.service'
+import type { BookingStatus } from '../../services/booking.service'
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 function formatBRL(v: number) {
@@ -40,6 +47,7 @@ const STATUS_STYLE: Record<string, string> = {
   IN_PROGRESS: 'bg-purple-100 text-purple-700 border-purple-200',
   COMPLETED:   'bg-green-100  text-green-700  border-green-200',
   CANCELLED:   'bg-red-100    text-red-600    border-red-200',
+  NO_SHOW:     'bg-pink-100   text-pink-700   border-pink-200',
 }
 const STATUS_DOT: Record<string, string> = {
   PENDING:     'bg-amber-400',
@@ -47,64 +55,60 @@ const STATUS_DOT: Record<string, string> = {
   IN_PROGRESS: 'bg-purple-500',
   COMPLETED:   'bg-green-500',
   CANCELLED:   'bg-red-400',
+  NO_SHOW:     'bg-pink-500',
 }
 
-/* ── Helpers de cancelamento ─────────────────────────────────────────────── */
-function canCancel(booking: BookingResponse): boolean {
-  if (booking.status !== 'PENDING' && booking.status !== 'CONFIRMED') return false
-  const ref = booking.checkIn ?? booking.bookingDate
-  if (!ref) return false
-  return new Date(ref) > new Date(Date.now() + 2 * 60 * 60 * 1000)
-}
-
-function creditMessageForCancel(booking: BookingResponse): string {
-  if (booking.paymentMethod === 'PACKAGE_CREDIT') {
-    return '1 crédito será devolvido ao seu pacote.'
-  }
-  return `${formatBRL(booking.price ?? 0)} serão adicionados como crédito Easypet para uso futuro.`
-}
+type BookingPartner = Pick<PartnerResponse,
+  'name' | 'services' | 'address' | 'number' | 'neighborhood' | 'city' | 'state'
+>
 
 /* ── Modal de detalhes ───────────────────────────────────────────────────── */
 function BookingDetailModal({
-  booking, partner, pet, onClose, onCancelled,
+  booking, partner, pet, onClose, onUpdated,
 }: {
   booking:     BookingResponse
-  partner?:    PartnerResponse
+  partner?:    BookingPartner
   pet?:        PetResponse
   onClose:     () => void
-  onCancelled: (id: string) => void
+  onUpdated: (booking: BookingResponse) => void
 }) {
   const navigate       = useNavigate()
   const isBoarding     = !!booking.checkIn
   const isFitting      = booking.isFittingRequest
   const serviceName    = partner?.services?.find(s => s.id === booking.serviceId)?.name
-  const cancellable    = canCancel(booking)
-  const [cancelling, setCancelling] = useState(false)
-  const [cancelError, setCancelError] = useState('')
+  const cityState      = [partner?.city, partner?.state].filter(Boolean).join(' - ')
+  const address        = [partner?.address, partner?.number, partner?.neighborhood, cityState]
+    .filter(Boolean).join(', ')
+  const editable = isEditableBooking(booking)
+  const ready = bookingStatusLabel(booking)
+  const [action, setAction] = useState<'reschedule' | 'cancel' | null>(null)
+  const [actions, setActions] = useState<TutorBookingActions | null>(null)
+  const [actionsError, setActionsError] = useState('')
+  const [actionsAttempt, setActionsAttempt] = useState(0)
 
-  async function handleCancel() {
-    if (!confirm('Confirmar cancelamento?\n\n' + creditMessageForCancel(booking))) return
-    setCancelling(true)
-    setCancelError('')
-    try {
-      await bookingService.updateStatus(booking.id, 'CANCELLED')
-      onCancelled(booking.id)
-      onClose()
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Não foi possível cancelar. Tente novamente.'
-      setCancelError(msg)
-    } finally {
-      setCancelling(false)
-    }
+  useEffect(() => {
+    if (!editable) return
+    let active = true
+    bookingService.tutorActions(booking.id)
+      .then(result => { if (active) setActions(result) })
+      .catch(err => { if (active) setActionsError(bookingError(err, 'Não foi possível consultar as opções da reserva.')) })
+    return () => { active = false }
+  }, [booking.id, booking.updatedAt, editable, actionsAttempt])
+
+  function handleSaved(updated: BookingResponse) {
+    onUpdated(updated)
+    setAction(null)
   }
 
   return (
+    <>
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       onClick={onClose}
     >
       <div
-        className="bg-(--color-surface) rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+        role="dialog" aria-modal="true" aria-label="Detalhes do agendamento"
+        className="bg-(--color-surface) rounded-2xl shadow-xl w-full max-w-md max-h-[90dvh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -124,6 +128,7 @@ function BookingDetailModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Fechar detalhes do agendamento"
             className="p-1.5 rounded-lg text-(--color-text-muted) hover:bg-(--color-bg) hover:text-(--color-text-body) transition-colors"
           >
             <X size={18} />
@@ -138,7 +143,7 @@ function BookingDetailModal({
             <span className="text-sm text-(--color-text-muted)">Status</span>
             <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLE[booking.status] ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[booking.status] ?? 'bg-gray-400'}`} />
-              {BOOKING_STATUS_LABEL[booking.status] ?? booking.status}
+              {ready ?? BOOKING_STATUS_LABEL[booking.status] ?? booking.status}
             </span>
           </div>
 
@@ -176,9 +181,9 @@ function BookingDetailModal({
           <div className="flex items-start gap-3">
             <MapPin size={16} className="text-(--color-text-muted) mt-0.5 shrink-0" />
             <div className="text-sm text-(--color-text-body)">
-              <p><strong>{partner?.name ?? '—'}</strong></p>
-              {partner?.address && (
-                <p className="text-(--color-text-muted) text-xs mt-0.5">{partner.address}</p>
+              <p><strong>{partner?.name ?? 'Estabelecimento indisponível'}</strong></p>
+              {address && (
+                <p className="text-(--color-text-muted) text-xs mt-0.5">{address}</p>
               )}
             </div>
           </div>
@@ -212,21 +217,10 @@ function BookingDetailModal({
             </div>
           )}
 
-          {/* Aviso de cancelamento fora do prazo */}
-          {booking.status !== 'CANCELLED' && booking.status !== 'COMPLETED' && !cancellable && (
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
-              <AlertCircle size={14} className="shrink-0 mt-0.5" />
-              <span>Cancelamentos devem ser feitos com pelo menos 2 horas de antecedência.</span>
-            </div>
+          {(booking.cancellationReason || booking.noShowReason) && (
+            <p className="text-sm text-text-body break-words">{booking.cancellationReason || booking.noShowReason}</p>
           )}
-
-          {/* Erro de cancelamento */}
-          {cancelError && (
-            <div className="flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600">
-              <AlertCircle size={14} className="shrink-0 mt-0.5" />
-              <span>{cancelError}</span>
-            </div>
-          )}
+          <BookingHistory key={booking.updatedAt ?? booking.id} bookingId={booking.id} />
 
           <hr className="border-(--color-border)" />
           <p className="text-xs text-(--color-text-muted)">
@@ -236,20 +230,27 @@ function BookingDetailModal({
 
         {/* Footer */}
         <div className="px-5 pb-5 flex flex-col gap-2">
-          {cancellable && (
-            <button
-              onClick={handleCancel}
-              disabled={cancelling}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-200
-                         text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors
-                         disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {cancelling
-                ? <Loader2 size={14} className="animate-spin" />
-                : <Ban size={14} />
-              }
-              {cancelling ? 'Cancelando...' : 'Cancelar agendamento'}
-            </button>
+          {editable && actionsError && (
+            <div className="space-y-2">
+              <p role="alert" className="text-sm text-text-danger">{actionsError}</p>
+              <Button variant="secondary" onClick={() => { setActionsError(''); setActions(null); setActionsAttempt(value => value + 1) }}>Consultar opções novamente</Button>
+            </div>
+          )}
+          {editable && !actions && !actionsError && <p role="status" className="text-sm text-text-muted">Consultando opções da reserva…</p>}
+          {editable && actions && !actions.canCancel && (
+            <p className="text-sm text-text-muted">
+              O prazo de {noticeDuration(actions.tutorNoticeMinutes)} de antecedência para cancelar ou reagendar terminou.
+            </p>
+          )}
+          {editable && actions?.canCancel && !actions.canReschedule && (
+            <p className="text-sm text-text-muted">O estabelecimento está indisponível para novos horários.</p>
+          )}
+          {booking.status === 'IN_PROGRESS' && <p className="text-sm text-text-muted">Após o início do atendimento, cancelamento e reagendamento ficam indisponíveis.</p>}
+          {editable && actions?.canReschedule && <Button variant="secondary" onClick={() => setAction('reschedule')}>Reagendar</Button>}
+          {editable && actions?.canCancel && (
+              <Button variant="secondary" onClick={() => setAction('cancel')}>
+                <Ban size={14} aria-hidden="true" /> Cancelar agendamento
+              </Button>
           )}
           <button
             onClick={() => { onClose(); navigate(`/app/parceiros/${booking.partnerId}`) }}
@@ -261,6 +262,14 @@ function BookingDetailModal({
         </div>
       </div>
     </div>
+      {action === 'reschedule' && (
+        <RescheduleBookingDialog booking={booking} onClose={() => setAction(null)} onSaved={handleSaved} />
+      )}
+      {action === 'cancel' && (
+        <BookingReasonDialog bookingId={booking.id} status="CANCELLED"
+          onClose={() => setAction(null)} onSaved={handleSaved} />
+      )}
+    </>
   )
 }
 
@@ -269,7 +278,7 @@ function BookingCard({
   booking, partner, pet, onClick,
 }: {
   booking: BookingResponse
-  partner?: PartnerResponse
+  partner?: BookingPartner
   pet?: PetResponse
   onClick: () => void
 }) {
@@ -289,7 +298,7 @@ function BookingCard({
         </p>
         <span className={`shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLE[booking.status] ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[booking.status] ?? 'bg-gray-400'}`} />
-          {BOOKING_STATUS_LABEL[booking.status] ?? booking.status}
+          {bookingStatusLabel(booking) ?? BOOKING_STATUS_LABEL[booking.status] ?? booking.status}
         </span>
       </div>
 
@@ -312,7 +321,7 @@ function BookingCard({
         )}
         <span className="flex items-center gap-1.5 text-xs text-(--color-text-muted) truncate">
           <MapPin size={12} />
-          {partner?.name ?? '—'}
+          {partner?.name ?? 'Estabelecimento indisponível'}
         </span>
       </div>
     </button>
@@ -320,7 +329,7 @@ function BookingCard({
 }
 
 /* ── Filtro de status ────────────────────────────────────────────────────── */
-type FilterStatus = 'ALL' | 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+type FilterStatus = 'ALL' | BookingStatus
 
 const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'ALL',         label: 'Todos'        },
@@ -329,6 +338,7 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'IN_PROGRESS', label: 'Em Andamento' },
   { value: 'COMPLETED',   label: 'Finalizados'  },
   { value: 'CANCELLED',   label: 'Cancelados'   },
+  { value: 'NO_SHOW',     label: 'Faltas'       },
 ]
 
 /* ── Página principal ────────────────────────────────────────────────────── */
@@ -336,77 +346,75 @@ const PAGE_SIZE = 10
 
 export default function MeusAgendamentosPage() {
   const [bookings,      setBookings]      = useState<BookingResponse[]>([])
-  const [partners,      setPartners]      = useState<Record<string, PartnerResponse>>({})
+  const [partners,      setPartners]      = useState<Record<string, BookingPartner>>({})
   const [pets,          setPets]          = useState<Record<string, PetResponse>>({})
   const [total,         setTotal]         = useState(0)
   const [totalPages,    setTotalPages]    = useState(0)
   const [page,          setPage]          = useState(0)
-  const [loading,       setLoading]       = useState(true)
-  const [refreshing,    setRefreshing]    = useState(false)
-  const [filter,        setFilter]        = useState<FilterStatus>('ALL')
+  const [request, setRequest] = useState({ page: 0, refreshing: false, status: 'ALL' as FilterStatus })
+  const [completedRequest, setCompletedRequest] = useState<typeof request | null>(null)
+  const [loadError, setLoadError] = useState('')
+  const filter = request.status
   const [selected,      setSelected]      = useState<BookingResponse | null>(null)
   const [creditBalance, setCreditBalance] = useState<number | null>(null)
+  const pending = request !== completedRequest
+  const loading = pending && !request.refreshing
+  const refreshing = pending && request.refreshing
 
-  async function load(p: number, showRefresh = false) {
-    if (showRefresh) setRefreshing(true)
-    else             setLoading(true)
-    try {
-      const res = await bookingService.myBookings(p, PAGE_SIZE)
-      setBookings(res.content)
-      setTotal(res.totalElements)
-      setTotalPages(res.totalPages)
-      setPage(p)
-
-      const uniquePartners = [...new Set(res.content.map(b => b.partnerId))]
-      const uniquePets     = [...new Set(res.content.map(b => b.petId))]
-
-      const [partnerEntries, petEntries] = await Promise.all([
-        Promise.all(uniquePartners.map(id =>
-          partnerService.getById(id).then(p => [id, p] as const).catch(() => null)
-        )),
-        Promise.all(uniquePets.map(id =>
-          petService.getById(id).then(p => [id, p] as const).catch(() => null)
-        )),
-      ])
-
-      const partnerMap: Record<string, PartnerResponse> = {}
-      for (const e of partnerEntries) if (e) partnerMap[e[0]] = e[1]
-
-      const petMap: Record<string, PetResponse> = {}
-      for (const e of petEntries) if (e) petMap[e[0]] = e[1]
-
-      setPartners(partnerMap)
-      setPets(petMap)
-    } catch {
-      /* silencioso */
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
+  useEffect(() => {
+    let active = true
+    async function load() {
+      try {
+        const res = await bookingService.myBookings(request.page, PAGE_SIZE, request.status === 'ALL' ? undefined : request.status)
+        const uniquePartners = [...new Set(res.content.map(b => b.partnerId))]
+        const uniquePets = [...new Set(res.content.map(b => b.petId))]
+        const [partnerEntries, petEntries] = await Promise.all([
+          Promise.allSettled(uniquePartners.map(async id => [id, await partnerService.getCatalogPartner(id)] as const)),
+          Promise.allSettled(uniquePets.map(async id => [id, await petService.getById(id)] as const)),
+        ])
+        if (!active) return
+        setBookings(res.content)
+        setTotal(res.totalElements)
+        setTotalPages(res.totalPages)
+        setPage(res.number)
+        setPartners(Object.fromEntries(partnerEntries.flatMap(result =>
+          result.status === 'fulfilled' ? [result.value] : []
+        )))
+        setPets(Object.fromEntries(petEntries.flatMap(result =>
+          result.status === 'fulfilled' ? [result.value] : []
+        )))
+        setLoadError('')
+      } catch (err) {
+        if (active) setLoadError(bookingError(err, 'Não foi possível carregar os agendamentos.'))
+      } finally {
+        if (active) setCompletedRequest(request)
+      }
     }
+    void load()
+    return () => { active = false }
+  }, [request])
+
+  function changePage(next: number, showRefresh = false) {
+    setRequest(current => ({ ...current, page: next, refreshing: showRefresh }))
   }
 
-  async function loadBalance() {
-    try {
-      const { balance } = await creditService.getBalance()
-      setCreditBalance(balance)
-    } catch {
-      /* silencioso — usuário pode não ter saldo ainda */
-    }
+  function setFilter(status: FilterStatus) {
+    if (status !== filter) setRequest({ page: 0, refreshing: false, status })
   }
 
   useEffect(() => {
-    load(0)
-    loadBalance()
+    let active = true
+    creditService.getBalance()
+      .then(({ balance }) => { if (active) setCreditBalance(balance) })
+      .catch(() => {})
+    return () => { active = false }
   }, [])
 
-  function handleCancelled(id: string) {
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'CANCELLED' as const } : b))
-    loadBalance()
+  function handleUpdated(updated: BookingResponse) {
+    setBookings(prev => prev.map(b => b.id === updated.id ? updated : b))
+    setSelected(updated)
+    changePage(page, true)
   }
-
-  const filtered = filter === 'ALL'
-    ? bookings
-    : bookings.filter(b => b.status === filter)
 
   return (
     <div className="space-y-6">
@@ -422,7 +430,7 @@ export default function MeusAgendamentosPage() {
           </p>
         </div>
         <button
-          onClick={() => load(page, true)}
+          onClick={() => changePage(page, true)}
           disabled={refreshing}
           className="flex items-center gap-1.5 text-sm text-(--color-text-muted) hover:text-(--color-text-body)
                      transition-colors px-3 py-2 rounded-lg border border-(--color-border) hover:bg-(--color-bg)"
@@ -455,6 +463,7 @@ export default function MeusAgendamentosPage() {
           <button
             key={opt.value}
             onClick={() => setFilter(opt.value)}
+            aria-pressed={filter === opt.value}
             className={`px-3.5 py-1.5 rounded-full text-sm font-medium border transition-colors
               ${filter === opt.value
                 ? 'bg-(--color-primary-700) border-(--color-primary-700) text-white'
@@ -471,7 +480,12 @@ export default function MeusAgendamentosPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !pending && loadError ? (
+        <div className="space-y-2 text-center">
+          <p role="alert" className="text-sm text-text-danger">{loadError}</p>
+          <Button variant="secondary" onClick={() => changePage(request.page)}>Tentar novamente</Button>
+        </div>
+      ) : bookings.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
           <CalendarDays size={40} className="text-(--color-text-placeholder)" />
           <p className="text-(--color-text-muted)">
@@ -488,7 +502,7 @@ export default function MeusAgendamentosPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {filtered.map(b => (
+          {bookings.map(b => (
             <BookingCard
               key={b.id}
               booking={b}
@@ -501,12 +515,13 @@ export default function MeusAgendamentosPage() {
       )}
 
       {/* Paginação */}
-      {!loading && filter === 'ALL' && totalPages > 1 && (
+      {!pending && !loadError && totalPages > 1 && (
         <div className="flex items-center justify-between text-sm text-(--color-text-muted)">
           <span>Página {page + 1} de {totalPages}</span>
           <div className="flex gap-2">
             <button
-              onClick={() => load(page - 1)}
+              onClick={() => changePage(page - 1)}
+              aria-label="Página anterior"
               disabled={page === 0}
               className="p-2 rounded-lg border border-(--color-border) hover:bg-(--color-bg)
                          disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -514,7 +529,8 @@ export default function MeusAgendamentosPage() {
               <ChevronLeft size={16} />
             </button>
             <button
-              onClick={() => load(page + 1)}
+              onClick={() => changePage(page + 1)}
+              aria-label="Próxima página"
               disabled={page >= totalPages - 1}
               className="p-2 rounded-lg border border-(--color-border) hover:bg-(--color-bg)
                          disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -528,11 +544,12 @@ export default function MeusAgendamentosPage() {
       {/* Modal */}
       {selected && (
         <BookingDetailModal
+          key={`${selected.id}:${selected.updatedAt ?? selected.bookingDate}:${selected.status}`}
           booking={selected}
           partner={partners[selected.partnerId]}
           pet={pets[selected.petId]}
           onClose={() => setSelected(null)}
-          onCancelled={handleCancelled}
+          onUpdated={handleUpdated}
         />
       )}
     </div>

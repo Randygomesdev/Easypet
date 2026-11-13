@@ -1,13 +1,15 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Loader2, Search, ChevronLeft, ChevronRight,
   CheckCircle2, Stethoscope, Syringe, Scissors,
   Clock, SlidersHorizontal, CalendarDays,
 } from 'lucide-react'
 import { staffService, type StaffResponse } from '../../../services/staff.service'
-import { petService, type PetResponse } from '../../../services/pet.service'
+import { Button } from '../../../components/ui/Button'
+import { BookingReasonDialog } from '../../../features/booking/BookingReasonDialog'
+import { bookingError } from '../../../features/booking/bookingUi'
 import {
-  bookingService, type BookingResponse, type BookingStatus, type BookingType,
+  bookingService, type BookingResponse, type BookingPet, type BookingQueryParams, type BookingStatus, type BookingType,
   BOOKING_TYPE_LABEL, BOOKING_STATUS_LABEL,
 } from '../../../services/booking.service'
 
@@ -39,7 +41,7 @@ function formatDateTime(iso?: string) {
 
 type ChipId = 'hoje' | 'pendentes' | 'confirmados' | 'finalizados' | 'semana' | 'mes'
 
-function buildChips() {
+function buildChips(): Array<{ id: ChipId; label: string } & BookingQueryParams> {
   const week = weekRange(), month = monthRange()
   return [
     { id: 'hoje'       as ChipId, label: 'Hoje',        date:      todayKey()        },
@@ -57,6 +59,7 @@ const STATUS_STYLE: Record<BookingStatus, string> = {
   IN_PROGRESS: 'bg-blue-100    text-blue-700',
   PENDING:     'bg-amber-100   text-amber-700',
   CANCELLED:   'bg-pink-100    text-pink-600',
+  NO_SHOW:     'bg-pink-100    text-pink-600',
 }
 
 function StatusBadge({ status }: { status: BookingStatus }) {
@@ -72,16 +75,24 @@ const PAGE_SIZE = 10
 
 /* ─── Tab principal ─── */
 export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
+  return <PartnerBookings key={partnerId} partnerId={partnerId} />
+}
+
+function PartnerBookings({ partnerId }: { partnerId: string }) {
   const [bookings,      setBookings]      = useState<BookingResponse[]>([])
   const [staffList,     setStaffList]     = useState<StaffResponse[]>([])
-  const [petMap,        setPetMap]        = useState<Record<string, PetResponse>>({})
-  const [loading,       setLoading]       = useState(true)
+  const [petMap,        setPetMap]        = useState<Record<string, BookingPet>>({})
+  const [loadedQuery, setLoadedQuery] = useState('')
+  const [reload, setReload] = useState(0)
+  const [loadError, setLoadError] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [cancelBooking, setCancelBooking] = useState<BookingResponse | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [page,          setPage]          = useState(0)
   const [totalPages,    setTotalPages]    = useState(0)
   const [totalItems,    setTotalItems]    = useState(0)
 
-  const chips = buildChips()
+  const chips = useMemo(() => buildChips(), [])
   const [activeChip,  setActiveChip]  = useState<ChipId>('hoje')
   const [search,      setSearch]      = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -93,8 +104,8 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
 
   const chipFilters = useMemo(() => {
     const chip = chips.find(c => c.id === activeChip)!
-    return { date: (chip as any).date, status: (chip as any).status, startDate: (chip as any).startDate, endDate: (chip as any).endDate }
-  }, [activeChip])
+    return { date: chip.date, status: chip.status, startDate: chip.startDate, endDate: chip.endDate }
+  }, [activeChip, chips])
 
   useEffect(() => {
     staffService.getByPartner(partnerId)
@@ -102,32 +113,30 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
       .catch(() => {})
   }, [partnerId])
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const hasAdvanced = fStatus || fType || fStaff || fStart || fEnd
-      const params = hasAdvanced
-        ? { status: fStatus || undefined, type: fType || undefined, staffId: fStaff || undefined, startDate: fStart || undefined, endDate: fEnd || undefined, page, size: PAGE_SIZE }
-        : { ...chipFilters, page, size: PAGE_SIZE }
+  const queryKey = JSON.stringify([partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page, reload])
+  const loading = queryKey !== loadedQuery
 
-      const res = await bookingService.getByPartner(partnerId, params)
-      setBookings(res.content)
-      setTotalPages(res.totalPages)
-      setTotalItems(res.totalElements)
-      res.content.forEach(b => {
-        if (b.petId && !petMap[b.petId])
-          petService.getById(b.petId)
-            .then(pet => setPetMap(prev => ({ ...prev, [pet.id]: pet })))
-            .catch(() => {})
-      })
-    } catch {
-      setBookings([])
-      setTotalPages(0)
-      setTotalItems(0)
-    } finally { setLoading(false) }
-  }, [partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page])
-
-  useEffect(() => { load() }, [load])
+  useEffect(() => {
+    let active = true
+    const hasAdvanced = fStatus || fType || fStaff || fStart || fEnd
+    const params = hasAdvanced
+      ? { status: fStatus || undefined, type: fType || undefined, staffId: fStaff || undefined,
+          startDate: fStart || undefined, endDate: fEnd || undefined, page, size: PAGE_SIZE }
+      : { ...chipFilters, page, size: PAGE_SIZE }
+    bookingService.getByPartner(partnerId, params).then(async result => {
+      const scoped = result.content.filter(booking => booking.partnerId === partnerId)
+      const pets = await Promise.allSettled(scoped.map(booking => bookingService.getPet(booking, true)))
+      if (!active) return
+      setBookings(scoped)
+      setPetMap(Object.fromEntries(pets.flatMap(result => result.status === 'fulfilled' ? [[result.value.id, result.value]] : [])))
+      setTotalPages(result.totalPages)
+      setTotalItems(result.totalElements)
+      setLoadError('')
+    }).catch(error => {
+      if (active) setLoadError(bookingError(error, 'Não foi possível consultar os agendamentos.'))
+    }).finally(() => { if (active) setLoadedQuery(queryKey) })
+    return () => { active = false }
+  }, [partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page, queryKey])
 
   /* KPIs */
   const kpiPending   = bookings.filter(b => b.status === 'PENDING').length
@@ -145,19 +154,21 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
 
   async function handleStatusChange(id: string, status: BookingStatus) {
     setActionLoading(id)
-    try { await bookingService.updateStatus(id, status); await load() }
-    catch { }
+    setActionError('')
+    try { await bookingService.updateAdminStatus(partnerId, id, status); setReload(value => value + 1) }
+    catch (err) { setActionError(bookingError(err, 'Não foi possível atualizar o agendamento.')) }
     finally { setActionLoading(null) }
   }
 
   async function handleFitting(id: string, decision: 'APPROVE' | 'REJECT') {
     setActionLoading(id)
-    try { await bookingService.processFittingDecision(id, decision); await load() }
-    catch { }
+    setActionError('')
+    try { await bookingService.adminFittingDecision(partnerId, id, decision); setReload(value => value + 1) }
+    catch (err) { setActionError(bookingError(err, 'Não foi possível atualizar o encaixe.')) }
     finally { setActionLoading(null) }
   }
 
-  function ActionButtons({ b }: { b: BookingResponse }) {
+  function renderActions(b: BookingResponse) {
     if (actionLoading === b.id) return <Loader2 size={14} className="animate-spin text-(--color-primary-700)" />
 
     if (b.status === 'PENDING' && b.isFittingRequest) return (
@@ -172,11 +183,17 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
       <div className="flex gap-1.5">
         <button onClick={() => handleStatusChange(b.id, 'CONFIRMED')}
           className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Confirmar</button>
-        <button onClick={() => handleStatusChange(b.id, 'CANCELLED')}
+        <button onClick={() => setCancelBooking(b)}
           className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors">Cancelar</button>
       </div>
     )
     if (b.status === 'CONFIRMED') return (
+      <button onClick={() => handleStatusChange(b.id, 'IN_PROGRESS')}
+        className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-(--color-secondary-500) text-white hover:opacity-90 transition-opacity">
+        Iniciar Atendimento
+      </button>
+    )
+    if (b.status === 'IN_PROGRESS') return (
       <button onClick={() => handleStatusChange(b.id, 'COMPLETED')}
         className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-(--color-secondary-500) text-white hover:opacity-90 transition-opacity">
         Concluir
@@ -196,6 +213,21 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
 
   return (
     <div className="space-y-5">
+
+      {!loading && loadError && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p role="alert" className="text-sm text-text-danger">{loadError}</p>
+          <Button size="sm" variant="secondary" onClick={() => setReload(value => value + 1)}>Tentar novamente</Button>
+        </div>
+      )}
+      {actionError && <p role="alert" className="text-sm text-text-danger">{actionError}</p>}
+      {cancelBooking && (
+        <BookingReasonDialog bookingId={cancelBooking.id} status="CANCELLED"
+          partnerId={partnerId} onClose={() => setCancelBooking(null)} onSaved={() => {
+            setCancelBooking(null)
+            setReload(value => value + 1)
+          }} />
+      )}
 
       {/* Cabeçalho */}
       <div>
@@ -281,6 +313,7 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
                   <option value="CONFIRMED">Confirmado</option>
                   <option value="COMPLETED">Finalizado</option>
                   <option value="CANCELLED">Cancelado</option>
+                  <option value="NO_SHOW">Falta</option>
                 </select>
               </div>
               <div>
@@ -346,7 +379,7 @@ export default function AgendamentosTab({ partnerId }: { partnerId: string }) {
                     <td className="px-5 py-4 text-sm text-(--color-text-body)">{BOOKING_TYPE_LABEL[b.type] ?? b.type}</td>
                     <td className="px-5 py-4 text-sm text-(--color-text-muted) whitespace-nowrap">{formatDateTime(b.bookingDate)}</td>
                     <td className="px-5 py-4"><StatusBadge status={b.status} /></td>
-                    <td className="px-5 py-4"><ActionButtons b={b} /></td>
+                    <td className="px-5 py-4">{renderActions(b)}</td>
                   </tr>
                 )
               })}

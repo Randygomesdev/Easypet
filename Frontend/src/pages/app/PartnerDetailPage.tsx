@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, MapPin, Star, Phone, Clock, Loader2,
@@ -8,7 +8,11 @@ import {
 } from 'lucide-react'
 import { partnerService, type PartnerResponse, type ReviewResponse, type ReviewRequest, type ServiceOffer } from '../../services/partner.service'
 import { packageService, type CustomerPackageResponse, type PackageTemplateResponse } from '../../services/package.service'
-import { bookingService, type AvailabilitySlot, type StaffSlot } from '../../services/booking.service'
+import { bookingService, type AvailabilitySlot, type BookingPolicy, type BookingRequest, type StaffSlot } from '../../services/booking.service'
+import { acknowledgeBookingIntent, bookingIntentScope, readBookingIntent, submitBookingIntent } from '../../features/booking/bookingIntent'
+import { bookingError, noticeDuration } from '../../features/booking/bookingUi'
+import { Button } from '../../components/ui/Button'
+import { isAxiosError } from 'axios'
 import { petService, type PetResponse, SPECIES_LABEL } from '../../services/pet.service'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
@@ -213,21 +217,25 @@ const inputCls = `w-full px-3 py-2.5 text-sm rounded-xl border border-(--color-b
 
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
-type BookingView = 'config' | 'slots' | 'confirm' | 'added' | 'booked'
+type BookingView = 'config' | 'slots' | 'confirm' | 'added' | 'booked' | 'resume'
 
 function BookingModal({
-  service, partnerId, partnerName, onClose,
+  service, partnerId, partnerName, onClose, onReloadCatalog,
 }: {
   service:     ServiceOffer
   partnerId:   string
   partnerName: string
   onClose:     () => void
+  onReloadCatalog: () => void
 }) {
   const navigate = useNavigate()
   const { addItem } = useCart()
+  const { user } = useAuth()
   const isDaily = service.billingUnit === 'DAILY'
+  const scope = user ? bookingIntentScope(user.id, 'catalog', partnerId, service.id) : null
 
-  const [view,           setView]           = useState<BookingView>('config')
+  const [intent, setIntent] = useState(() => scope ? readBookingIntent(scope) : null)
+  const [view,           setView]           = useState<BookingView>(intent ? 'resume' : 'config')
   const [pets,           setPets]           = useState<PetResponse[]>([])
   const [petId,          setPetId]          = useState('')
   // Slots flow
@@ -247,19 +255,43 @@ function BookingModal({
   const [usePackage,      setUsePackage]       = useState(false)
   const [bookingPkg,      setBookingPkg]       = useState<CustomerPackageResponse | null>(null)
   const [bookingLoading,  setBookingLoading]   = useState(false)
+  const submittingBooking = useRef(false)
   // Submit
   const [error, setError] = useState('')
+  const [priceChanged, setPriceChanged] = useState(false)
+  const [policy, setPolicy] = useState<BookingPolicy | null>(null)
+  const [policyError, setPolicyError] = useState('')
+  const [policyAttempt, setPolicyAttempt] = useState(0)
+  const [petLoad, setPetLoad] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [petAttempt, setPetAttempt] = useState(0)
+  const [slotError, setSlotError] = useState('')
+  const slotsRequest = useRef(0)
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date())
 
   useEffect(() => {
+    let active = true
     petService.list()
       .then(p => {
-        const list: PetResponse[] = Array.isArray(p) ? p : (p as any).content ?? []
+        if (!active) return
+        const list: PetResponse[] = Array.isArray(p) ? p : p.content ?? []
         setPets(list)
+        setPetLoad('ready')
         if (list.length === 1) setPetId(list[0].id)
       })
-      .catch(() => {})
+      .catch(() => { if (active) setPetLoad('error') })
+    return () => { active = false }
+  }, [petAttempt])
+
+  useEffect(() => {
+    let active = true
+    bookingService.policy()
+      .then(value => { if (active) setPolicy(value) })
+      .catch(err => { if (active) setPolicyError(bookingError(err, 'Não foi possível consultar as regras da reserva.')) })
+    return () => { active = false }
+  }, [policyAttempt])
+
+  useEffect(() => {
     // Carregar pacotes ativos do usuário para este parceiro/serviço
     if (env.internalPilot) return
     packageService.myBalances()
@@ -272,18 +304,23 @@ function BookingModal({
         if (compatible.length > 0) setBookingPkg(compatible[0])
       })
       .catch(() => {})
-  }, [])
+  }, [partnerId, service.id])
 
   function handleDateChange(newDate: string) {
+    const requestId = ++slotsRequest.current
     setDate(newDate)
     setSelectedSlot(null)
     setStaffId(null)
+    setSlots([])
+    setSlotError('')
+    setLoadingSlots(Boolean(newDate))
     if (!newDate) return
-    setLoadingSlots(true)
     bookingService.getAvailability(partnerId, newDate, service.id)
-      .then(s => setSlots(s))
-      .catch(() => setSlots([]))
-      .finally(() => setLoadingSlots(false))
+      .then(s => { if (requestId === slotsRequest.current) setSlots(s) })
+      .catch(err => {
+        if (requestId === slotsRequest.current) setSlotError(bookingError(err, 'Não foi possível consultar os horários.'))
+      })
+      .finally(() => { if (requestId === slotsRequest.current) setLoadingSlots(false) })
   }
 
   function handleSlotSelect(slot: AvailabilitySlot) {
@@ -316,6 +353,34 @@ function BookingModal({
     if (view === 'confirm') setView(isDaily ? 'config' : 'slots')
   }
 
+  function close() {
+    if (bookingLoading) return
+    if (scope && intent?.bookingId && view === 'booked') acknowledgeBookingIntent(scope, intent.bookingId)
+    onClose()
+  }
+
+  async function submitBooking(input: BookingRequest) {
+    if (!scope || submittingBooking.current || (!intent && !policy)) return
+    submittingBooking.current = true
+    setBookingLoading(true)
+    setError('')
+    setPriceChanged(false)
+    try {
+      await submitBookingIntent(scope, input)
+      setIntent(readBookingIntent(scope))
+      setView('booked')
+    } catch (err) {
+      const saved = readBookingIntent(scope)
+      setIntent(saved)
+      setView(saved ? 'resume' : view === 'resume' ? 'config' : view)
+      setPriceChanged(isAxiosError<{ errors?: { price?: string } }>(err) && !!err.response?.data?.errors?.price)
+      setError(bookingError(err, 'Não foi possível confirmar a reserva. Tente novamente.'))
+    } finally {
+      submittingBooking.current = false
+      setBookingLoading(false)
+    }
+  }
+
   async function handleAddToCart() {
     const pet = pets.find(p => p.id === petId)
     const staffMember = staffId
@@ -338,10 +403,7 @@ function BookingModal({
     }
 
     if (env.internalPilot) {
-      setBookingLoading(true)
-      setError('')
-      try {
-        await bookingService.create({
+      await submitBooking({
           petId, partnerId, serviceId: service.id,
           type: meta.bookingType,
           price: isDaily ? dailyNights * service.price : service.price,
@@ -350,13 +412,7 @@ function BookingModal({
           ...(isDaily
             ? { checkIn: meta.checkIn, checkOut: meta.checkOut }
             : { bookingDate: `${date}T${selectedSlot?.time}:00` }),
-        })
-        setView('booked')
-      } catch {
-        setError('Não foi possível criar a reserva. Verifique o horário e tente novamente.')
-      } finally {
-        setBookingLoading(false)
-      }
+      })
       return
     }
 
@@ -374,11 +430,7 @@ function BookingModal({
 
   async function handleBookWithPackage() {
     if (!bookingPkg || !petId) return
-    setBookingLoading(true)
-    setError('')
-    try {
-      // Consumir 1 crédito do pacote
-      await bookingService.create({
+    await submitBooking({
         petId,
         partnerId,
         serviceId:     service.id,
@@ -391,13 +443,7 @@ function BookingModal({
           ? { checkIn: `${checkInDate}T${checkInTime}:00`, checkOut: `${checkOutDate}T${checkOutTime}:00` }
           : { bookingDate: `${date}T${selectedSlot?.time}:00` }
         ),
-      })
-      setView('booked')
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Não foi possível confirmar o agendamento.')
-    } finally {
-      setBookingLoading(false)
-    }
+    })
   }
 
   // Step indicator
@@ -408,11 +454,13 @@ function BookingModal({
   const dailyNights = (checkInDate && checkOutDate)
     ? Math.max(1, Math.ceil((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / 86400000))
     : 0
+  const duration = service.durationMinutes > 0 ? service.durationMinutes : policy?.defaultAppointmentDurationMinutes
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-         onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="w-full max-w-lg bg-(--color-surface) rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4"
+         onClick={e => { if (e.target === e.currentTarget) close() }}>
+      <div role="dialog" aria-modal="true" aria-label="Agendar serviço"
+           className="w-full min-w-0 max-w-lg bg-(--color-surface) rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[94dvh]">
 
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-(--color-border) shrink-0">
@@ -422,13 +470,14 @@ function BookingModal({
               {service.name} · {formatBRL(service.price)}{isDaily ? '/dia' : '/sessão'}
             </p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-(--color-bg) text-(--color-text-muted)">
+          <button onClick={close} disabled={bookingLoading} aria-label="Fechar reserva"
+                  className="p-1.5 rounded-lg hover:bg-(--color-bg) text-(--color-text-muted)">
             <X size={18} />
           </button>
         </div>
 
         {/* Step indicator */}
-        {view !== 'added' && (
+        {view !== 'added' && view !== 'resume' && (
           <div className="flex items-center px-5 py-3 border-b border-(--color-border) shrink-0">
             {STEPS.map((label, i) => (
               <Fragment key={label}>
@@ -453,6 +502,13 @@ function BookingModal({
 
         {/* Body */}
         <div className="overflow-y-auto flex-1 p-5 space-y-4">
+          {view === 'resume' && intent && (
+            <div className="space-y-1 text-sm text-text-body">
+              <p className="font-semibold text-text-heading">Retomar reserva</p>
+              <p>{(intent.input.checkIn ?? intent.input.bookingDate)?.replace('T', ' ').slice(0, 16)}</p>
+              <p>Consulte o resultado da tentativa anterior para confirmar a reserva.</p>
+            </div>
+          )}
 
           {/* ── VIEW: config ── */}
           {view === 'config' && (
@@ -462,13 +518,19 @@ function BookingModal({
                 <label className="text-xs font-semibold text-(--color-text-muted) uppercase tracking-wide">
                   Pet <span className="text-red-500">*</span>
                 </label>
-                {pets.length === 0 ? (
+                {petLoad === 'loading' ? <p role="status" className="text-sm text-text-muted">Carregando pets…</p>
+                  : petLoad === 'error' ? (
+                    <div className="space-y-2">
+                      <p role="alert" className="text-sm text-text-danger">Não foi possível carregar seus pets.</p>
+                      <Button size="sm" variant="secondary" onClick={() => { setPetLoad('loading'); setPetAttempt(value => value + 1) }}>Tentar novamente</Button>
+                    </div>
+                  ) : pets.length === 0 ? (
                   <p className="text-sm text-(--color-text-muted)">
                     Você não tem pets cadastrados.{' '}
                     <a href="/app/pets/novo" className="text-(--color-secondary-500) hover:underline">Cadastrar agora</a>
                   </p>
                 ) : (
-                  <select value={petId} onChange={e => setPetId(e.target.value)} className={inputCls}>
+                  <select aria-label="Pet" value={petId} onChange={e => setPetId(e.target.value)} className={inputCls}>
                     <option value="">Selecione um pet</option>
                     {pets.map(p => (
                       <option key={p.id} value={p.id}>{p.name} ({SPECIES_LABEL[p.species]})</option>
@@ -519,7 +581,7 @@ function BookingModal({
                   <label className="text-xs font-semibold text-(--color-text-muted) uppercase tracking-wide">
                     Data <span className="text-red-500">*</span>
                   </label>
-                  <input type="date" min={today} value={date}
+                  <input aria-label="Data do agendamento" type="date" min={today} value={date}
                          onChange={e => handleDateChange(e.target.value)} className={inputCls} />
                   {loadingSlots && (
                     <p className="text-xs text-(--color-text-muted) flex items-center gap-1 mt-1">
@@ -542,6 +604,11 @@ function BookingModal({
                 {loadingSlots ? (
                   <div className="flex justify-center py-10">
                     <Loader2 size={26} className="animate-spin text-(--color-primary-700)" />
+                  </div>
+                ) : slotError ? (
+                  <div className="space-y-2">
+                    <p role="alert" className="text-sm text-text-danger">{slotError}</p>
+                    <Button size="sm" variant="secondary" onClick={() => handleDateChange(date)}>Consultar horários novamente</Button>
                   </div>
                 ) : slots.length === 0 ? (
                   <div className="text-center py-10 space-y-2">
@@ -619,7 +686,7 @@ function BookingModal({
                                   : 'border-(--color-border) text-(--color-text-body) hover:border-(--color-secondary-400)'
                                 }`}>
                         {s.photoUrl && (
-                          <img src={s.photoUrl} alt={s.name} className="w-6 h-6 rounded-full object-cover shrink-0" />
+                              <img src={s.photoUrl} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
                         )}
                         {s.name}
                       </button>
@@ -682,6 +749,22 @@ function BookingModal({
                     {formatBRL(isDaily ? dailyNights * service.price : service.price)}
                   </span>
                 </div>
+              </div>
+              <div className="space-y-2 text-sm text-text-body">
+                {isDaily ? <p>Duração da hospedagem: {dailyNights} diária(s)</p>
+                  : duration && <p>Duração do serviço: {noticeDuration(duration)}</p>}
+                {policy ? (
+                  <p>
+                    Você pode cancelar ou reagendar reservas pendentes ou confirmadas
+                    {policy.tutorNoticeMinutes > 0 ? ` com pelo menos ${noticeDuration(policy.tutorNoticeMinutes)} de antecedência` : ' até o horário agendado'}.
+                    Após o início, essas ações ficam indisponíveis.
+                  </p>
+                ) : policyError ? (
+                  <>
+                    <p role="alert" className="text-text-danger">{policyError}</p>
+                    <Button size="sm" variant="secondary" onClick={() => { setPolicyError(''); setPolicyAttempt(value => value + 1) }}>Consultar regras novamente</Button>
+                  </>
+                ) : <p role="status">Carregando regras da reserva…</p>}
               </div>
 
               {/* Opção de pacote */}
@@ -756,14 +839,20 @@ function BookingModal({
             </div>
           )}
 
-          {error && view !== 'added' && <p className="text-sm text-red-500">{error}</p>}
+          {error && view !== 'added' && <p role="alert" className="text-sm text-text-danger">{error}</p>}
+          {priceChanged && <Button size="sm" variant="secondary" onClick={onReloadCatalog}>Atualizar preço do serviço</Button>}
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-5 border-t border-(--color-border) shrink-0">
-          {(view === 'added' || view === 'booked') ? (
+        <div className="flex flex-wrap gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-(--color-border) shrink-0">
+          {view === 'resume' && intent ? (
+            <button onClick={() => void submitBooking(intent.input)} disabled={bookingLoading}
+                    className="w-full py-2.5 text-sm rounded-xl bg-(--color-primary-700) text-white disabled:opacity-50">
+              {bookingLoading ? 'Consultando…' : 'Retomar reserva'}
+            </button>
+          ) : (view === 'added' || view === 'booked') ? (
             <>
-              <button onClick={onClose}
+              <button onClick={close}
                       className="flex-1 py-2.5 text-sm rounded-xl border border-(--color-border)
                                  text-(--color-text-body) hover:bg-(--color-bg) transition-colors">
                 {view === 'booked' ? 'Fechar' : 'Continuar comprando'}
@@ -776,7 +865,7 @@ function BookingModal({
                 </button>
               )}
               {view === 'booked' && (
-                <button onClick={() => navigate('/app/agendamentos')}
+                <button onClick={() => { close(); navigate('/app/agendamentos') }}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm rounded-xl
                                    bg-(--color-primary-700) text-white hover:bg-(--color-primary-800) transition-colors">
                   <CalendarDays size={15} /> Ver agendamentos
@@ -786,13 +875,13 @@ function BookingModal({
           ) : (
             <>
               {view === 'config' ? (
-                <button onClick={onClose}
+                <button onClick={close}
                         className="flex-1 py-2.5 text-sm rounded-xl border border-(--color-border)
                                    text-(--color-text-body) hover:bg-(--color-bg) transition-colors">
                   Cancelar
                 </button>
               ) : (
-                <button onClick={goBack}
+                <button onClick={goBack} disabled={bookingLoading}
                         className="flex-1 py-2.5 text-sm rounded-xl border border-(--color-border)
                                    text-(--color-text-body) hover:bg-(--color-bg) transition-colors">
                   Voltar
@@ -808,7 +897,7 @@ function BookingModal({
                   <ChevronRight size={15} />
                 </button>
               ) : usePackage ? (
-                <button onClick={handleBookWithPackage} disabled={bookingLoading}
+                <button onClick={handleBookWithPackage} disabled={bookingLoading || !policy}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm rounded-xl
                                    bg-green-600 text-white hover:bg-green-700
                                    disabled:opacity-50 transition-colors">
@@ -819,7 +908,7 @@ function BookingModal({
                   {bookingLoading ? 'Confirmando...' : 'Confirmar com pacote'}
                 </button>
               ) : (
-                <button onClick={handleAddToCart} disabled={bookingLoading}
+                <button onClick={handleAddToCart} disabled={bookingLoading || !policy || priceChanged}
                         className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm rounded-xl
                                    bg-(--color-secondary-500) text-white hover:bg-(--color-secondary-600)
                                    transition-colors">
@@ -952,19 +1041,37 @@ export default function PartnerDetailPage() {
   const [partner,         setPartner]         = useState<PartnerResponse | null>(null)
   const [packages,        setPackages]        = useState<PackageTemplateResponse[]>([])
   const [loading,         setLoading]         = useState(true)
+  const [catalogError, setCatalogError] = useState('')
+  const [catalogAttempt, setCatalogAttempt] = useState(0)
   const [selectedService, setSelectedService] = useState<ServiceOffer | null>(null)
   const [selectedPackage, setSelectedPackage] = useState<PackageTemplateResponse | null>(null)
 
   useEffect(() => {
     if (!id) return
+    let active = true
     Promise.all([
       partnerService.getCatalogPartner(id),
       env.internalPilot ? Promise.resolve([]) : packageService.getByPartner(id).catch(() => []),
     ]).then(([p, pkgs]) => {
+      if (!active) return
       setPartner(p)
-      setPackages(Array.isArray(pkgs) ? pkgs : (pkgs as any).content ?? [])
-    }).catch(() => setPartner(null)).finally(() => setLoading(false))
-  }, [id])
+      setPackages(pkgs)
+    }).catch(err => {
+      if (!active) return
+      setPartner(null)
+      setCatalogError(isAxiosError(err) && err.response?.status === 404
+        ? 'Este estabelecimento não está disponível no catálogo.'
+        : bookingError(err, 'Não foi possível carregar o estabelecimento.'))
+    }).finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [id, catalogAttempt])
+
+  function reloadCatalog() {
+    setSelectedService(null)
+    setLoading(true)
+    setCatalogError('')
+    setCatalogAttempt(value => value + 1)
+  }
 
   if (loading) return (
     <div className="flex justify-center py-32">
@@ -972,7 +1079,13 @@ export default function PartnerDetailPage() {
     </div>
   )
   if (!partner) return (
-    <div className="text-center py-32 text-(--color-text-muted)">Parceiro não encontrado.</div>
+    <div className="space-y-3 text-center py-20 text-text-body">
+      <p role="alert">{catalogError || 'Estabelecimento indisponível.'}</p>
+      <div className="flex flex-wrap justify-center gap-2">
+        <Button variant="secondary" onClick={() => navigate('/app/home')}>Voltar ao catálogo</Button>
+        <Button onClick={reloadCatalog}>Tentar novamente</Button>
+      </div>
+    </div>
   )
 
   const open     = isOpenNow(partner.businessHours)
@@ -1201,6 +1314,7 @@ export default function PartnerDetailPage() {
           partnerId={id}
           partnerName={partner.name}
           onClose={() => setSelectedService(null)}
+          onReloadCatalog={reloadCatalog}
         />
       )}
       {selectedPackage && id && (

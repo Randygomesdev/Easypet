@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+@theme static {
   /* ─── Brand ─── */
   --color-primary-50:  #e8f0f7;
   --color-primary-100: #c5d8ec;
@@ -45,13 +45,19 @@
   --color-text-body:    #484860;
   --color-text-muted:   #808098;
   --color-text-placeholder: #c0c0cc;
+  --color-text-danger: var(--color-red-700);
 
   --color-icon-default: #808098;
   --color-icon-active:  #16426b;
 }
 
+:root {
+  --ui-color-scheme: light;
+}
+
 /* ─── Dark mode overrides ─── */
 html.dark {
+  --ui-color-scheme: dark;
   --color-bg:          #16426b;
   --color-surface:     #0f2f50;
   --color-border:      #2a6090;
@@ -61,6 +67,7 @@ html.dark {
   --color-text-body:    #c5d8ec;
   --color-text-muted:   #7a9ab8;
   --color-text-placeholder: #4a6880;
+  --color-text-danger: var(--color-red-300);
 
   --color-icon-default: #7a9ab8;
   --color-icon-active:  #9dbfdf;

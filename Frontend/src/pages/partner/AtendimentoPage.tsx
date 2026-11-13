@@ -5,11 +5,9 @@ import {
   Stethoscope, Syringe, Pill, Scale, FlaskConical, Scissors,
   ArrowLeft, Plus, Save, Trash2, Edit2, Weight,
 } from 'lucide-react'
-import { partnerService }  from '../../services/partner.service'
 import { staffService, type StaffResponse } from '../../services/staff.service'
 import {
   petService,
-  type PetResponse,
   type PetHistoryResponse,
   type VaccineResponse,     type VaccineRequest,
   type MedicationResponse,  type MedicationRequest,
@@ -22,8 +20,11 @@ import {
 import {
   bookingService,
   type BookingResponse,
+  type BookingPet,
   BOOKING_TYPE_LABEL,
 } from '../../services/booking.service'
+import { GroomingCheckIn } from '../../features/booking/GroomingCheckIn'
+import { bookingError, bookingStatusLabel } from '../../features/booking/bookingUi'
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
 function formatTime(iso?: string) {
@@ -201,7 +202,7 @@ function SlidePanel({ open, onClose, title, children }: {
                        ${open ? 'translate-x-0 shadow-2xl' : 'translate-x-full invisible'}`}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-(--color-border) shrink-0">
           <h2 className="font-semibold text-(--color-text-heading)">{title}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-(--color-bg) text-(--color-text-muted)">
+          <button onClick={onClose} aria-label="Fechar painel" className="p-1.5 rounded-lg hover:bg-(--color-bg) text-(--color-text-muted)">
             <X size={18} />
           </button>
         </div>
@@ -727,21 +728,25 @@ type RecordPanel = 'weight' | 'appointment' | 'vaccine' | 'exam' | 'surgery' | '
 
 interface RecordPanelProps {
   booking:        BookingResponse
-  pet:            PetResponse | null
+  pet:            BookingPet | null
   partnerName?:   string
   serviceNameMap: Record<string, string>
-  onFinish:       () => void
+  onFinish:       (booking: BookingResponse) => void
+  onReady:        (booking: BookingResponse) => void
+  hasClinicalAccess: boolean
 }
 
-function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish }: RecordPanelProps) {
+function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish, onReady, hasClinicalAccess }: RecordPanelProps) {
   const [panel,   setPanel]   = useState<RecordPanel>(null)
   const [saving,  setSaving]  = useState(false)
+  const [error, setError] = useState('')
 
   async function handleFinalize() {
     setSaving(true)
-    try { await bookingService.updateStatus(booking.id, 'COMPLETED') }
+    setError('')
+    try { onFinish(await bookingService.updateStatus(booking.id, 'COMPLETED')) }
+    catch (err) { setError(bookingError(err, 'Não foi possível finalizar o atendimento.')) }
     finally { setSaving(false) }
-    onFinish()
   }
 
   return (
@@ -752,29 +757,34 @@ function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish }: Re
         <p className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wider mb-0.5">Registrar Atendimento</p>
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-base font-bold text-(--color-text-heading)">
-            {BOOKING_TYPE_LABEL[booking.type as keyof typeof BOOKING_TYPE_LABEL] ?? booking.type}
+            {serviceNameMap[booking.serviceId ?? ''] ?? BOOKING_TYPE_LABEL[booking.type] ?? booking.type}
           </h3>
           <span className="text-xs text-(--color-text-muted)">{formatTime(booking.bookingDate)}</span>
         </div>
         {pet && (
           <p className="text-xs text-(--color-text-muted) mt-0.5">
-            {pet.name} · {pet.breed} · {age(pet.birthDate)}
+            {[pet.name, pet.breed, pet.birthDate ? age(pet.birthDate) : null].filter(Boolean).join(' · ')}
           </p>
         )}
       </div>
 
       {/* Section cards */}
       <div className="flex-1 overflow-y-auto p-5 space-y-2.5">
+        {booking.type === 'GROOMING' && <GroomingCheckIn booking={booking} onReady={onReady} />}
+        {hasClinicalAccess && <>
         <SectionCard icon={Scale}        label="Pesagem"                   color="bg-teal-100 text-teal-600"    onClick={() => setPanel('weight')} />
         <SectionCard icon={Stethoscope}  label="Observações da Consulta"   color="bg-blue-100 text-blue-600"    onClick={() => setPanel('appointment')} />
         <SectionCard icon={Syringe}      label="Vacinas"                   color="bg-green-100 text-green-600"  onClick={() => setPanel('vaccine')} />
         <SectionCard icon={FlaskConical} label="Exames"               color="bg-purple-100 text-purple-600" onClick={() => setPanel('exam')} />
         <SectionCard icon={Scissors}     label="Cirurgias / Procedimentos" color="bg-red-100 text-red-600" onClick={() => setPanel('surgery')} />
         <SectionCard icon={Pill}         label="Medicamentos / Prescrições" color="bg-orange-100 text-orange-600" onClick={() => setPanel('medication')} />
+        </>}
       </div>
 
       {/* Finalizar */}
       <div className="px-5 py-4 border-t border-(--color-border) shrink-0">
+        <p className="mb-2 text-sm text-text-muted">A interrupção do atendimento está indisponível após o início.</p>
+        {error && <p className="mb-2 text-sm text-text-danger" role="alert">{error}</p>}
         <button onClick={handleFinalize} disabled={saving}
                 className="w-full py-3 rounded-xl font-bold text-sm text-white
                            bg-(--color-primary-700) hover:opacity-90 disabled:opacity-50
@@ -785,7 +795,7 @@ function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish }: Re
       </div>
 
       {/* SlidePanels */}
-      {pet && (
+      {pet && hasClinicalAccess && (
         <>
           <SlidePanel open={panel === 'weight'}      onClose={() => setPanel(null)} title="Pesagem"><WeightPanel      petId={pet.id} bookingId={booking.id} partnerName={partnerName} /></SlidePanel>
           <SlidePanel open={panel === 'appointment'} onClose={() => setPanel(null)} title="Observações da Consulta"><AppointmentPanel petId={pet.id} booking={booking} partnerName={partnerName} serviceNameMap={serviceNameMap} /></SlidePanel>
@@ -806,27 +816,44 @@ export default function AtendimentoPage() {
   const initialId      = searchParams.get('bookingId')
 
   const [queue,          setQueue]          = useState<BookingResponse[]>([])
-  const [petMap,         setPetMap]         = useState<Record<string, PetResponse>>({})
-  const [historyMap,     setHistoryMap]     = useState<Record<string, PetHistoryResponse>>({})
+  const [petMap,         setPetMap]         = useState<Record<string, BookingPet>>({})
+  const [historyMap,     setHistoryMap]     = useState<Record<string, PetHistoryResponse | null>>({})
   const [selected,       setSelected]       = useState<BookingResponse | null>(null)
   const [loading,        setLoading]        = useState(true)
-  const [histLoading,    setHistLoading]    = useState(false)
-  const [finished,       setFinished]       = useState<Set<string>>(new Set())
+  const [error,          setError]          = useState('')
   const [partnerName,    setPartnerName]    = useState<string | undefined>(undefined)
   const [serviceNameMap, setServiceNameMap] = useState<Record<string, string>>({})
+  const [teamMember, setTeamMember] = useState(false)
+  const [petError, setPetError] = useState('')
+  const [retry, setRetry] = useState(0)
+
+  const selectBooking = useCallback(async (booking: BookingResponse) => {
+    if (booking.status !== 'CONFIRMED') {
+      setSelected(booking)
+      return
+    }
+    const updated = await bookingService.updateStatus(booking.id, 'IN_PROGRESS')
+    setQueue(prev => prev.map(item => item.id === updated.id ? updated : item))
+    setSelected(updated)
+  }, [])
 
   /* carrega fila do dia (CONFIRMED + IN_PROGRESS) */
   useEffect(() => {
-    partnerService.getMe().then(async p => {
-      setPartnerName(p.name)
-      const svcMap: Record<string, string> = {}
-      ;(p.services ?? []).forEach(s => { svcMap[s.id] = s.name })
-      setServiceNameMap(svcMap)
+    bookingService.agendaAccess().then(async access => {
+      if (!access.canAttend) {
+        setError('Sua conta não tem permissão para operar o atendimento.')
+        return
+      }
+      setTeamMember(access.teamMember)
+      void bookingService.partnerSummary(access.partnerId).then(p => {
+          setPartnerName(p.name)
+          setServiceNameMap(Object.fromEntries((p.services ?? []).map(service => [service.id, service.name])))
+        }).catch(err => setPetError(bookingError(err, 'Não foi possível carregar os serviços do estabelecimento.')))
       const todayStr = today()
       try {
         const [confirmedRes, inProgressRes] = await Promise.all([
-          bookingService.getByPartner(p.id, { date: todayStr, status: 'CONFIRMED',   size: 50, sort: 'bookingDate,asc' }),
-          bookingService.getByPartner(p.id, { date: todayStr, status: 'IN_PROGRESS', size: 50, sort: 'bookingDate,asc' }),
+          bookingService.getByPartner(access.partnerId, { date: todayStr, status: 'CONFIRMED',   size: 50, sort: 'bookingDate,asc' }),
+          bookingService.getByPartner(access.partnerId, { date: todayStr, status: 'IN_PROGRESS', size: 50, sort: 'bookingDate,asc' }),
         ])
 
         const merged = [...inProgressRes.content, ...confirmedRes.content]
@@ -835,56 +862,58 @@ export default function AtendimentoPage() {
 
         merged.forEach(b => {
           if (b.petId) {
-            petService.getById(b.petId)
+            bookingService.getPet(b, access.teamMember)
               .then(pet => setPetMap(prev => ({ ...prev, [pet.id]: pet })))
-              .catch(() => {})
+              .catch(err => setPetError(bookingError(err, 'Não foi possível carregar o cadastro do pet.')))
           }
         })
 
         if (initialId) {
           const found = merged.find(b => b.id === initialId)
-          if (found) setSelected(found)
+          if (found) await selectBooking(found)
         }
-      } catch { /* API error */ }
-    }).finally(() => setLoading(false))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialId])
+      } catch (err) { setError(bookingError(err, 'Não foi possível carregar os atendimentos.')) }
+    }).catch(err => setError(bookingError(err, 'Não foi possível carregar o estabelecimento.')))
+      .finally(() => setLoading(false))
+  }, [initialId, selectBooking, retry])
 
   /* carrega prontuário quando seleciona um booking */
   useEffect(() => {
-    if (!selected) return
+    if (!selected || selected.receptionCustomerId || teamMember) return
     const petId = selected.petId
-    if (historyMap[petId]) return
-    setHistLoading(true)
+    if (petId in historyMap) return
+    let active = true
     petService.getHistory(petId)
-      .then(h => setHistoryMap(prev => ({ ...prev, [petId]: h })))
-      .catch(() => {})
-      .finally(() => setHistLoading(false))
-  }, [selected, historyMap])
+      .then(history => { if (active) setHistoryMap(prev => ({ ...prev, [petId]: history })) })
+      .catch(() => { if (active) setHistoryMap(prev => ({ ...prev, [petId]: null })) })
+    return () => { active = false }
+  }, [selected, historyMap, teamMember])
 
   const handleSelect = useCallback(async (b: BookingResponse) => {
-    if (b.status === 'CONFIRMED') {
-      try {
-        const updated = await bookingService.updateStatus(b.id, 'IN_PROGRESS')
-        setQueue(prev => prev.map(q => q.id === updated.id ? updated : q))
-        setSelected(updated)
-      } catch {
-        setSelected(b)
-      }
-    } else {
-      setSelected(b)
-    }
-    navigate(`/partner/atendimento?bookingId=${b.id}`, { replace: true })
-  }, [navigate])
+    setError('')
+    try {
+      await selectBooking(b)
+      navigate(`/partner/atendimento?bookingId=${b.id}`, { replace: true })
+    } catch (err) { setError(bookingError(err, 'Não foi possível iniciar o atendimento.')) }
+  }, [navigate, selectBooking])
 
-  const handleFinish = useCallback(() => {
-    if (!selected) return
-    setFinished(prev => new Set([...prev, selected.id]))
+  const updateQueue = useCallback((updated: BookingResponse) => {
+    setQueue(prev => prev.map(item => item.id === updated.id ? updated : item))
+  }, [])
+
+  const handleFinish = useCallback((updated: BookingResponse) => {
+    updateQueue(updated)
     setSelected(null)
-  }, [selected])
+  }, [updateQueue])
+
+  const handleReady = useCallback((updated: BookingResponse) => {
+    updateQueue(updated)
+    setSelected(current => current?.id === updated.id ? updated : current)
+  }, [updateQueue])
 
   const pet     = selected ? petMap[selected.petId]     : null
   const history = selected ? historyMap[selected.petId] : null
+  const histLoading = !!selected && !(selected.petId in historyMap)
 
   if (loading) {
     return (
@@ -907,6 +936,14 @@ export default function AtendimentoPage() {
           )}
         </p>
       </div>
+      {error && <p role="alert" className="text-sm text-text-danger">{error}</p>}
+      {petError && <div className="flex flex-wrap items-center gap-2">
+        <p role="alert" className="text-sm text-text-danger">{petError}</p>
+        <button type="button" className="text-sm font-semibold text-text-heading underline" onClick={() => {
+          setPetError('')
+          setRetry(value => value + 1)
+        }}>Tentar novamente</button>
+      </div>}
 
       <div className="flex flex-col lg:flex-row gap-5" style={{ minHeight: '70vh' }}>
 
@@ -919,7 +956,7 @@ export default function AtendimentoPage() {
           ) : queue.map(b => {
             const p           = petMap[b.petId]
             const isSelected  = selected?.id === b.id
-            const isDone      = finished.has(b.id)
+            const isDone      = b.status === 'COMPLETED'
             const isInProgress = b.status === 'IN_PROGRESS'
             return (
               <button key={b.id} onClick={() => !isDone && handleSelect(b)}
@@ -947,11 +984,13 @@ export default function AtendimentoPage() {
                   {isDone
                     ? <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                     : isInProgress
-                      ? <span className="text-[10px] font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full shrink-0">Em atendimento</span>
+                      ? <span className="text-[10px] font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full shrink-0">
+                          {bookingStatusLabel(b) ?? 'Em atendimento'}
+                        </span>
                       : <ChevronRight size={14} className="text-(--color-text-muted) shrink-0" />
                   }
                 </div>
-                <p className="font-bold text-(--color-text-heading) text-sm mt-1.5">{p?.name ?? '…'}</p>
+                <p className="font-bold text-(--color-text-heading) text-sm mt-1.5">{p?.name ?? 'Pet indisponível'}</p>
                 <p className="text-xs text-(--color-text-muted) leading-tight">
                   {p?.breed ?? ''}{p?.breed && p?.species ? ' · ' : ''}{p?.species ? SPECIES_LABEL[p.species] : ''}
                 </p>
@@ -959,7 +998,7 @@ export default function AtendimentoPage() {
                   <p className="text-xs text-(--color-text-muted)">{age(p.birthDate)}</p>
                 )}
                 <p className="text-xs text-(--color-text-muted) mt-0.5">
-                  {BOOKING_TYPE_LABEL[b.type as keyof typeof BOOKING_TYPE_LABEL] ?? b.type}
+                  {serviceNameMap[b.serviceId ?? ''] ?? BOOKING_TYPE_LABEL[b.type] ?? b.type}
                 </p>
               </button>
             )
@@ -983,26 +1022,28 @@ export default function AtendimentoPage() {
             {/* Prontuário do pet */}
             <div className="bg-(--color-surface) border border-(--color-border) rounded-2xl overflow-hidden flex flex-col">
               <div className="px-5 py-4 border-b border-(--color-border) shrink-0">
-                <p className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wider mb-0.5">Prontuário</p>
-                <h3 className="text-lg font-bold text-(--color-text-heading)">{pet?.name ?? '…'}</h3>
+                <p className="text-xs font-bold text-(--color-text-muted) uppercase tracking-wider mb-0.5">
+                  {selected.receptionCustomerId || teamMember ? 'Cadastro do pet' : 'Prontuário'}
+                </p>
+                <h3 className="text-lg font-bold text-(--color-text-heading)">{pet?.name ?? 'Pet indisponível'}</h3>
                 {pet && (
                   <div className="mt-1 space-y-0.5">
                     <p className="text-xs text-(--color-text-muted)">
-                      {pet.breed} · {SPECIES_LABEL[pet.species]} · {GENDER_LABEL[pet.gender]}
+                      {[pet.breed, SPECIES_LABEL[pet.species], pet.gender ? GENDER_LABEL[pet.gender] : null].filter(Boolean).join(' · ')}
                     </p>
-                    <p className="text-xs text-(--color-text-muted)">
+                    {pet.birthDate && <p className="text-xs text-(--color-text-muted)">
                       Nascimento: {fmt(pet.birthDate)} · <span className="font-medium text-(--color-text-body)">{age(pet.birthDate)}</span>
-                    </p>
-                    <p className="text-xs text-(--color-text-muted)">
+                    </p>}
+                    {pet.weight != null && <p className="text-xs text-(--color-text-muted)">
                       Peso cadastrado: <span className="font-medium text-(--color-text-body)">{pet.weight} kg</span>
-                    </p>
+                    </p>}
                     {pet.microchipNumber && (
                       <p className="text-xs text-(--color-text-muted)">Microchip: {pet.microchipNumber}</p>
                     )}
                   </div>
                 )}
               </div>
-              <div className="flex-1 overflow-y-auto p-5">
+              {!selected.receptionCustomerId && !teamMember && <div className="flex-1 overflow-y-auto p-5">
                 {histLoading ? (
                   <div className="flex justify-center py-10">
                     <Loader2 size={20} className="animate-spin text-(--color-primary-700)" />
@@ -1010,13 +1051,15 @@ export default function AtendimentoPage() {
                 ) : history ? (
                   <ProntuarioPanel history={history} />
                 ) : (
-                  <p className="text-xs text-(--color-text-muted) italic">Carregando prontuário…</p>
+                  <p className="text-xs text-text-danger">Não foi possível carregar o prontuário.</p>
                 )}
-              </div>
+              </div>}
             </div>
 
             {/* Registro de atendimento */}
-            <RecordPanel booking={selected} pet={pet} partnerName={partnerName} serviceNameMap={serviceNameMap} onFinish={handleFinish} />
+            <RecordPanel key={selected.id} booking={selected} pet={pet ?? null} partnerName={partnerName}
+              serviceNameMap={serviceNameMap} onFinish={handleFinish} onReady={handleReady}
+              hasClinicalAccess={!selected.receptionCustomerId && !teamMember} />
           </div>
         )}
       </div>

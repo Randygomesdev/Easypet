@@ -1,9 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Camera, Loader2, Save, Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import TimePicker from '../../components/ui/TimePicker'
+import { Button } from '../../components/ui/Button'
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
 import { partnerService, type ServiceOffer } from '../../services/partner.service'
-import { formatPhone } from './CadastroPage'
+import { formatPhone } from './partnerForm'
 import {
   staffService,
   type StaffResponse,
@@ -102,13 +104,19 @@ type Props = { adminPartnerId?: string }
 
 export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
   const { staffId } = useParams<{ staffId: string }>()
+  return <ColaboradorEditor key={JSON.stringify([adminPartnerId, staffId])}
+    adminPartnerId={adminPartnerId} staffId={staffId} />
+}
+
+function ColaboradorEditor({ adminPartnerId, staffId }: Props & { staffId?: string }) {
   const navigate    = useNavigate()
   const isNew       = !staffId
 
   const [partnerId, setPartnerId]     = useState<string | null>(null)
   const [staff, setStaff]             = useState<StaffResponse | null>(null)
   const [activeTab, setActiveTab]     = useState<Tab>('dados')
-  const [loading, setLoading]         = useState(true)
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [loadResult, setLoadResult]   = useState<'ready' | 'error'>()
   const [availableServices, setAvailableServices] = useState<ServiceOffer[]>([])
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
@@ -127,7 +135,6 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
   // Schedule
   const [escala, setEscala]         = useState<DiaEscala[]>(DEFAULT_ESCALA)
   const [savingEscala, setSavingEscala] = useState(false)
-  const scheduleInitialized             = useRef(false)
 
   // Absences
   const [absences, setAbsences]     = useState<StaffAbsenceResponse[]>([])
@@ -136,22 +143,32 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
   const [showModal, setShowModal]   = useState(false)
 
   useEffect(() => {
-    const resolveId = adminPartnerId
-      ? Promise.resolve(adminPartnerId)
-      : partnerService.getMe().then(p => p.id)
+    let current = true
+    const resolvePartner = adminPartnerId !== undefined
+      ? partnerService.getAdminPartner(adminPartnerId)
+      : partnerService.getMe()
 
-    resolveId
-      .then(async pid => {
-        setPartnerId(pid)
-        const partnerData = await partnerService.getById(pid).catch(() => null)
-        if (partnerData?.services) setAvailableServices(partnerData.services)
+    resolvePartner
+      .then(async partnerData => {
+        if (!current) return
+        if (!partnerData.id || (adminPartnerId !== undefined && partnerData.id !== adminPartnerId)) {
+          setLoadResult('error')
+          return
+        }
+        setPartnerId(partnerData.id)
+        setAvailableServices(partnerData.services ?? [])
 
         if (!isNew && staffId) {
           const [s, sched, abs] = await Promise.all([
-            staffService.getById(staffId),
-            staffService.getSchedule(staffId),
-            staffService.getAbsences(staffId),
+            staffService.getById(staffId, partnerData.id),
+            staffService.getSchedule(staffId, partnerData.id),
+            staffService.getAbsences(staffId, partnerData.id),
           ])
+          if (!current) return
+          if (s.partnerId !== partnerData.id) {
+            setLoadResult('error')
+            return
+          }
           setStaff(s)
           setName(s.name)
           setPhotoUrl(s.photoUrl    ?? '')
@@ -162,13 +179,13 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
           setWhatsapp(s.whatsapp    ?? '')
           setSelectedServiceIds(s.serviceIds ?? [])
           setEscala(fromScheduleApi(sched))
-          scheduleInitialized.current = true
           setAbsences(abs)
         }
+        setLoadResult('ready')
       })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [staffId])
+      .catch(() => { if (current) setLoadResult('error') })
+    return () => { current = false }
+  }, [adminPartnerId, isNew, staffId, loadAttempt])
 
   /* ── Salvar dados ── */
   async function handleSaveDados() {
@@ -191,8 +208,10 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
           ? `/admin/parceiros/${adminPartnerId}/colaboradores/${created.id}`
           : `/partner/colaboradores/${created.id}`
         navigate(dest, { replace: true })
-      } else if (staffId) {
-        const updated = await staffService.update(staffId, payload)
+      } else if (staffId && partnerId) {
+        const updated = await staffService.update(staffId, {
+          ...payload, serviceIds: selectedServiceIds,
+        }, partnerId)
         setStaff(updated)
         setSuccess(true)
         setTimeout(() => setSuccess(false), 3000)
@@ -203,10 +222,18 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
 
   /* ── Salvar escala ── */
   async function handleSaveEscala() {
-    if (!staffId) return
+    if (!staffId || !partnerId) return
+    if (escala.some(day => day.trabalhando && (!day.inicio || !day.fim || day.inicio >= day.fim
+      || (day.intervalo && (!day.intervaloInicio || !day.intervaloFim
+        || day.intervaloInicio < day.inicio || day.intervaloFim > day.fim || day.intervaloInicio >= day.intervaloFim))))) {
+      setError('Confira o expediente e o intervalo dos dias selecionados.')
+      return
+    }
     setSavingEscala(true)
+    setError('')
+    setSuccess(false)
     try {
-      const updated = await staffService.updateSchedule(staffId, toScheduleApi(escala))
+      const updated = await staffService.updateSchedule(staffId, toScheduleApi(escala), partnerId)
       setEscala(fromScheduleApi(updated))
       setSuccess(true); setTimeout(() => setSuccess(false), 3000)
     } catch { setError('Erro ao salvar escala.') }
@@ -219,11 +246,15 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
     { id: 'afastamentos',  label: 'Afastamentos',     disabled: isNew },
   ]
 
-  if (loading) {
+  if (!loadResult) return <LoadingState label="Carregando colaborador e escala…" />
+
+  if (loadResult === 'error') {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-      </div>
+      <ErrorState message="Não foi possível carregar o colaborador e a escala."
+        action={<Button variant="secondary" onClick={() => {
+          setLoadResult(undefined)
+          setLoadAttempt(attempt => attempt + 1)
+        }}>Tentar novamente</Button>} />
     )
   }
 
@@ -232,7 +263,7 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
       {/* Page header */}
       <div className="mb-4 lg:mb-6">
         <button
-          onClick={() => navigate('/partner/colaboradores')}
+          onClick={() => navigate(adminPartnerId ? `/admin/parceiros/${adminPartnerId}` : '/partner/colaboradores')}
           className="flex items-center gap-1.5 text-sm text-(--color-text-muted) hover:text-(--color-text-body)
                      transition-colors mb-3"
         >
@@ -287,11 +318,14 @@ export default function ColaboradorPage({ adminPartnerId }: Props = {}) {
             />
           )}
           {activeTab === 'escala' && (
-            <EscalaTab escala={escala} setEscala={setEscala} />
+            <fieldset disabled={savingEscala}>
+              <EscalaTab escala={escala} setEscala={setEscala} />
+            </fieldset>
           )}
-          {activeTab === 'afastamentos' && staffId && (
+          {activeTab === 'afastamentos' && staffId && partnerId && (
             <AfastamentosTab
               staffId={staffId}
+              partnerId={partnerId}
               absences={absences}
               setAbsences={setAbsences}
               page={page} setPage={setPage}
@@ -373,7 +407,7 @@ function DadosTab({ name, setName, photoUrl, jobTitle, setJobTitle,
           }
         </div>
         <span className="text-xs text-(--color-text-muted) text-center">
-          Upload disponível após integração com storage
+          Upload de foto indisponível.
         </span>
       </div>
 
@@ -465,6 +499,8 @@ function EscalaTab({ escala, setEscala }: {
       {escala.map((dia, i) => (
         <div
           key={dia.dayOfWeek}
+          role="group"
+          aria-label={dia.nome}
           className="border border-(--color-border) rounded-xl p-4 flex flex-col gap-3
                      lg:flex-row lg:items-center lg:gap-4 lg:p-3 lg:border-0 lg:rounded-none
                      lg:border-b lg:border-(--color-border) last:border-b-0"
@@ -522,6 +558,10 @@ function EscalaTab({ escala, setEscala }: {
               {dia.trabalhando ? 'Trabalhando' : 'Folga'}
             </span>
             <button
+              type="button"
+              role="switch"
+              aria-label={`Expediente de ${dia.nome}`}
+              aria-checked={dia.trabalhando}
               onClick={() => update(i, 'trabalhando', !dia.trabalhando)}
               className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors cursor-pointer shrink-0
                 ${dia.trabalhando ? 'bg-(--color-secondary-500)' : 'bg-(--color-border)'}`}
@@ -539,8 +579,9 @@ function EscalaTab({ escala, setEscala }: {
 /* ════════════════════════════════════════
    Tab — Afastamentos
 ════════════════════════════════════════ */
-function AfastamentosTab({ staffId, absences, setAbsences, page, setPage, pageSize, showModal, setShowModal }: {
+function AfastamentosTab({ staffId, partnerId, absences, setAbsences, page, setPage, pageSize, showModal, setShowModal }: {
   staffId:      string
+  partnerId:    string
   absences:     StaffAbsenceResponse[]
   setAbsences:  (v: StaffAbsenceResponse[]) => void
   page:         number
@@ -650,6 +691,7 @@ function AfastamentosTab({ staffId, absences, setAbsences, page, setPage, pageSi
       {showModal && (
         <AbsenceModal
           staffId={staffId}
+          partnerId={partnerId}
           onClose={() => setShowModal(false)}
           onCreated={handleCreated}
         />
@@ -663,8 +705,9 @@ function AfastamentosTab({ staffId, absences, setAbsences, page, setPage, pageSi
 ════════════════════════════════════════ */
 const ABSENCE_TYPES = ['Férias', 'Folga', 'Atestado Médico', 'Licença', 'Outros']
 
-function AbsenceModal({ staffId, onClose, onCreated }: {
+function AbsenceModal({ staffId, partnerId, onClose, onCreated }: {
   staffId:   string
+  partnerId: string
   onClose:   () => void
   onCreated: (a: StaffAbsenceResponse) => void
 }) {
@@ -700,7 +743,7 @@ function AbsenceModal({ staffId, onClose, onCreated }: {
         startDate: `${startDate}T00:00:00`,
         endDate:   `${endDate}T23:59:59`,
         reason:    tipo,
-      })
+      }, partnerId)
       onCreated(created)
     } catch { setError('Erro ao registrar afastamento.') }
     finally  { setSaving(false) }

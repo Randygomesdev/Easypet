@@ -1,7 +1,6 @@
 # Design System — Easypet Frontend
 
-Documentação do sistema de design utilizado no frontend React do Easypet.  
-Definido em `src/index.css` via `@theme` do Tailwind CSS v4.
+Os tokens do frontend ficam em `src/index.css` via `@theme` do Tailwind CSS v4. A galeria `/design-system` mostra as escalas de cor, a tipografia e os componentes com exemplos TSX. Em desenvolvimento, abra a URL diretamente. No build, entre com uma conta `ADMIN` e use o item **Design system** no menu.
 
 ---
 
@@ -28,6 +27,7 @@ Definido em `src/index.css` via `@theme` do Tailwind CSS v4.
 | `--color-text-body` | `#484860` | `#c5d8ec` |
 | `--color-text-muted` | `#808098` | `#7a9ab8` |
 | `--color-text-placeholder` | `#c0c0cc` | `#4a6880` |
+| `--color-text-danger` | `--color-red-700` | `--color-red-300` |
 | `--color-icon-default` | `#808098` | `#7a9ab8` |
 | `--color-icon-active` | `#16426b` | `#9dbfdf` |
 
@@ -54,21 +54,36 @@ Definido em `src/index.css` via `@theme` do Tailwind CSS v4.
 
 ## Componentes
 
-### Card Base
+| Componente em `src/components/ui/` | Composição |
+| --- | --- |
+| `Button.tsx` | `Button` usa `type="button"` por padrão. Declare `type="submit"` em formulários. Variantes `primary`, `accent`, `secondary` e `danger`, com tamanhos `default` e `sm`. Dê nome acessível a botões que exibem apenas um ícone. |
+| `Field.tsx` | `TextField` e `SelectField` associam `label`, `hint` e `error` ao controle. Aceitam `ref` e props nativas. `SelectField` usa `<option>` como filhos. |
+| `Badge.tsx` | `Badge` recebe o rótulo do domínio e um tom `neutral`, `success`, `info`, `warning` ou `danger`. |
+| `Card.tsx` | `Card` define superfície, borda, raio e sombra. Combine com `CardHeader` e `CardContent` quando precisar de título, ação e espaçamento interno. |
+| `Dialog.tsx` | `Dialog` usa o elemento nativo e o estado `open` do consumidor. Mantenha-o montado enquanto `open` alterna para que o foco retorne ao acionador. Use `onOpenChange` para aplicar a solicitação de fechamento por botão ou Escape. |
+| `Table.tsx` | `Table` fornece `caption` e região com rolagem horizontal acessível por teclado. Componha com `<thead>`, `<tbody>`, `TableHeaderCell` e `TableCell`. |
+| `Pagination.tsx` | `Pagination` recebe `page` com base 1, `totalPages` e `onPageChange`. Ajuste a base no consumidor se o endpoint começar em zero. |
+| `FeedbackState.tsx` | `LoadingState`, `ErrorState` e `EmptyState` recebem textos e ações da página. `EmptyState` recebe um ícone de `lucide-react`. |
+| `TimePicker.tsx` e `UserAvatar.tsx` | Componentes existentes para escala e identidade visual. `TimePicker` recebe `value` e `onChange`. `UserAvatar` recebe `name`, `pictureUrl?` e `size?`. |
+
 ```tsx
-<div className="bg-surface border border-(--color-border) rounded-2xl p-5 shadow-sm">
+import { Button } from '../../components/ui/Button'
+import { Card, CardContent, CardHeader } from '../../components/ui/Card'
+import { TextField } from '../../components/ui/Field'
+
+<Card>
+  <CardHeader title="Dados do tutor" />
+  <CardContent>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <TextField label="E-mail" name="email" type="email" autoComplete="email"
+        required error={errors.email} />
+      <Button type="submit" disabled={saving}>Salvar</Button>
+    </form>
+  </CardContent>
+</Card>
 ```
 
-### Card com Header
-```tsx
-<div className="bg-surface border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">
-  <div className="px-5 py-4 border-b border-(--color-border)">
-    <h2 className="text-sm font-bold text-(--color-text-heading)">Título</h2>
-    <p className="text-xs text-(--color-text-muted) mt-0.5">Subtítulo</p>
-  </div>
-  <div className="p-5">...</div>
-</div>
-```
+Primitivas de `components/ui` recebem valores, conteúdo e callbacks por props. Mantenha acesso a serviços, permissões e estados de negócio nas páginas, hooks e features. Reaproveite as variantes e os tokens semânticos. Ao introduzir um padrão em outra sprint, envie a composição e os estados usados para a galeria em `src/pages/design-system/`.
 
 ### KPI Card
 ```tsx
@@ -101,51 +116,22 @@ Definido em `src/index.css` via `@theme` do Tailwind CSS v4.
 
 ## Estados de UI
 
-### Loading
 ```tsx
-<div className="flex items-center justify-center h-64">
-  <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-</div>
-```
+import { Users } from 'lucide-react'
+import { Button } from '../../components/ui/Button'
+import { EmptyState, ErrorState, LoadingState } from '../../components/ui/FeedbackState'
 
-### Vazio (empty state)
-```tsx
-<div className="flex flex-col items-center justify-center py-12 gap-3">
-  <div className="w-14 h-14 rounded-full bg-(--color-bg) border border-(--color-border) flex items-center justify-center">
-    <IconName size={22} className="text-(--color-text-muted)" />
-  </div>
-  <p className="text-xs text-(--color-text-muted)">Mensagem de vazio</p>
-</div>
-```
-
-### Erro
-```tsx
-<div className="flex items-center justify-center h-64">
-  <p className="text-sm text-red-500">Mensagem de erro</p>
-</div>
+if (loading) return <LoadingState label="Carregando clientes…" />
+if (error) return <ErrorState message={error}
+  action={<Button variant="secondary" onClick={reload}>Tentar novamente</Button>} />
+if (customers.length === 0) return <EmptyState icon={Users} title="Nenhum cliente cadastrado." />
 ```
 
 ---
 
 ## Badges de Status
 
-```tsx
-// Agendamentos
-COMPLETED → 'bg-emerald-100 text-emerald-700'
-CONFIRMED → 'bg-violet-100  text-violet-700'
-PENDING   → 'bg-amber-100   text-amber-700'
-CANCELLED → 'bg-pink-100    text-pink-600'
-
-// Roles
-ADMIN    → 'bg-red-100    text-red-700'
-PARTNER  → 'bg-blue-100   text-blue-700'
-CUSTOMER → 'bg-green-100  text-green-700'
-
-// Estrutura
-<span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${style}`}>
-  {label}
-</span>
-```
+Em agendamentos, os exemplos da galeria usam `success` para concluído, `info` para confirmado, `warning` para pendente e `danger` para cancelado. Inclua sempre o rótulo de status junto da cor.
 
 ---
 
@@ -174,3 +160,7 @@ const C_MUTED     = '#808098'   // gray-500
 const C_BORDER    = '#ebebef'   // gray-100
 const C_BG        = '#f6f6f8'   // gray-50
 ```
+
+## Verificação local
+
+Execute `npm run test:design-system` em `Frontend/` com Chromium do Playwright disponível. Para usar Chrome instalado, configure `EASYPET_S01_BROWSER_CHANNEL=chrome` no ambiente do comando. O teste sobe Vite e o preview em `127.0.0.1:19141` e `127.0.0.1:19142`, respectivamente. Ele ativa as rotas da onda B e verifica navegação, permissões, revogação, indisponibilidade da sessão e componentes com respostas de API simuladas. A suíte de aceite com os serviços reais é executada pela S07.

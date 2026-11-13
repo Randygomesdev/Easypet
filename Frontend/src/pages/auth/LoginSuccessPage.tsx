@@ -8,17 +8,22 @@ export default function LoginSuccessPage() {
   const { login }      = useAuth()
   const navigate       = useNavigate()
   const attempted      = useRef(false) // evita dupla chamada do StrictMode em dev
+  const code           = searchParams.get('code')
 
   useEffect(() => {
     if (attempted.current) return
     attempted.current = true
 
-    const code = searchParams.get('code')
     if (!code) { navigate('/login'); return }
 
     authService.exchangeOAuthCode(code)
       .then(({ token }) => {
-        const payload = JSON.parse(atob(token.split('.')[1]))
+        const segment = token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/')
+        const payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(segment), c => c.charCodeAt(0))))
+        if (payload.role !== 'PARTNER' && payload.role !== 'ADMIN' && payload.role !== 'CUSTOMER') {
+          navigate('/login', { replace: true })
+          return
+        }
         login({
           token,
           id:         payload.userId,
@@ -27,13 +32,10 @@ export default function LoginSuccessPage() {
           role:       payload.role,
           pictureUrl: payload.pictureUrl,
         })
-        if (payload.role === 'PARTNER')        navigate('/partner/dashboard', { replace: true })
-        else if (payload.role === 'ADMIN')     navigate('/admin/parceiros',   { replace: true })
-        else if (payload.role === 'CUSTOMER')  navigate('/app/home',          { replace: true })
-        else                                   navigate('/',                  { replace: true })
+        navigate('/painel', { replace: true })
       })
-      .catch(() => navigate('/login'))
-  }, [])
+      .catch(() => navigate('/login', { replace: true }))
+  }, [code, login, navigate])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

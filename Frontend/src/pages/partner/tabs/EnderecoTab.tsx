@@ -29,9 +29,18 @@ function mapsUrl(lat: number, lng: number) {
 }
 
 export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, errors = {} }: Props) {
-  const [semNumero, setSemNumero]   = useState(false)
+  const [semNumero, setSemNumero]   = useState(form.number === 'S/N')
   const [loadingCep, setLoadingCep] = useState(false)
   const [cepError, setCepError]     = useState('')
+  const cepRequest = useRef<AbortController | null>(null)
+  const addressChangedDuringLookup = useRef(false)
+
+  useEffect(() => () => cepRequest.current?.abort(), [])
+
+  function changeAddress(field: keyof PartnerPayload, value: string | boolean) {
+    addressChangedDuringLookup.current = true
+    onChange(field, value)
+  }
 
   // String state local para os inputs de coordenadas (suporta digitação intermediária como "-23.")
   const [latStr, setLatStr] = useState(form.latitude?.toString()  ?? '')
@@ -61,26 +70,33 @@ export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, 
 
   function handleCepChange(raw: string) {
     const digits = raw.replace(/\D/g, '').slice(0, 8)
+    cepRequest.current?.abort()
+    setLoadingCep(false)
     onChange('zipCode', digits)
     setCepError('')
     if (digits.length === 8) fetchCep(digits)
   }
 
   async function fetchCep(digits: string) {
+    const request = new AbortController()
+    cepRequest.current = request
+    addressChangedDuringLookup.current = false
     setLoadingCep(true)
     setCepError('')
     try {
-      const res  = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const res  = await fetch(`https://viacep.com.br/ws/${digits}/json/`, { signal: request.signal })
+      if (!res.ok) throw new Error('Consulta de CEP indisponível.')
       const data = await res.json() as ViaCepResponse
+      if (request.signal.aborted || addressChangedDuringLookup.current) return
       if (data.erro) { setCepError('CEP não encontrado.'); return }
       onChange('address',      data.logradouro)
       onChange('neighborhood', data.bairro)
       onChange('city',         data.localidade)
       onChange('state',        data.uf)
     } catch {
-      setCepError('Erro ao consultar o CEP. Tente novamente.')
+      if (!request.signal.aborted) setCepError('Não foi possível consultar o CEP. Confira os dados manualmente.')
     } finally {
-      setLoadingCep(false)
+      if (!request.signal.aborted) setLoadingCep(false)
     }
   }
 
@@ -98,6 +114,7 @@ export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, 
           <div className="relative">
             <input
               type="text"
+              aria-label="CEP"
               value={formatCep(form.zipCode ?? '')}
               onChange={e => handleCepChange(e.target.value)}
               placeholder="00000-000"
@@ -121,7 +138,7 @@ export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, 
           <Field
             label="Logradouro" required error={errors.address}
             value={form.address ?? ''}
-            onChange={v => onChange('address', v)}
+            onChange={v => changeAddress('address', v)}
             placeholder="Digite o Logradouro"
           />
         </div>
@@ -161,7 +178,7 @@ export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, 
           <Field
             label="Bairro" required error={errors.neighborhood}
             value={form.neighborhood ?? ''}
-            onChange={v => onChange('neighborhood', v)}
+            onChange={v => changeAddress('neighborhood', v)}
             placeholder="Digite o Bairro"
           />
         </div>
@@ -169,7 +186,7 @@ export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, 
           <Field
             label="Cidade" required error={errors.city}
             value={form.city ?? ''}
-            onChange={v => onChange('city', v)}
+            onChange={v => changeAddress('city', v)}
             placeholder="Digite a Cidade"
           />
         </div>
@@ -181,7 +198,7 @@ export default function EnderecoTab({ form, onChange, onLatChange, onLngChange, 
           <Field
             label="Estado" required error={errors.state}
             value={form.state ?? ''}
-            onChange={v => onChange('state', v)}
+            onChange={v => changeAddress('state', v)}
             placeholder="UF"
           />
         </div>

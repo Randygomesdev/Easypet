@@ -1,16 +1,24 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Loader2, Search, ChevronLeft, ChevronRight,
   Users, CheckCircle2, Stethoscope, Syringe, Scissors,
   Clock, SlidersHorizontal, CalendarDays,
 } from 'lucide-react'
-import { partnerService }  from '../../services/partner.service'
 import { staffService, type StaffResponse } from '../../services/staff.service'
-import { petService, type PetResponse } from '../../services/pet.service'
+import { Badge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
+import { Dialog } from '../../components/ui/Dialog'
+import { AgendaBlocksDialog } from '../../features/booking/AgendaBlocksDialog'
+import { BookingHistory } from '../../features/booking/BookingHistory'
+import { BookingReasonDialog } from '../../features/booking/BookingReasonDialog'
+import { RescheduleBookingDialog } from '../../features/booking/RescheduleBookingDialog'
+import { bookingError, bookingStatusLabel, canRecordNoShow, isEditableBooking } from '../../features/booking/bookingUi'
 import {
   bookingService,
   type BookingResponse,
+  type BookingAccess,
+  type BookingPet,
   type BookingStatus,
   type BookingType,
   BOOKING_TYPE_LABEL,
@@ -84,9 +92,13 @@ const STATUS_STYLE: Record<BookingStatus, string> = {
   IN_PROGRESS: 'bg-blue-100    text-blue-700',
   PENDING:     'bg-amber-100   text-amber-700',
   CANCELLED:   'bg-pink-100    text-pink-600',
+  NO_SHOW:     'bg-pink-100    text-pink-600',
 }
 
-function StatusBadge({ status }: { status: BookingStatus }) {
+function StatusBadge({ booking }: { booking: BookingResponse }) {
+  const ready = bookingStatusLabel(booking)
+  if (ready) return <Badge tone="success">{ready}</Badge>
+  const { status } = booking
   return (
     <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${STATUS_STYLE[status] ?? 'bg-gray-100 text-gray-600'}`}>
       {BOOKING_STATUS_LABEL[status] ?? status}
@@ -97,25 +109,37 @@ function StatusBadge({ status }: { status: BookingStatus }) {
 const ALL_TYPES: BookingType[] = ['CONSULTATION','VACCINATION','GROOMING','BOARDING','OTHER']
 const PAGE_SIZE = 10
 
+type BookingDialog = { booking: BookingResponse; action: 'reschedule' | 'history' | 'CANCELLED' | 'NO_SHOW' }
+
 /* ─────────────────────────────────────────────
    Página
 ───────────────────────────────────────────── */
 export default function AgendamentosPage() {
   const navigate = useNavigate()
 
-  const [partnerId,     setPartnerId]     = useState<string | null>(null)
+  const [access, setAccess] = useState<BookingAccess | null>(null)
+  const partnerId = access?.partnerId ?? null
+  const summaryOnly = access?.teamMember ?? false
   const [bookings,      setBookings]      = useState<BookingResponse[]>([])
   const [staffList,     setStaffList]     = useState<StaffResponse[]>([])
-  const [petMap,        setPetMap]        = useState<Record<string, PetResponse>>({})
-  const [loading,       setLoading]       = useState(true)
-  const [error, setError] = useState('')
+  const [serviceNames, setServiceNames] = useState<Record<string, string>>({})
+  const [serviceError, setServiceError] = useState('')
+  const [petMap,        setPetMap]        = useState<Record<string, BookingPet>>({})
+  const [petLoadFailed, setPetLoadFailed] = useState(false)
+  const [partnerLoading, setPartnerLoading] = useState(true)
+  const [loadedRequest, setLoadedRequest] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [refresh, setRefresh] = useState(0)
   const [page,          setPage]          = useState(0)
   const [totalPages,    setTotalPages]    = useState(0)
   const [totalItems,    setTotalItems]    = useState(0)
+  const [blocksOpen, setBlocksOpen] = useState(false)
+  const [dialog, setDialog] = useState<BookingDialog | null>(null)
 
   /* ── Filtros ── */
-  const chips       = buildChips()
+  const chips       = useMemo(() => buildChips(), [])
   const [activeChip,  setActiveChip]  = useState<ChipId>('hoje')
   const [search,      setSearch]      = useState('')
   const [showFilters, setShowFilters] = useState(false)
@@ -134,50 +158,73 @@ export default function AgendamentosPage() {
       startDate: chip.startDate,
       endDate:   chip.endDate,
     }
-  }, [activeChip])
+  }, [activeChip, chips])
 
   /* carrega parceiro + staff */
   useEffect(() => {
-    partnerService.getMe().then(async p => {
-      setPartnerId(p.id)
-      try {
-        const list = await staffService.getByPartner(p.id)
-        setStaffList(list)
-      } catch { /* opcional */ }
-    }).catch(() => setError('Não foi possível carregar o estabelecimento. Confira seu cadastro.'))
-      .finally(() => setLoading(false))
+    let active = true
+    bookingService.agendaAccess().then(context => {
+      if (!active) return
+      setAccess(context)
+      if (!context.teamMember) {
+        void staffService.getByPartner(context.partnerId).then(list => { if (active) setStaffList(list) }).catch(() => {})
+      }
+    }).catch(err => { if (active) setLoadError(bookingError(err, 'Não foi possível carregar o acesso à agenda.')) })
+      .finally(() => setPartnerLoading(false))
+    return () => { active = false }
   }, [])
 
-  /* carrega bookings */
-  const load = useCallback(async () => {
+  useEffect(() => {
     if (!partnerId) return
-    setLoading(true)
-    try {
+    let active = true
+    bookingService.partnerSummary(partnerId).then(partner => {
+      if (!active) return
+      setServiceNames(Object.fromEntries(partner.services.map(service => [service.id, service.name])))
+      setServiceError('')
+    }).catch(err => { if (active) setServiceError(bookingError(err, 'Não foi possível carregar os serviços.')) })
+    return () => { active = false }
+  }, [partnerId, refresh])
+
+  /* carrega bookings */
+  const requestKey = JSON.stringify([partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page, refresh])
+  const loading = partnerLoading || (!!partnerId && requestKey !== loadedRequest)
+  useEffect(() => {
+    if (!partnerId) return
+    let active = true
+    async function load(id: string) {
       const hasAdvanced = fStatus || fType || fStaff || fStart || fEnd
       const params = hasAdvanced
         ? { status: fStatus || undefined, type: fType || undefined, staffId: fStaff || undefined, startDate: fStart || undefined, endDate: fEnd || undefined, page, size: PAGE_SIZE }
         : { ...chipFilters, page, size: PAGE_SIZE }
 
-      const res = await bookingService.getByPartner(partnerId, params)
-
-      setBookings(res.content)
-      setTotalPages(res.totalPages)
-      setTotalItems(res.totalElements)
-      const ids = [...new Set(res.content.map(booking => booking.petId).filter(Boolean))]
-      const pets = await Promise.allSettled(ids.map(id => petService.getById(id)))
-      setPetMap(Object.fromEntries(pets.flatMap(result =>
-        result.status === 'fulfilled' ? [[result.value.id, result.value]] : []
-      )))
-    } catch {
-      setBookings([])
-      setTotalPages(0)
-      setTotalItems(0)
-      setPetMap({})
-      setError('Não foi possível carregar os agendamentos. Tente novamente.')
-    } finally { setLoading(false) }
-  }, [partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page])
-
-  useEffect(() => { load() }, [load])
+      try {
+        const res = await bookingService.getByPartner(id, params)
+        const byPet = new Map(res.content.map(booking => [booking.petId, booking]))
+        const pets = await Promise.allSettled([...byPet.values()].map(booking => bookingService.getPet(booking, summaryOnly)))
+        if (!active) return
+        setBookings(res.content)
+        setTotalPages(res.totalPages)
+        setTotalItems(res.totalElements)
+        setPetMap(Object.fromEntries(pets.flatMap(result =>
+          result.status === 'fulfilled' ? [[result.value.id, result.value]] : []
+        )))
+        setPetLoadFailed(pets.some(result => result.status === 'rejected'))
+        setLoadError('')
+      } catch (err) {
+        if (!active) return
+        setBookings([])
+        setTotalPages(0)
+        setTotalItems(0)
+        setPetMap({})
+        setPetLoadFailed(false)
+        setLoadError(bookingError(err, 'Não foi possível carregar os agendamentos.'))
+      } finally {
+        if (active) setLoadedRequest(requestKey)
+      }
+    }
+    void load(partnerId)
+    return () => { active = false }
+  }, [partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page, requestKey, summaryOnly])
 
   /* KPIs derivados da página carregada */
   const kpiPending   = bookings.filter(b => b.status === 'PENDING').length
@@ -198,59 +245,62 @@ export default function AgendamentosPage() {
   /* ── Ações ── */
   async function handleStatusChange(id: string, status: BookingStatus) {
     setActionLoading(id)
-    try { await bookingService.updateStatus(id, status); await load() }
-    catch { setError('Não foi possível atualizar o agendamento. Tente novamente.') }
+    setActionError('')
+    try { await bookingService.updateStatus(id, status); setRefresh(value => value + 1) }
+    catch (err) { setActionError(bookingError(err, 'Não foi possível atualizar o agendamento.')) }
     finally { setActionLoading(null) }
   }
 
   async function handleFitting(id: string, decision: 'APPROVE' | 'REJECT') {
     setActionLoading(id)
-    try { await bookingService.processFittingDecision(id, decision); await load() }
-    catch { setError('Não foi possível atualizar o agendamento. Tente novamente.') }
+    setActionError('')
+    try { await bookingService.processFittingDecision(id, decision); setRefresh(value => value + 1) }
+    catch (err) { setActionError(bookingError(err, 'Não foi possível atualizar o agendamento.')) }
     finally { setActionLoading(null) }
   }
 
-  function ActionButtons({ b }: { b: BookingResponse }) {
+  function renderActions(b: BookingResponse) {
     if (actionLoading === b.id)
       return <Loader2 size={14} className="animate-spin text-(--color-primary-700)" />
 
-    if (b.status === 'PENDING' && b.isFittingRequest) return (
-      <div className="flex gap-1.5">
-        <button onClick={() => handleFitting(b.id, 'APPROVE')}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors">
-          Aprovar
-        </button>
-        <button onClick={() => handleFitting(b.id, 'REJECT')}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors">
-          Rejeitar
-        </button>
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {access?.canManage && b.status === 'PENDING' && (
+          <Button size="sm" onClick={() => b.isFittingRequest
+            ? void handleFitting(b.id, 'APPROVE')
+            : void handleStatusChange(b.id, 'CONFIRMED')}>
+            {b.isFittingRequest ? 'Aprovar' : 'Confirmar'}
+          </Button>
+        )}
+        {access?.canAttend && (b.status === 'CONFIRMED' || b.status === 'IN_PROGRESS') && (
+          <Button size="sm" variant="accent" onClick={() => navigate(`/partner/atendimento?bookingId=${b.id}`)}>
+            {b.status === 'CONFIRMED' ? 'Iniciar Atendimento' : 'Abrir atendimento'}
+          </Button>
+        )}
+        {access?.canManage && isEditableBooking(b) && (
+          <>
+            <Button size="sm" variant="secondary" onClick={() => setDialog({ booking: b, action: 'reschedule' })}>
+              Reagendar
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setDialog({ booking: b, action: 'CANCELLED' })}>
+              {b.status === 'PENDING' && b.isFittingRequest ? 'Rejeitar' : 'Cancelar'}
+            </Button>
+          </>
+        )}
+        {access?.canManage && canRecordNoShow(b) && (
+          <Button size="sm" variant="secondary" onClick={() => setDialog({ booking: b, action: 'NO_SHOW' })}>
+            Registrar falta
+          </Button>
+        )}
+        <Button size="sm" variant="secondary" onClick={() => setDialog({ booking: b, action: 'history' })}>Histórico</Button>
       </div>
     )
-    if (b.status === 'PENDING') return (
-      <div className="flex gap-1.5">
-        <button onClick={() => handleStatusChange(b.id, 'CONFIRMED')}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">
-          Confirmar
-        </button>
-        <button onClick={() => handleStatusChange(b.id, 'CANCELLED')}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors">
-          Cancelar
-        </button>
-      </div>
-    )
-    if (b.status === 'CONFIRMED') return (
-      <div className="flex gap-1.5">
-        <button onClick={() => navigate(`/partner/atendimento?bookingId=${b.id}`)}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-(--color-secondary-500) text-white hover:opacity-90 transition-opacity">
-          Iniciar Atendimento
-        </button>
-        <button onClick={() => handleStatusChange(b.id, 'CANCELLED')}
-          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-pink-100 text-pink-600 hover:bg-pink-200 transition-colors">
-          Cancelar
-        </button>
-      </div>
-    )
-    return null
+  }
+
+  function bookingSaved() {
+    setDialog(null)
+    setActionError('')
+    setRefresh(value => value + 1)
   }
 
   function handleChip(id: ChipId) {
@@ -281,16 +331,27 @@ export default function AgendamentosPage() {
     <div className="space-y-5">
 
       {/* ── Cabeçalho ── */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-(--color-text-heading)">Agendamentos</h1>
-        <p className="text-sm text-(--color-text-muted) mt-1">
-          Gerencie e acompanhe todos os atendimentos da sua equipe
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-(--color-text-heading)">Agendamentos</h1>
+          <p className="text-sm text-(--color-text-muted) mt-1">
+            Gerencie e acompanhe todos os atendimentos da sua equipe
+          </p>
+        </div>
+        {partnerId && access?.canManage && <Button variant="secondary" onClick={() => setBlocksOpen(true)}>Bloqueios de agenda</Button>}
       </div>
 
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-
-      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+      {(actionError || (!loading && loadError)) && (
+        <p role="alert" className="text-sm text-text-danger">{actionError || loadError}</p>
+      )}
+      {!loading && (petLoadFailed || serviceError) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p role="alert" className="text-sm text-text-danger">
+            {petLoadFailed ? 'Não foi possível carregar alguns cadastros de pet.' : serviceError}
+          </p>
+          <Button size="sm" variant="secondary" onClick={() => setRefresh(value => value + 1)}>Tentar novamente</Button>
+        </div>
+      )}
 
       {/* ── KPIs ── */}
       <div className="bg-(--color-surface) border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">
@@ -380,6 +441,7 @@ export default function AgendamentosPage() {
                   <option value="CONFIRMED">Confirmado</option>
                   <option value="COMPLETED">Finalizado</option>
                   <option value="CANCELLED">Cancelado</option>
+                  <option value="NO_SHOW">Falta</option>
                 </select>
               </div>
               <div>
@@ -451,18 +513,18 @@ export default function AgendamentosPage() {
                     <div className="flex items-start justify-between gap-2 mb-1.5">
                       <div>
                         <p className="font-bold text-(--color-text-heading) text-sm leading-tight">
-                          {pet?.name ?? '–'}
+                          {pet?.name ?? 'Pet indisponível'}
                         </p>
                         {pet?.breed && <p className="text-xs text-(--color-text-muted)">{pet.breed}</p>}
                       </div>
-                      <StatusBadge status={b.status} />
+                      <StatusBadge booking={b} />
                     </div>
                     <div className="flex items-center gap-1.5 text-xs text-(--color-text-muted) mb-2">
-                      <span className="font-medium text-(--color-text-body)">{BOOKING_TYPE_LABEL[b.type] ?? b.type}</span>
+                      <span className="font-medium text-(--color-text-body)">{serviceNames[b.serviceId ?? ''] ?? BOOKING_TYPE_LABEL[b.type] ?? b.type}</span>
                       {staff && <><span>·</span><span>{staff.name}</span></>}
                       {b.bookingDate && <><span>·</span><span>{formatDateTime(b.bookingDate)}</span></>}
                     </div>
-                    <ActionButtons b={b} />
+                    {renderActions(b)}
                   </div>
                 )
               })}
@@ -475,7 +537,7 @@ export default function AgendamentosPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-(--color-border)">
-                {['PET','RAÇA','PROFISSIONAL','TIPO','DATA / HORÁRIO','STATUS','AÇÕES'].map(col => (
+                {['PET','RAÇA','PROFISSIONAL','SERVIÇO','DATA / HORÁRIO','STATUS','AÇÕES'].map(col => (
                   <th key={col}
                     className="text-left px-5 py-3.5 text-[11px] font-bold text-(--color-text-muted)
                                uppercase tracking-wider whitespace-nowrap">
@@ -504,7 +566,7 @@ export default function AgendamentosPage() {
                   <tr key={b.id}
                     className="border-b border-(--color-border) hover:bg-(--color-bg)/60 transition-colors">
                     <td className="px-5 py-4 text-sm font-semibold text-(--color-text-body)">
-                      {pet?.name ?? <span className="italic text-(--color-text-muted) text-xs">–</span>}
+                      {pet?.name ?? <span className="italic text-(--color-text-muted) text-xs">Pet indisponível</span>}
                     </td>
                     <td className="px-5 py-4 text-sm text-(--color-text-body)">
                       {pet?.breed ?? <span className="italic text-(--color-text-muted) text-xs">–</span>}
@@ -513,16 +575,16 @@ export default function AgendamentosPage() {
                       {staff?.name ?? <span className="italic text-(--color-text-muted) text-xs">Qualquer</span>}
                     </td>
                     <td className="px-5 py-4 text-sm text-(--color-text-body)">
-                      {BOOKING_TYPE_LABEL[b.type] ?? b.type}
+                      {serviceNames[b.serviceId ?? ''] ?? BOOKING_TYPE_LABEL[b.type] ?? b.type}
                     </td>
                     <td className="px-5 py-4 text-sm text-(--color-text-muted) whitespace-nowrap">
                       {formatDateTime(b.bookingDate)}
                     </td>
                     <td className="px-5 py-4">
-                      <StatusBadge status={b.status} />
+                      <StatusBadge booking={b} />
                     </td>
                     <td className="px-5 py-4">
-                      <ActionButtons b={b} />
+                      {renderActions(b)}
                     </td>
                   </tr>
                 )
@@ -553,6 +615,22 @@ export default function AgendamentosPage() {
           </div>
         )}
       </div>
+
+      {blocksOpen && partnerId && (
+        <AgendaBlocksDialog partnerId={partnerId} staff={staffList} onClose={() => setBlocksOpen(false)} />
+      )}
+      {dialog?.action === 'reschedule' && (
+        <RescheduleBookingDialog booking={dialog.booking} onClose={() => setDialog(null)} onSaved={bookingSaved} />
+      )}
+      {dialog?.action === 'history' && (
+        <Dialog open title="Histórico do agendamento" onOpenChange={open => { if (!open) setDialog(null) }}>
+          <BookingHistory bookingId={dialog.booking.id} standalone />
+        </Dialog>
+      )}
+      {(dialog?.action === 'CANCELLED' || dialog?.action === 'NO_SHOW') && (
+        <BookingReasonDialog bookingId={dialog.booking.id} status={dialog.action}
+          onClose={() => setDialog(null)} onSaved={bookingSaved} />
+      )}
 
     </div>
   )

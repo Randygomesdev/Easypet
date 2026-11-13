@@ -1,3 +1,5 @@
+import { Button } from '../../../components/ui/Button'
+import { ErrorState } from '../../../components/ui/FeedbackState'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, Plus, UserRound, Pencil, Trash2, Users } from 'lucide-react'
@@ -9,19 +11,28 @@ export default function ColaboradoresTab({ partnerId }: { partnerId: string }) {
   const [loading, setLoading] = useState(true)
   const [removing, setRemoving] = useState<string | null>(null)
 
+  const [loadError, setLoadError] = useState('')
+  const [writeError, setWriteError] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+
   useEffect(() => {
+    let current = true
     staffService.getByPartner(partnerId)
-      .then(members => setStaff(members.filter(s => s.status === 'ACTIVE')))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [partnerId])
+      .then(members => { if (current) setStaff(members.filter(s => s.status === 'ACTIVE')) })
+      .catch(() => { if (current) setLoadError('Não foi possível carregar os colaboradores.') })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [partnerId, attempt])
 
   async function handleRemove(id: string) {
     if (!confirm('Deseja desativar este colaborador?')) return
+    setWriteError(false)
     setRemoving(id)
     try {
-      await staffService.remove(id)
+      await staffService.remove(id, partnerId)
       setStaff(prev => prev.filter(s => s.id !== id))
+    } catch {
+      setWriteError(true)
     } finally { setRemoving(null) }
   }
 
@@ -31,8 +42,13 @@ export default function ColaboradoresTab({ partnerId }: { partnerId: string }) {
     </div>
   )
 
+  if (loadError) return <ErrorState message={loadError} action={<Button variant="secondary" onClick={() => {
+    setLoadError(''); setLoading(true); setAttempt(value => value + 1)
+  }}>Tentar novamente</Button>} />
+
   return (
     <div>
+      {writeError && <p role="alert" className="mb-4 text-sm text-text-danger">Não foi possível desativar o colaborador. Tente novamente.</p>}
       <div className="flex items-start justify-between mb-6 gap-4">
         <div>
           <h2 className="text-lg font-bold text-(--color-text-heading)">Colaboradores</h2>

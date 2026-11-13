@@ -1,37 +1,48 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, type KeyboardEvent } from 'react'
 import {
   LayoutDashboard, ClipboardList, Users, Wrench, Package,
   CalendarDays, Stethoscope, X, LogOut,
-  Building2, PawPrint, Store,
+  Bell, Building2, LifeBuoy, Link2, Palette, PawPrint, ShieldCheck, Store, Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import LogoEasypet from '../../assets/LogoEasypet.svg'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
-import type { UserRole } from '../../types/auth.types'
+import { access, canAccess, waveBEnabled, type AccessPolicy } from '../../routes/access'
 
-type NavItem = { icon: LucideIcon; label: string; path: string }
+type NavItem = { icon: LucideIcon; label: string; path: string; policy: AccessPolicy }
 
-const NAV_ITEMS: Record<UserRole, NavItem[]> = {
-  PARTNER: [
-    { icon: LayoutDashboard, label: 'Dashboard',     path: '/partner/dashboard' },
-    { icon: ClipboardList,   label: 'Cadastro',      path: '/partner/cadastro' },
-    { icon: Users,           label: 'Colaboradores', path: '/partner/colaboradores' },
-    { icon: Wrench,          label: 'Serviços',      path: '/partner/servicos' },
-    { icon: Package,         label: 'Pacotes',       path: '/partner/pacotes' },
-    { icon: CalendarDays,    label: 'Agendamentos',  path: '/partner/agendamentos' },
-    { icon: Stethoscope,     label: 'Atendimento',   path: '/partner/atendimento' },
-  ],
-  ADMIN: [
-    { icon: Building2,       label: 'Parceiros',     path: '/admin/parceiros' },
-    { icon: Users,           label: 'Clientes',      path: '/admin/clientes' },
-  ],
-  CUSTOMER: [
-    { icon: Store,           label: 'Início',           path: '/app/home'          },
-    { icon: PawPrint,        label: 'Meus Pets',        path: '/app/pets'          },
-    { icon: CalendarDays,    label: 'Agendamentos',     path: '/app/agendamentos'  },
-  ],
-}
+const NAV_ITEMS: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/partner/dashboard', policy: access.partner },
+  { icon: ClipboardList, label: 'Cadastro', path: '/partner/cadastro', policy: access.partner },
+  { icon: Users, label: 'Clientes', path: '/partner/clientes', policy: access.customers },
+  { icon: Users, label: 'Colaboradores', path: '/partner/colaboradores', policy: access.partner },
+  ...(waveBEnabled ? [
+    { icon: ShieldCheck, label: 'Equipe', path: '/partner/equipe', policy: access.partner },
+  ] : []),
+  { icon: Wrench, label: 'Serviços', path: '/partner/servicos', policy: access.partner },
+  ...(!env.internalPilot ? [
+    { icon: Package, label: 'Pacotes', path: '/partner/pacotes', policy: access.partner },
+  ] : []),
+  { icon: CalendarDays, label: 'Agendamentos', path: '/partner/agendamentos', policy: access.agenda },
+  { icon: Stethoscope, label: 'Atendimento', path: '/partner/atendimento', policy: access.attendance },
+  ...(waveBEnabled ? [
+    { icon: Wallet, label: 'Caixa', path: '/partner/caixa', policy: access.cashier },
+  ] : []),
+  { icon: Building2, label: 'Parceiros', path: '/admin/parceiros', policy: access.admin },
+  { icon: Users, label: 'Clientes', path: '/admin/clientes', policy: access.admin },
+  ...(waveBEnabled ? [
+    { icon: Bell, label: 'Notificações', path: '/admin/notificacoes', policy: access.admin },
+  ] : []),
+  { icon: Palette, label: 'Design system', path: '/design-system', policy: access.admin },
+  { icon: Store, label: 'Início', path: '/app/home', policy: access.customer },
+  { icon: PawPrint, label: 'Meus Pets', path: '/app/pets', policy: access.customer },
+  { icon: CalendarDays, label: 'Agendamentos', path: '/app/agendamentos', policy: access.customer },
+  ...(waveBEnabled ? [
+    { icon: Link2, label: 'Vincular cadastro', path: '/app/reivindicar-cadastro', policy: access.customer },
+  ] : []),
+]
 
 type Props = {
   open: boolean
@@ -40,10 +51,32 @@ type Props = {
 
 export default function Sidebar({ open, onClose }: Props) {
   const { pathname }       = useLocation()
-  const { logout, user }   = useAuth()
+  const { logout, session } = useAuth()
   const navigate           = useNavigate()
+  const closeButton = useRef<HTMLButtonElement>(null)
 
-  const navItems = NAV_ITEMS[user?.role ?? 'CUSTOMER'].filter(item => !env.internalPilot || item.path !== '/partner/pacotes')
+  const navItems = NAV_ITEMS.filter(item => canAccess(session, item.policy))
+
+  useEffect(() => { if (open) closeButton.current?.focus() }, [open])
+
+  function handleMenuKey(event: KeyboardEvent<HTMLElement>) {
+    if (!open) return
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+    }
+    if (event.key !== 'Tab') return
+    const items = event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+    const first = items[0]
+    const last = items[items.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last?.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first?.focus()
+    }
+  }
 
   function handleLogout() {
     logout()
@@ -62,11 +95,16 @@ export default function Sidebar({ open, onClose }: Props) {
 
       {/* Sidebar */}
       <aside
+        id="painel-navegacao"
+        role={open ? 'dialog' : undefined}
+        aria-modal={open || undefined}
+        aria-label={open ? 'Menu do painel' : undefined}
+        onKeyDown={handleMenuKey}
         className={`
-          fixed z-30 top-0 left-0 h-full bg-(--color-surface) flex flex-col transition-all duration-300
-          md:relative md:translate-x-0
-          ${open ? 'translate-x-0 w-56' : '-translate-x-full w-56'}
-          md:w-56
+          fixed z-30 top-0 left-0 h-full bg-surface flex flex-col motion-safe:transition-transform motion-safe:duration-300
+          md:visible md:relative md:translate-x-0
+          ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}
+          w-56
         `}
       >
         {/* Logo */}
@@ -80,15 +118,19 @@ export default function Sidebar({ open, onClose }: Props) {
 
           {/* Botão fechar — só mobile */}
           <button
+            type="button"
+            ref={closeButton}
+            aria-label="Fechar menu"
             onClick={onClose}
-            className="md:hidden p-1 text-(--color-icon-default) hover:text-(--color-icon-active)"
+            className="min-h-11 min-w-11 rounded-lg p-2 text-icon-default hover:text-icon-active
+                       focus-visible:outline-2 focus-visible:outline-primary-400 md:hidden"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 overflow-y-auto">
+        <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto">
           {navItems.map(({ icon: Icon, label, path }) => {
             const isActive = pathname === path || pathname.startsWith(path + '/')
             return (
@@ -96,7 +138,9 @@ export default function Sidebar({ open, onClose }: Props) {
                 key={path}
                 to={path}
                 onClick={onClose}
+                aria-current={isActive ? 'page' : undefined}
                 className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors relative
+                  focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400
                   ${isActive
                     ? 'text-(--color-text-heading) bg-(--color-bg)'
                     : 'text-(--color-text-muted) hover:text-(--color-text-heading) hover:bg-(--color-bg)'
@@ -104,6 +148,7 @@ export default function Sidebar({ open, onClose }: Props) {
               >
                 <Icon
                   size={18}
+                  aria-hidden="true"
                   className={isActive ? 'text-(--color-icon-active)' : 'text-(--color-icon-default)'}
                 />
                 {label}
@@ -113,6 +158,11 @@ export default function Sidebar({ open, onClose }: Props) {
               </Link>
             )
           })}
+          <Link to="/suporte" onClick={onClose}
+            className="flex min-h-11 items-center gap-3 px-6 py-3 text-sm font-medium text-text-body hover:bg-bg
+                       focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400">
+            <LifeBuoy size={18} aria-hidden="true" /> Suporte interno
+          </Link>
         </nav>
 
         {/* Logout */}

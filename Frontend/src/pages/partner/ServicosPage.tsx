@@ -1,11 +1,14 @@
+import { Link } from 'react-router-dom'
+import { isAxiosError } from 'axios'
+import { Button } from '../../components/ui/Button'
+import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
 import { useState, useEffect } from 'react'
 import {
-  Loader2, Wrench, Plus, Pencil, Trash2,
+  Loader2, Wrench, Plus, Pencil,
   Clock, Tag, CheckCircle2, XCircle, X, Users,
 } from 'lucide-react'
 import {
   partnerService,
-  buildPayload,
   type PartnerResponse,
   type ServiceOffer,
   type ServiceOfferRequest,
@@ -313,25 +316,31 @@ export default function ServicosPage() {
   const [loading,          setLoading]          = useState(true)
   const [modalOpen,        setModalOpen]        = useState(false)
   const [saving,           setSaving]           = useState(false)
-  const [removing,         setRemoving]         = useState<string | null>(null)
   const [editingId,        setEditingId]        = useState<string | null>(null)
   const [form,             setForm]             = useState<ServiceOfferRequest>(EMPTY_FORM)
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [formError,        setFormError]        = useState('')
+  const [attempt, setAttempt] = useState(0)
+  const [loadError, setLoadError] = useState('')
+  const [missingPartner, setMissingPartner] = useState(false)
 
   useEffect(() => {
-    partnerService.getMe().then(p => {
+    let current = true
+    partnerService.getMe().then(async p => {
+      const [cats, staffList] = await Promise.all([partnerService.listCategories(), staffService.getByPartner(p.id)])
+      if (!current) return
       setPartner(p)
       setServices(p.services ?? [])
-      return Promise.all([
-        partnerService.listCategories().catch(() => [] as ServiceCategoryResponse[]),
-        staffService.getByPartner(p.id).catch(() => [] as StaffResponse[]),
-      ]).then(([cats, staffList]) => {
-        setCategories(cats)
-        setStaff(staffList.filter(s => s.status === 'ACTIVE'))
-      })
-    }).finally(() => setLoading(false))
-  }, [])
+      setCategories(cats)
+      setStaff(staffList)
+    }).catch(cause => {
+      if (!current) return
+      if (isAxiosError(cause) && cause.response?.status === 404 && cause.config?.url === '/partners/me') {
+        setMissingPartner(true)
+      } else setLoadError('Não foi possível carregar os serviços e colaboradores.')
+    }).finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [attempt])
 
   function openNew() {
     setEditingId(null)
@@ -380,13 +389,18 @@ export default function ServicosPage() {
   function validate() {
     if (!form.name.trim()) return 'O nome do serviço é obrigatório.'
     if (form.price <= 0)   return 'O preço deve ser maior que R$ 0,00.'
-    if (staff.length > 0 && selectedStaffIds.length === 0) return 'Selecione pelo menos um colaborador para este serviço.'
+    const activeStaff = staff.filter(member => member.status === 'ACTIVE')
+    if (activeStaff.length > 0 && !activeStaff.some(member => selectedStaffIds.includes(member.id))) {
+      return 'Selecione pelo menos um colaborador ativo para este serviço.'
+    }
     return ''
   }
 
-  async function refreshStaff(partnerId: string) {
-    const updated = await staffService.getByPartner(partnerId).catch(() => [] as StaffResponse[])
-    setStaff(updated.filter(s => s.status === 'ACTIVE'))
+  function updateStaffLinks(serviceId: string) {
+    setStaff(current => current.map(member => {
+      const next = (member.serviceIds ?? []).filter(id => id !== serviceId)
+      return { ...member, serviceIds: selectedStaffIds.includes(member.id) ? [...next, serviceId] : next }
+    }))
   }
 
   async function handleSave() {
@@ -399,11 +413,11 @@ export default function ServicosPage() {
       if (editingId === null) {
         const newService = await partnerService.addService(partner.id, { ...form, staffIds: selectedStaffIds })
         setServices(prev => [...prev, newService])
-        await refreshStaff(partner.id)
+        updateStaffLinks(newService.id)
       } else {
         const updated = await partnerService.updateService(partner.id, editingId, { ...form, staffIds: selectedStaffIds })
         setServices(prev => prev.map(s => s.id === editingId ? updated : s))
-        await refreshStaff(partner.id)
+        updateStaffLinks(updated.id)
       }
       closeModal()
     } catch {
@@ -413,32 +427,12 @@ export default function ServicosPage() {
     }
   }
 
-  async function handleRemove(id: string) {
-    if (!confirm('Deseja remover este serviço?')) return
-    if (!partner) return
-    setRemoving(id)
-    try {
-      const updatedServices: ServiceOfferRequest[] = services
-        .filter(s => s.id !== id)
-        .map(s => ({ name: s.name, description: s.description, price: s.price, durationMinutes: s.durationMinutes, billingUnit: s.billingUnit, categoryId: s.categoryId }))
-      const updated = await partnerService.updateMe(buildPayload(partner, { services: updatedServices }))
-      setPartner(updated)
-      setServices(updated.services ?? [])
-      await refreshStaff(partner.id)
-    } catch {
-      alert('Erro ao remover serviço.')
-    } finally {
-      setRemoving(null)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 size={28} className="animate-spin text-(--color-primary-700)" />
-      </div>
-    )
-  }
+  if (loading) return <LoadingState label="Carregando serviços…" />
+  if (loadError) return <ErrorState message={loadError} action={<Button variant="secondary" onClick={() => {
+    setLoadError(''); setLoading(true); setAttempt(value => value + 1)
+  }}>Tentar novamente</Button>} />
+  if (missingPartner) return <ErrorState message="Cadastre seu estabelecimento antes de adicionar serviços."
+    action={<Link className="font-semibold underline text-text-heading" to="/partner/cadastro">Abrir cadastro</Link>} />
 
   return (
     <div>
@@ -450,7 +444,7 @@ export default function ServicosPage() {
         saving={saving}
         formError={formError}
         categories={categories}
-        staff={staff}
+        staff={staff.filter(member => member.status === 'ACTIVE')}
         selectedStaffIds={selectedStaffIds}
         onChange={handleChange}
         onStaffToggle={handleStaffToggle}
@@ -474,6 +468,10 @@ export default function ServicosPage() {
           <Plus size={16} /> Novo Serviço
         </button>
       </div>
+
+      {services.length > 0 && (
+        <p className="mb-4 text-sm text-(--color-text-muted)">A remoção de serviços está indisponível na homologação.</p>
+      )}
 
       {/* Conteúdo */}
       {services.length === 0 ? (
@@ -504,9 +502,7 @@ export default function ServicosPage() {
               key={s.id}
               service={s}
               staffCount={staff.filter(m => m.serviceIds?.includes(s.id)).length}
-              isRemoving={removing === s.id}
               onEdit={() => openEdit(s)}
-              onRemove={() => handleRemove(s.id)}
             />
           ))}
         </div>
@@ -519,13 +515,11 @@ export default function ServicosPage() {
    Card de serviço
 ───────────────────────────────────────────── */
 function ServiceCard({
-  service, staffCount, isRemoving, onEdit, onRemove,
+  service, staffCount, onEdit,
 }: {
   service:    ServiceOffer
   staffCount: number
-  isRemoving: boolean
   onEdit:     () => void
-  onRemove:   () => void
 }) {
   return (
     <div className="bg-(--color-surface) border border-(--color-border) rounded-2xl p-5 shadow-sm
@@ -598,17 +592,7 @@ function ServiceCard({
         >
           <Pencil size={13} /> Editar
         </button>
-        <button
-          onClick={onRemove}
-          disabled={isRemoving}
-          className="flex-1 flex items-center justify-center gap-1.5 border border-(--color-border)
-                     hover:border-red-300 hover:text-red-500 hover:bg-red-50
-                     text-(--color-text-muted) font-semibold text-xs py-2 rounded-xl transition-colors
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isRemoving ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-          Remover
-        </button>
+
       </div>
     </div>
   )

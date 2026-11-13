@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import TimePicker from '../../../components/ui/TimePicker'
 import type { BusinessHour } from '../../../services/partner.service'
 
@@ -72,23 +72,12 @@ interface Props {
 }
 
 export default function HorarioTab({ value, onChange }: Props) {
-  const [dias, setDias]   = useState<DiaSemana[]>(DEFAULTS)
-  const initialized       = useRef(false)
-
-  // Sincroniza apenas uma vez quando os dados do parceiro chegam da API
-  useEffect(() => {
-    if (!initialized.current && value.length > 0) {
-      initialized.current = true
-      setDias(fromApi(value))
-    }
-  }, [value])
+  const [dias, setDias] = useState(() => fromApi(value))
 
   function update(index: number, field: keyof DiaSemana, val: string | boolean) {
-    setDias(prev => {
-      const next = prev.map((d, i) => i === index ? { ...d, [field]: val } : d)
-      onChange(toApi(next))
-      return next
-    })
+    const next = dias.map((day, position) => position === index ? { ...day, [field]: val } : day)
+    setDias(next)
+    onChange(toApi(next))
   }
 
   return (
@@ -104,6 +93,10 @@ export default function HorarioTab({ value, onChange }: Props) {
           <div className="flex items-center justify-between lg:justify-start lg:gap-3 lg:w-52 lg:shrink-0">
             <div className="flex items-center gap-3">
               <button
+                type="button"
+                role="switch"
+                aria-label={`Expediente de ${dia.nome}`}
+                aria-checked={dia.aberto}
                 onClick={() => update(i, 'aberto', !dia.aberto)}
                 className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors cursor-pointer shrink-0
                   ${dia.aberto ? 'bg-(--color-secondary-500)' : 'bg-(--color-border)'}`}
