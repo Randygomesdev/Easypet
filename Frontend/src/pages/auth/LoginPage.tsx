@@ -10,7 +10,7 @@ type Mode = 'login' | 'register'
 
 export default function LoginPage() {
   const [searchParams]                  = useSearchParams()
-  const isParceiro                      = searchParams.get('parceiro') === 'true'
+  const isParceiro                      = env.internalPilot || searchParams.get('parceiro') === 'true'
 
   const [mode, setMode]                 = useState<Mode>('login')
   const [showPassword, setShowPassword] = useState(false)
@@ -126,40 +126,44 @@ export default function LoginPage() {
           </div>
 
           {/* Toggle Login / Registrar */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
-            {(['login', 'register'] as Mode[]).map((m) => (
+          {!env.internalPilot && (
+            <>
+              <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
+                {(['login', 'register'] as Mode[]).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => { setMode(m); setError('') }}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer
+                      ${mode === m
+                        ? 'bg-white text-(--color-primary-700) shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                  >
+                    {m === 'login' ? 'Login' : 'Registrar'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Google */}
               <button
-                key={m}
-                onClick={() => { setMode(m); setError('') }}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer
-                  ${mode === m
-                    ? 'bg-white text-(--color-primary-700) shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                  }`}
+                type="button"
+                onClick={() => window.location.href = env.googleAuthUrl}
+                className="w-full flex items-center justify-center gap-3 border border-gray-200
+                           rounded-xl py-2.5 text-sm font-medium text-gray-700
+                           hover:bg-gray-50 transition-colors cursor-pointer mb-5"
               >
-                {m === 'login' ? 'Login' : 'Registrar'}
+                <GoogleIcon />
+                Continuar com Google
               </button>
-            ))}
-          </div>
 
-          {/* Google */}
-          <button
-            type="button"
-            onClick={() => window.location.href = env.googleAuthUrl}
-            className="w-full flex items-center justify-center gap-3 border border-gray-200
-                       rounded-xl py-2.5 text-sm font-medium text-gray-700
-                       hover:bg-gray-50 transition-colors cursor-pointer mb-5"
-          >
-            <GoogleIcon />
-            Continuar com Google
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">ou use seu email</span>
-            <div className="flex-1 h-px bg-gray-200" />
-          </div>
+              {/* Divider */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400">ou use seu email</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+            </>
+          )}
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -209,7 +213,7 @@ export default function LoginPage() {
             </div>
 
             {/* Lembrar-me + Esqueceu — só no login */}
-            {mode === 'login' && (
+            {!env.internalPilot && mode === 'login' && (
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
                   <input type="checkbox" name="remember" className="accent-(--color-primary-700) w-4 h-4" />
@@ -244,23 +248,25 @@ export default function LoginPage() {
           </form>
 
           {/* Link alternativo */}
-          <p className="text-center text-sm text-gray-500 mt-6">
-            {mode === 'login' ? (
-              <>Ainda não tem conta?{' '}
-                <button onClick={() => setMode('register')}
-                  className="text-(--color-primary-700) font-semibold hover:underline cursor-pointer">
-                  Cadastre-se
-                </button>
-              </>
-            ) : (
-              <>Já possui uma conta?{' '}
-                <button onClick={() => setMode('login')}
-                  className="text-(--color-primary-700) font-semibold hover:underline cursor-pointer">
-                  Faça Login
-                </button>
-              </>
-            )}
-          </p>
+          {!env.internalPilot && (
+            <p className="text-center text-sm text-gray-500 mt-6">
+              {mode === 'login' ? (
+                <>Ainda não tem conta?{' '}
+                  <button onClick={() => setMode('register')}
+                    className="text-(--color-primary-700) font-semibold hover:underline cursor-pointer">
+                    Cadastre-se
+                  </button>
+                </>
+              ) : (
+                <>Já possui uma conta?{' '}
+                  <button onClick={() => setMode('login')}
+                    className="text-(--color-primary-700) font-semibold hover:underline cursor-pointer">
+                    Faça Login
+                  </button>
+                </>
+              )}
+            </p>
+          )}
 
         </div>
       </div>

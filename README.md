@@ -182,6 +182,10 @@ Acesse o painel do tutor/parceiro através de `http://localhost:5173`.
 
 ---
 
+## Homologação interna
+
+O EasyPet é implantado manualmente na VPS com Git e Docker Compose. O [guia de homologação](Backend/Infra/docs/homologacao.md) cobre a primeira instalação, a atualização e o roteiro de testes.
+
 ## 📚 Documentação Adicional
 
 Manuais de arquitetura, segurança e detalhamento técnico podem ser encontrados na pasta de infraestrutura:

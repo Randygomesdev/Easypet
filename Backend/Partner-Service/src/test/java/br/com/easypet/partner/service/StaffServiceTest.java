@@ -8,10 +8,16 @@ import br.com.easypet.partner.dto.response.StaffScheduleResponse;
 import br.com.easypet.partner.repository.PartnerRepository;
 import br.com.easypet.partner.repository.StaffRepository;
 import br.com.easypet.partner.repository.StaffScheduleRepository;
+import br.com.easypet.partner.security.UserPrincipal;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +49,9 @@ class StaffServiceTest {
 
     @BeforeEach
     void setUp() {
+        UUID ownerId = UUID.randomUUID();
         Partner partner = Partner.builder()
+                .userId(ownerId)
                 .name("Clínica Beiramar")
                 .legalName("Clínica Veterinária Beiramar LTDA")
                 .cnpj("12345678901234")
@@ -61,12 +69,24 @@ class StaffServiceTest {
                 .createdAt(java.time.LocalDateTime.now())
                 .build();
         staff = staffRepository.save(staff);
+        authenticatePartner(ownerId);
+    }
+
+    @AfterEach
+    void clearAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticatePartner(UUID userId) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                new UserPrincipal(userId.toString(), "pilot@example.test", "Parceiro"), null,
+                List.of(new SimpleGrantedAuthority("ROLE_PARTNER"))));
     }
 
     @Test
     void updateStaffSchedule_ShouldSaveSchedulesSuccessfully() {
         // Arrange
-        StaffScheduleRequest request = new StaffScheduleRequest(2, LocalTime.of(8, 0), LocalTime.of(18, 0));
+        StaffScheduleRequest request = new StaffScheduleRequest(2, LocalTime.of(8, 0), LocalTime.of(18, 0), null, null);
 
         // Act
         List<StaffScheduleResponse> response = staffService.updateStaffSchedule(staff.getId(), List.of(request));
@@ -83,5 +103,13 @@ class StaffServiceTest {
         assertEquals(1, dbSchedules.size());
         assertEquals(2, dbSchedules.get(0).getDayOfWeek());
         assertEquals(LocalTime.of(8, 0), dbSchedules.get(0).getStartTime());
+    }
+
+    @Test
+    void anotherPartnerCannotReadOrChangeStaffSchedule() {
+        authenticatePartner(UUID.randomUUID());
+
+        assertThrows(AccessDeniedException.class, () -> staffService.requireStaffAccess(staff.getId()));
+        assertThrows(AccessDeniedException.class, () -> staffService.updateStaffSchedule(staff.getId(), List.of()));
     }
 }

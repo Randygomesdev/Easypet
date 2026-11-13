@@ -2,13 +2,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, ClipboardList, Users, Wrench, Package, CalendarDays, Stethoscope, X, LogOut } from 'lucide-react'
 import LogoEasypet from '../../assets/LogoEasypet.svg'
 import { useAuth } from '../../contexts/AuthContext'
+import { env } from '../../config/env'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard',     path: '/partner/dashboard' },
   { icon: ClipboardList,   label: 'Cadastro',      path: '/partner/cadastro' },
   { icon: Users,           label: 'Colaboradores', path: '/partner/colaboradores' },
   { icon: Wrench,          label: 'Serviços',      path: '/partner/servicos' },
-  { icon: Package,         label: 'Pacotes',       path: '/partner/pacotes' },
+  ...(!env.internalPilot ? [{ icon: Package, label: 'Pacotes', path: '/partner/pacotes' }] : []),
   { icon: CalendarDays,    label: 'Agendamentos',  path: '/partner/agendamentos' },
   { icon: Stethoscope,     label: 'Atendimento',   path: '/partner/atendimento' },
 ]

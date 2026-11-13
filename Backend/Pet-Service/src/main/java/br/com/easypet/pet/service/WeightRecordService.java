@@ -11,10 +11,8 @@ import br.com.easypet.pet.repository.WeightRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +26,13 @@ public class WeightRecordService {
 
     private final WeightRecordRepository weightRecordRepository;
     private final PetRepository petRepository;
+    private final PetAccessService petAccessService;
     private final WeightRecordMapper weightRecordMapper;
 
     //@CacheEvict(value = "weights", key = "#petId")
     public WeightRecordResponse create(UUID petId, WeightRecordRequest request) {
         log.info("Registrando nova pesagem para o pet ID: {}", petId);
-        Pet pet = findPetIfOwner(petId);
+        Pet pet = petAccessService.requireOwnerOrAdmin(petId);
         WeightRecord record = weightRecordMapper.toEntity(request, pet);
 
         pet.setWeight(request.weight());
@@ -44,27 +43,19 @@ public class WeightRecordService {
 
     @Transactional(readOnly = true)
     public Page<WeightRecordResponse> findAllByPet(UUID petId, Pageable pageable) {
-        findPetIfOwner(petId);
+        petAccessService.requireOwnerOrAdmin(petId);
         return weightRecordRepository.findAllByPetIdOrderByDateDesc(petId, pageable)
                 .map(weightRecordMapper::toResponse);
     }
 
     //@CacheEvict(value = "weights", key = "#petId")
     public void delete(UUID petId, UUID recordId) {
-        findPetIfOwner(petId);
-        weightRecordRepository.deleteById(recordId);
+        petAccessService.requireOwnerOrAdmin(petId);
+        weightRecordRepository.findById(recordId)
+                .filter(record -> record.getPet().getId().equals(petId))
+                .ifPresentOrElse(weightRecordRepository::delete, () -> {
+                    throw new ResourceNotFoundException("Pesagem não encontrada para este pet");
+                });
     }
 
-    @Transactional(readOnly = true)
-    private Pet findPetIfOwner(UUID petId) {
-        UUID currentUserId = getCurrentUserId();
-        return petRepository.findById(petId)
-                .filter(p -> p.getOwnerId().equals(currentUserId))
-                .orElseThrow(() -> new ResourceNotFoundException("Pet não encontrado ou acesso negado"));
-    }
-
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        return UUID.fromString(authentication.getCredentials().toString());
-    }
 }

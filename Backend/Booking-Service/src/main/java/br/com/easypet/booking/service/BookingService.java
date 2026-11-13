@@ -1,5 +1,7 @@
 package br.com.easypet.booking.service;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import br.com.easypet.booking.domain.entity.Booking;
 import br.com.easypet.booking.domain.enums.BookingStatus;
 import br.com.easypet.booking.dto.request.BookingRequest;
@@ -15,6 +17,7 @@ import br.com.easypet.booking.dto.response.PartnerIntegrationResponse;
 import br.com.easypet.booking.dto.response.PartnerBusinessHourIntegrationResponse;
 import br.com.easypet.booking.client.PartnerServiceClient;
 import br.com.easypet.booking.client.PaymentServiceClient;
+import br.com.easypet.booking.client.PetServiceClient;
 import br.com.easypet.booking.client.dto.CreditConsumeResponse;
 import br.com.easypet.booking.domain.enums.PaymentMethod;
 import lombok.RequiredArgsConstructor;
@@ -60,20 +63,28 @@ public class BookingService {
     private final PartnerIntegrationService partnerIntegrationService;
     private final PartnerServiceClient partnerServiceClient;
     private final PaymentServiceClient paymentServiceClient;
+    private final PetServiceClient petServiceClient;
+
+    @Value("${app.package-credits-enabled:true}")
+    private boolean packageCreditsEnabled = true;
 
     public BookingResponse createBooking(BookingRequest request) {
+        validatePaymentMethod(request.paymentMethod());
         log.info("Iniciando criação de agendamento do tipo {} para o pet {}", request.type(), request.petId());
         Booking booking = bookingMapper.toEntity(request);
         if (booking.getIsFittingRequest() == null) {
             booking.setIsFittingRequest(false);
         }
 
-        // Atribuir o ID do usuário atualmente autenticado extraído do JWT
-        UUID currentUserId = getCurrentUserId();
-        booking.setUserId(currentUserId);
+        if (hasRole("ROLE_PARTNER")) {
+            requirePartnerAccess(request.partnerId());
+        }
+        UUID petOwnerId = petServiceClient.getAccessiblePetOwner(request.petId());
+        booking.setUserId(petOwnerId);
 
         // Interceptar se o pagamento for via crédito de pacote pré-pago
         if (request.paymentMethod() == PaymentMethod.PACKAGE_CREDIT) {
+            UUID currentUserId = getCurrentUserId();
             log.info("Processando pagamento via crédito de pacote para o usuário: {}", currentUserId);
             if (request.serviceId() == null) {
                 throw new BusinessException("O ID do serviço é obrigatório para agendamento com créditos de pacote.");
@@ -301,6 +312,7 @@ public class BookingService {
             UUID partnerId, LocalDate date, UUID staffId,
             BookingStatus status, br.com.easypet.booking.domain.enums.BookingType type,
             LocalDate startDate, LocalDate endDate, Pageable pageable) {
+        requirePartnerAccess(partnerId);
         log.info("Buscando agendamentos do parceiro {}, date: {}, staffId: {}, status: {}, type: {}", partnerId, date, staffId, status, type);
 
         LocalDateTime start = startDate != null ? startDate.atStartOfDay()
@@ -328,19 +340,37 @@ public class BookingService {
     @Transactional(readOnly = true)
     public Page<BookingResponse> getBookingsByPetId(UUID petId, Pageable pageable) {
         log.info("Buscando agendamentos do pet {}", petId);
-        Page<Booking> bookings = bookingRepository.findByPetId(petId, pageable);
+        Page<Booking> bookings = hasRole("ROLE_ADMIN")
+                ? bookingRepository.findByPetId(petId, pageable)
+                : bookingRepository.findByPetIdAndPartnerId(petId, currentPartnerId(), pageable);
         return bookings.map(bookingMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    public boolean hasPetAccess(UUID petId, UUID ownerId) {
+        return bookingRepository.existsByPetIdAndUserIdAndPartnerIdAndStatusNot(
+                petId, ownerId, currentPartnerId(), BookingStatus.CANCELLED);
+    }
+
     public BookingResponse updateBooking(UUID id, BookingRequest request) {
+        validatePaymentMethod(request.paymentMethod());
         log.info("Atualizando dados do agendamento ID: {}", id);
         Booking booking = findBookingOrThrow(id);
         validateOwnership(booking);
 
+        if (!booking.getPetId().equals(request.petId()) || !booking.getPartnerId().equals(request.partnerId())) {
+            throw new BusinessException("Não é possível trocar o pet ou o estabelecimento de um agendamento.");
+        }
         bookingMapper.updateEntityFromRequest(request, booking);
         Booking updatedBooking = bookingRepository.save(booking);
         log.info("Agendamento ID: {} atualizado com sucesso!", id);
         return bookingMapper.toResponse(updatedBooking);
+    }
+
+    private void validatePaymentMethod(PaymentMethod paymentMethod) {
+        if (!packageCreditsEnabled && paymentMethod == PaymentMethod.PACKAGE_CREDIT) {
+            throw new BusinessException("O uso de créditos de pacote está indisponível neste ambiente.");
+        }
     }
 
     public BookingResponse updateStatus(UUID id, BookingStatus status) {
@@ -348,6 +378,12 @@ public class BookingService {
         Booking booking = findBookingOrThrow(id);
         validateOwnership(booking);
 
+        if (status != BookingStatus.CANCELLED && booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new BusinessException("Um agendamento cancelado não pode ser reaberto.");
+        }
+        if (status != BookingStatus.CANCELLED && !hasRole("ROLE_ADMIN") && !hasRole("ROLE_PARTNER")) {
+            throw new BusinessException("A confirmação e a conclusão dependem do estabelecimento.");
+        }
         booking.setStatus(status);
         Booking updatedBooking = bookingRepository.save(booking);
         log.info("Status do agendamento ID: {} alterado para {}", id, status);
@@ -375,22 +411,33 @@ public class BookingService {
                 });
     }
 
-    /**
-     * Verifica se o agendamento pertence ao usuário autenticado.
-     * Lança BusinessException (403) caso o usuário não seja o dono.
-     */
     private void validateOwnership(Booking booking) {
-        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-        UUID currentUserId = UUID.fromString((String) auth.getCredentials());
-        
-        boolean isAdminOrPartner = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_PARTNER"));
-
-        if (!booking.getUserId().equals(currentUserId) && !isAdminOrPartner) {
-            log.warn("Tentativa de acesso não autorizado ao agendamento ID: {} pelo usuário: {}",
-                    booking.getId(), currentUserId);
-            throw new BusinessException("Você não tem permissão para acessar este agendamento.");
+        if (hasRole("ROLE_ADMIN")) {
+            return;
         }
+        if (hasRole("ROLE_PARTNER")) {
+            requirePartnerAccess(booking.getPartnerId());
+        } else if (!booking.getUserId().equals(getCurrentUserId())) {
+            throw new ResourceNotFoundException("Agendamento não encontrado.");
+        }
+    }
+
+    private void requirePartnerAccess(UUID partnerId) {
+        if (!hasRole("ROLE_ADMIN") && !currentPartnerId().equals(partnerId)) {
+            throw new ResourceNotFoundException("Estabelecimento não encontrado.");
+        }
+    }
+
+    private UUID currentPartnerId() {
+        if (!hasRole("ROLE_PARTNER")) {
+            throw new ResourceNotFoundException("Estabelecimento não encontrado.");
+        }
+        return partnerServiceClient.getCurrentPartnerId();
+    }
+
+    private boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
     }
 
     /**
@@ -748,8 +795,8 @@ public class BookingService {
 
     public FittingDecisionResponse processFittingDecision(UUID bookingId, FittingDecisionRequest request) {
         log.info("Processando decisão de encaixe '{}' para o agendamento ID: {}", request.decision(), bookingId);
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado com o ID: " + bookingId));
+        Booking booking = findBookingOrThrow(bookingId);
+        requirePartnerAccess(booking.getPartnerId());
 
         if (booking.getIsFittingRequest() == null || !booking.getIsFittingRequest()) {
             throw new BusinessException("Este agendamento não é uma solicitação de encaixe.");
@@ -781,6 +828,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public RevenueStatsResponse getRevenueStats(UUID partnerId, YearMonth month) {
+        requirePartnerAccess(partnerId);
         LocalDateTime start = month.atDay(1).atStartOfDay();
         LocalDateTime end   = month.plusMonths(1).atDay(1).atStartOfDay();
         BigDecimal revenue  = bookingRepository.sumRevenueByPartnerAndPeriod(partnerId, start, end);
@@ -789,6 +837,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public List<DailyStatsEntry> getDailyStats(UUID partnerId, int days) {
+        requirePartnerAccess(partnerId);
         LocalDateTime startDate = LocalDate.now().minusDays(days - 1L).atStartOfDay();
         List<Object[]> rows = bookingRepository.countDailyBookings(partnerId, startDate);
 
@@ -811,6 +860,7 @@ public class BookingService {
 
     @Transactional(readOnly = true)
     public ClientStatsResponse getClientStats(UUID partnerId, YearMonth month) {
+        requirePartnerAccess(partnerId);
         LocalDateTime start = month.atDay(1).atStartOfDay();
         LocalDateTime end   = month.plusMonths(1).atDay(1).atStartOfDay();
         Long newClients     = bookingRepository.countNewClientsByPartnerAndPeriod(partnerId, start, end);

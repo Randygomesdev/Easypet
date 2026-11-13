@@ -51,6 +51,7 @@ public class StaffController {
             @RequestParam(name = "status", required = false) StaffStatus status,
             @RequestParam(name = "serviceId", required = false) UUID serviceId) {
         log.info("Recebida requisição para listar profissionais do parceiro ID: {}, status: {}, serviceId: {}", partnerId, status, serviceId);
+        staffService.requirePartnerAccess(partnerId);
         List<StaffResponse> response = staffService.getStaffByPartnerId(partnerId, status, serviceId);
         return ResponseEntity.ok(response);
     }
@@ -59,6 +60,7 @@ public class StaffController {
     @Operation(summary = "Buscar profissional por ID", description = "Retorna detalhes e especialidades de um profissional específico.")
     public ResponseEntity<StaffResponse> getStaffById(@PathVariable(name = "staffId") UUID staffId) {
         log.info("Recebida requisição para buscar profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId);
         StaffResponse response = staffService.getStaffById(staffId);
         return ResponseEntity.ok(response);
     }
@@ -95,6 +97,7 @@ public class StaffController {
     @Operation(summary = "Consultar grade horária semanal", description = "Retorna a escala horária regular configurada para o profissional.")
     public ResponseEntity<List<StaffScheduleResponse>> getSchedule(@PathVariable(name = "staffId") UUID staffId) {
         log.info("Recebida requisição para consultar escala do profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId);
         List<StaffScheduleResponse> response = staffService.getStaffSchedule(staffId);
         return ResponseEntity.ok(response);
     }
@@ -117,6 +120,7 @@ public class StaffController {
     @Operation(summary = "Consultar ausências/férias", description = "Retorna a lista de ausências temporárias cadastradas para o profissional.")
     public ResponseEntity<List<StaffAbsenceResponse>> getAbsences(@PathVariable(name = "staffId") UUID staffId) {
         log.info("Recebida requisição para consultar ausências do profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId);
         List<StaffAbsenceResponse> response = staffService.getStaffAbsences(staffId);
         return ResponseEntity.ok(response);
     }

@@ -14,8 +14,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -45,6 +45,18 @@ spring:
     baseline-on-migrate: true
 
   security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION:86400000}
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: "!homolog"
+
+  security:
     oauth2:
       client:
         registration:
@@ -54,7 +66,3 @@ spring:
             scope:
               - email
               - profile
-
-    jwt:
-      secret: ${JWT_SECRET}
-      expiration: ${JWT_EXPIRATION:86400000}

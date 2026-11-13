@@ -1,7 +1,8 @@
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Outlet, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import ProtectedRoute from './routes/ProtectedRoute'
 import RoleRouter from './routes/RoleRouter'
+import { env } from './config/env'
 
 import LandingPage      from './pages/LandingPage'
 import LoginPage         from './pages/auth/LoginPage'
@@ -20,10 +21,11 @@ import PlaceholderPage    from './pages/partner/PlaceholderPage'
 
 const router = createBrowserRouter([
   // Rotas públicas
-  { path: '/',              element: <LandingPage /> },
+  { path: '/',              element: env.internalPilot ? <RoleRouter /> : <LandingPage /> },
   { path: '/login',           element: <LoginPage /> },
-  { path: '/login-success',  element: <LoginSuccessPage /> },
-  { path: '/seja-parceiro',  element: <SejaParceiroPage /> },
+  { path: '/login-success',  element: env.internalPilot ? <Navigate to="/login" replace /> : <LoginSuccessPage /> },
+  { path: '/seja-parceiro',  element: env.internalPilot ? <Navigate to="/login" replace /> : <SejaParceiroPage /> },
+  { path: '/unauthorized',   element: <Navigate to="/" replace /> },
 
   // Painel do parceiro (PARTNER)
   {
@@ -40,7 +42,7 @@ const router = createBrowserRouter([
       { path: 'colaboradores/novo',      element: <ColaboradorPage /> },
       { path: 'colaboradores/:staffId',  element: <ColaboradorPage /> },
       { path: 'servicos',      element: <ServicosPage /> },
-      { path: 'pacotes',       element: <PacotesPage /> },
+      { path: 'pacotes',       element: env.internalPilot ? <Navigate to="/partner/dashboard" replace /> : <PacotesPage /> },
       { path: 'agendamentos',  element: <AgendamentosPage /> },
       { path: 'atendimento',   element: <AtendimentoPage /> },
     ],

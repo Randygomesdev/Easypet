@@ -1,6 +1,7 @@
 package br.com.easypet.booking.service;
 
 import br.com.easypet.booking.client.PartnerServiceClient;
+import br.com.easypet.booking.client.PetServiceClient;
 import br.com.easypet.booking.client.dto.PartnerResponseDto;
 import br.com.easypet.booking.client.dto.ServiceResponseDto;
 import br.com.easypet.booking.domain.entity.Booking;
@@ -14,20 +15,22 @@ import br.com.easypet.booking.exception.ResourceNotFoundException;
 import br.com.easypet.booking.mapper.BookingMapper;
 import br.com.easypet.booking.repository.BookingRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,6 +49,9 @@ class BookingServiceTest {
     @Mock
     private PartnerServiceClient partnerServiceClient;
 
+    @Mock
+    private PetServiceClient petServiceClient;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -61,17 +67,103 @@ class BookingServiceTest {
         userId = UUID.randomUUID();
         serviceId = UUID.randomUUID();
 
-        // Mock Security Context para retornar o userId logado
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getCredentials()).thenReturn(userId.toString());
-        
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
+        authenticateAs("CUSTOMER");
+    }
+
+    @AfterEach
+    void clearAuthentication() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticateAs(String role) {
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+                "fixture", userId.toString(), List.of(new SimpleGrantedAuthority("ROLE_" + role))));
+    }
+
+    @Test
+    void partnerCannotChangeAnotherPartnersBookingEvenIfTheyOwnThePet() {
+        authenticateAs("PARTNER");
+        UUID bookingId = UUID.randomUUID();
+        Booking booking = Booking.builder()
+                .id(bookingId).partnerId(partnerId).userId(userId).status(BookingStatus.PENDING).build();
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(partnerServiceClient.getCurrentPartnerId()).thenReturn(UUID.randomUUID());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> bookingService.updateStatus(bookingId, BookingStatus.COMPLETED));
+        assertEquals(BookingStatus.PENDING, booking.getStatus());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void partnerCannotListAnotherPartnersBookings() {
+        authenticateAs("PARTNER");
+        when(partnerServiceClient.getCurrentPartnerId()).thenReturn(UUID.randomUUID());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> bookingService.getBookingsByPartnerId(partnerId, Pageable.unpaged()));
+        verifyNoInteractions(bookingRepository);
+    }
+
+    @Test
+    void partnerCanChangeStatusOfBookingAtTheirEstablishment() {
+        authenticateAs("PARTNER");
+        UUID bookingId = UUID.randomUUID();
+        Booking booking = Booking.builder()
+                .id(bookingId).partnerId(partnerId).userId(UUID.randomUUID()).status(BookingStatus.PENDING).build();
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(partnerServiceClient.getCurrentPartnerId()).thenReturn(partnerId);
+        when(bookingRepository.save(booking)).thenReturn(booking);
+
+        bookingService.updateStatus(bookingId, BookingStatus.CONFIRMED);
+
+        assertEquals(BookingStatus.CONFIRMED, booking.getStatus());
+        verify(bookingRepository).save(booking);
+    }
+
+    @Test
+    void cancelledBookingCannotBeReopenedToRegainPetAccess() {
+        authenticateAs("PARTNER");
+        UUID bookingId = UUID.randomUUID();
+        Booking booking = Booking.builder().id(bookingId).partnerId(partnerId).status(BookingStatus.CANCELLED).build();
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(partnerServiceClient.getCurrentPartnerId()).thenReturn(partnerId);
+
+        assertThrows(BusinessException.class, () -> bookingService.updateStatus(bookingId, BookingStatus.CONFIRMED));
+        assertEquals(BookingStatus.CANCELLED, booking.getStatus());
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void partnerCannotAttachAnUnrelatedPetToTheirBooking() {
+        authenticateAs("PARTNER");
+        UUID bookingId = UUID.randomUUID();
+        Booking booking = Booking.builder().id(bookingId).partnerId(partnerId).petId(petId).build();
+        BookingRequest request = new BookingRequest(
+                UUID.randomUUID(), partnerId, LocalDateTime.now(), BookingType.GROOMING, null,
+                BigDecimal.TEN, null, null, serviceId, null, null, null, null);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(partnerServiceClient.getCurrentPartnerId()).thenReturn(partnerId);
+
+        assertThrows(BusinessException.class, () -> bookingService.updateBooking(bookingId, request));
+        verifyNoInteractions(bookingMapper);
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    void petAccessRequiresMatchingPartnerAndOwnerOnNonCancelledBooking() {
+        authenticateAs("PARTNER");
+        when(partnerServiceClient.getCurrentPartnerId()).thenReturn(partnerId);
+        when(bookingRepository.existsByPetIdAndUserIdAndPartnerIdAndStatusNot(
+                petId, userId, partnerId, BookingStatus.CANCELLED)).thenReturn(true);
+
+        assertTrue(bookingService.hasPetAccess(petId, userId));
+        assertFalse(bookingService.hasPetAccess(petId, UUID.randomUUID()));
     }
 
     @Test
     void createBooking_ShouldSucceed_WhenOrdinaryGroomingBooking() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         LocalDateTime bookingDate = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0).withSecond(0).withNano(0);
         BookingRequest request = new BookingRequest(
@@ -122,6 +214,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldThrowException_WhenOrdinaryBookingMissingBookingDate() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         BookingRequest request = new BookingRequest(
                 petId, partnerId, null, BookingType.GROOMING, "Banho",
@@ -137,6 +230,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldSucceed_WhenBoardingBookingWithinCapacity() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         LocalDateTime checkIn = LocalDateTime.now().plusDays(1);
         LocalDateTime checkOut = LocalDateTime.now().plusDays(4); // 3 diárias
@@ -180,6 +274,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldThrowException_WhenBoardingMissingDates() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         BookingRequest request = new BookingRequest(
                 petId, partnerId, null, BookingType.BOARDING, "Sem datas",
@@ -195,6 +290,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldThrowException_WhenCheckOutBeforeCheckIn() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         LocalDateTime checkIn = LocalDateTime.now().plusDays(2);
         LocalDateTime checkOut = LocalDateTime.now().plusDays(1); // Inválido
@@ -212,6 +308,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldThrowException_WhenBoardingCapacityExceeded() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         LocalDateTime checkIn = LocalDateTime.now().plusDays(1);
         LocalDateTime checkOut = LocalDateTime.now().plusDays(3); // 2 diárias
@@ -252,6 +349,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldSucceed_WhenOrdinaryBookingWithRoundRobinAndSomeDayBookingsHaveNullStaffId() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         LocalDateTime bookingDate = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0).withSecond(0).withNano(0);
         BookingRequest request = new BookingRequest(
@@ -313,6 +411,7 @@ class BookingServiceTest {
 
     @Test
     void createBooking_ShouldDefaultIsFittingRequestToFalse_WhenRequestFittingIsNull() {
+        when(petServiceClient.getAccessiblePetOwner(petId)).thenReturn(userId);
         // Arrange
         LocalDateTime bookingDate = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0).withSecond(0).withNano(0);
         BookingRequest request = new BookingRequest(

@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { env } from '../config/env'
 
 export default function RoleRouter() {
   const { user } = useAuth()
@@ -9,5 +10,5 @@ export default function RoleRouter() {
   if (user?.role === 'CUSTOMER')       return <Navigate to="/app/home"          replace />
 
   // Não logado — landing page
-  return <Navigate to="/" replace />
+  return <Navigate to={env.internalPilot ? '/login' : '/'} replace />
 }

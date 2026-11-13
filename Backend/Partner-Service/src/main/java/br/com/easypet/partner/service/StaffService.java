@@ -19,6 +19,7 @@ import br.com.easypet.partner.repository.ServiceOfferRepository;
 import br.com.easypet.partner.repository.StaffRepository;
 import br.com.easypet.partner.repository.StaffScheduleRepository;
 import br.com.easypet.partner.repository.StaffAbsenceRepository;
+import br.com.easypet.partner.security.PartnerAccess;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,10 +41,22 @@ public class StaffService {
     private final StaffAbsenceRepository staffAbsenceRepository;
     private final StaffMapper staffMapper;
 
+    public void requirePartnerAccess(UUID partnerId) {
+        PartnerAccess.requireOwnerOrAdmin(partnerRepository.findById(partnerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado")));
+    }
+
+    public void requireStaffAccess(UUID staffId) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado"));
+        PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
+    }
+
     public StaffResponse createStaff(UUID partnerId, StaffRequest request) {
         log.info("Cadastrando novo profissional '{}' no parceiro ID: {}", request.name(), partnerId);
         Partner partner = partnerRepository.findById(partnerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado com ID: " + partnerId));
+        PartnerAccess.requireOwnerOrAdmin(partner);
 
         Staff staff = staffMapper.toEntity(request);
         staff.setPartner(partner);
@@ -51,6 +64,7 @@ public class StaffService {
 
         if (request.serviceIds() != null && !request.serviceIds().isEmpty()) {
             List<ServiceOffer> services = serviceOfferRepository.findAllById(request.serviceIds());
+            validateServices(partner, services, new HashSet<>(request.serviceIds()).size());
             staff.setServices(new HashSet<>(services));
         } else {
             staff.setServices(new HashSet<>());
@@ -89,6 +103,7 @@ public class StaffService {
         log.info("Atualizando profissional ID: {}", staffId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado com ID: " + staffId));
+        PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
 
         staffMapper.updateEntityFromRequest(request, staff);
 
@@ -98,6 +113,7 @@ public class StaffService {
 
         if (request.serviceIds() != null) {
             List<ServiceOffer> services = serviceOfferRepository.findAllById(request.serviceIds());
+            validateServices(staff.getPartner(), services, new HashSet<>(request.serviceIds()).size());
             staff.setServices(new HashSet<>(services));
         }
 
@@ -109,6 +125,7 @@ public class StaffService {
         log.info("Desativando profissional ID: {}", staffId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado com ID: " + staffId));
+        PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
         
         // Em vez de exclusão física destrutiva, inativamos o profissional para manter histórico
         staff.setStatus(StaffStatus.INACTIVE);
@@ -119,6 +136,7 @@ public class StaffService {
         log.info("Atualizando grade horária do profissional ID: {}", staffId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado com ID: " + staffId));
+        PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
 
         // Limpa a grade horária anterior
         staffScheduleRepository.deleteByStaffId(staffId);
@@ -154,6 +172,7 @@ public class StaffService {
         log.info("Cadastrando ausência para o profissional ID: {}", staffId);
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado com ID: " + staffId));
+        PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
 
         StaffAbsence absence = staffMapper.toEntity(request);
         absence.setStaff(staff);
@@ -169,5 +188,12 @@ public class StaffService {
         return absences.stream()
                 .map(staffMapper::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void validateServices(Partner partner, List<ServiceOffer> services, int requestedCount) {
+        if (services.size() != requestedCount || services.stream()
+                .anyMatch(service -> !service.getPartner().getId().equals(partner.getId()))) {
+            throw new ResourceNotFoundException("Um ou mais serviços não pertencem a este estabelecimento.");
+        }
     }
 }

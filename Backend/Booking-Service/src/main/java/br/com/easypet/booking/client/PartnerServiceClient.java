@@ -23,6 +23,18 @@ public class PartnerServiceClient {
     @Value("${services.partner-service.url:http://localhost:8083/api/v1}")
     private String partnerServiceUrl;
 
+    public UUID getCurrentPartnerId() {
+        try {
+            PartnerResponseDto partner = restTemplate.getForObject(partnerServiceUrl + "/partners/me", PartnerResponseDto.class);
+            if (partner != null && partner.id() != null) {
+                return partner.id();
+            }
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResourceNotFoundException("Estabelecimento do usuário não encontrado.");
+        }
+        throw new ResourceNotFoundException("Estabelecimento do usuário não encontrado.");
+    }
+
     public PartnerResponseDto getPartnerById(UUID partnerId) {
         String url = partnerServiceUrl + "/partners/" + partnerId;
         log.info("Buscando dados do parceiro síncrono no partner-service: {}", url);
@@ -38,9 +50,9 @@ public class PartnerServiceClient {
     }
 
     public List<br.com.easypet.booking.client.dto.StaffResponseDto> getStaffByPartnerId(UUID partnerId, UUID serviceId) {
-        String url = partnerServiceUrl + "/partners/" + partnerId + "/staff?status=ACTIVE";
+        String url = partnerServiceUrl + "/internal/partners/" + partnerId + "/staff";
         if (serviceId != null) {
-            url += "&serviceId=" + serviceId;
+            url += "?serviceId=" + serviceId;
         }
         log.info("Buscando profissionais síncronos no partner-service: {}", url);
         try {
@@ -53,7 +65,7 @@ public class PartnerServiceClient {
     }
 
     public List<br.com.easypet.booking.client.dto.StaffScheduleResponseDto> getStaffSchedule(UUID staffId) {
-        String url = partnerServiceUrl + "/partners/staff/" + staffId + "/schedule";
+        String url = partnerServiceUrl + "/internal/partners/staff/" + staffId + "/schedule";
         log.info("Buscando grade horária do profissional no partner-service: {}", url);
         try {
             br.com.easypet.booking.client.dto.StaffScheduleResponseDto[] response = restTemplate.getForObject(url, br.com.easypet.booking.client.dto.StaffScheduleResponseDto[].class);
@@ -65,7 +77,7 @@ public class PartnerServiceClient {
     }
 
     public List<br.com.easypet.booking.client.dto.StaffAbsenceResponseDto> getStaffAbsences(UUID staffId) {
-        String url = partnerServiceUrl + "/partners/staff/" + staffId + "/absences";
+        String url = partnerServiceUrl + "/internal/partners/staff/" + staffId + "/absences";
         log.info("Buscando ausências do profissional no partner-service: {}", url);
         try {
             br.com.easypet.booking.client.dto.StaffAbsenceResponseDto[] response = restTemplate.getForObject(url, br.com.easypet.booking.client.dto.StaffAbsenceResponseDto[].class);

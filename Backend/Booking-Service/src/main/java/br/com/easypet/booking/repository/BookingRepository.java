@@ -32,6 +32,11 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, org.spr
     
     Page<Booking> findByPetId(UUID petId, Pageable pageable);
 
+    Page<Booking> findByPetIdAndPartnerId(UUID petId, UUID partnerId, Pageable pageable);
+
+    boolean existsByPetIdAndUserIdAndPartnerIdAndStatusNot(
+            UUID petId, UUID userId, UUID partnerId, br.com.easypet.booking.domain.enums.BookingStatus status);
+
     java.util.List<Booking> findByPartnerIdAndStatusNotAndBookingDateBetween(
         UUID partnerId,
         br.com.easypet.booking.domain.enums.BookingStatus status,

@@ -20,6 +20,7 @@ import br.com.easypet.payment.repository.PackageTemplateRepository;
 import br.com.easypet.payment.repository.PaymentTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,9 @@ public class PackageService {
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final PackageMapper packageMapper;
     private final PartnerServiceClient partnerServiceClient;
+
+    @Value("${app.package-credits-enabled:true}")
+    private boolean packageCreditsEnabled = true;
 
     public PackageTemplateResponse createTemplate(PackageTemplateRequest request) {
         log.info("Iniciando criação de modelo de pacote '{}' para o parceiro {}", request.name(), request.partnerId());
@@ -112,6 +116,7 @@ public class PackageService {
     }
 
     public CustomerPackageResponse purchasePackage(UUID templateId, UUID userId) {
+        requirePackageCredits();
         log.info("Processando compra do pacote {} pelo usuário {}", templateId, userId);
 
         PackageTemplate template = packageTemplateRepository.findById(templateId)
@@ -179,6 +184,7 @@ public class PackageService {
     }
 
     public CreditConsumeResponse consumeCredit(CreditConsumeRequest request) {
+        requirePackageCredits();
         log.info("Requisição síncrona para consumir 1 crédito. Usuário: {}, Parceiro: {}, Serviço: {}", 
                 request.userId(), request.partnerId(), request.serviceId());
 
@@ -219,5 +225,11 @@ public class PackageService {
         log.info("Débito realizado com sucesso. Novo saldo de créditos: {}", saved.getRemainingCredits());
 
         return new CreditConsumeResponse(saved.getId(), saved.getRemainingCredits(), true);
+    }
+
+    private void requirePackageCredits() {
+        if (!packageCreditsEnabled) {
+            throw new BusinessException("A compra e o uso de créditos de pacote estão indisponíveis neste ambiente.");
+        }
     }
 }

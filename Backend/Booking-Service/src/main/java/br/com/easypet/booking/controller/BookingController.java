@@ -45,7 +45,7 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    @Operation(summary = "Criar um novo agendamento", description = "Cria um novo agendamento/reserva de serviço. O ID do cliente é extraído automaticamente do token JWT. Retorna o cabeçalho 'Location' com a URI do novo recurso.")
+    @Operation(summary = "Criar um novo agendamento", description = "Cria uma reserva para um pet que o usuário pode acessar. Retorna a URI do novo recurso no cabeçalho 'Location'.")
     public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request) {
         log.info("Recebida requisição para criar agendamento do tipo {} para o pet {}", request.type(), request.petId());
         BookingResponse response = bookingService.createBooking(request);

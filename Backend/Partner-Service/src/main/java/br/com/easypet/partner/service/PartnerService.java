@@ -1,5 +1,7 @@
 package br.com.easypet.partner.service;
 
+import br.com.easypet.partner.security.PartnerAccess;
+
 import br.com.easypet.partner.domain.entity.Partner;
 import br.com.easypet.partner.domain.model.PartnerCategory;
 import br.com.easypet.partner.dto.request.PartnerRequest;
@@ -110,6 +112,7 @@ public class PartnerService {
         log.info("Atualizando dados do parceiro ID: {}", id);
         Partner partner = partnerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado"));
+        PartnerAccess.requireOwnerOrAdmin(partner);
         
         // Armazenamos o endereço anterior para comparar se houve alterações
         String oldAddress = partner.getAddress();
@@ -205,6 +208,7 @@ public class PartnerService {
         log.info("Desativando parceiro ID: {}", id);
         Partner partner = partnerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado"));
+        PartnerAccess.requireOwnerOrAdmin(partner);
         
         partner.setActive(false);
         partnerRepository.save(partner);
@@ -214,6 +218,7 @@ public class PartnerService {
         log.info("Adicionando serviço '{}' ao parceiro ID: {}", request.name(), partnerId);
         Partner partner = partnerRepository.findById(partnerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado"));
+        PartnerAccess.requireOwnerOrAdmin(partner);
 
         br.com.easypet.partner.domain.entity.ServiceOffer service = br.com.easypet.partner.domain.entity.ServiceOffer.builder()
                 .name(request.name())

@@ -27,10 +27,11 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers(HttpMethod.GET, "/partners/me").hasRole("PARTNER")
                 .requestMatchers(HttpMethod.GET, "/partners/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/partners/*/reviews").authenticated()
-                .requestMatchers(HttpMethod.GET, "/partners/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/partners/me/**").hasAnyRole("PARTNER")
                 .requestMatchers(HttpMethod.PUT, "/partners/me/**").hasAnyRole("PARTNER")
                 .requestMatchers("/partners/**").hasAnyRole("ADMIN", "MASTER", "PARTNER")

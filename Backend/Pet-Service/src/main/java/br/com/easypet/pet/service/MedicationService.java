@@ -9,12 +9,9 @@ import br.com.easypet.pet.exception.ResourceNotFoundException;
 import br.com.easypet.pet.mapper.MedicationMapper;
 import br.com.easypet.pet.repository.AppointmentRepository;
 import br.com.easypet.pet.repository.MedicationRepository;
-import br.com.easypet.pet.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,17 +26,18 @@ public class MedicationService {
 
     private final MedicationRepository medicationRepository;
     private final AppointmentRepository appointmentRepository;
-    private final PetRepository petRepository;
+    private final PetAccessService petAccessService;
     private final MedicationMapper medicationMapper;
 
     @CacheEvict(value = "medications", key = "#p0")
     public MedicationResponse create(UUID petId, MedicationRequest request) {
         log.info("Registrando medicamento '{}' para o pet ID: {}", request.name(), petId);
-        Pet pet = findPetIfOwner(petId);
+        Pet pet = petAccessService.requireAccess(petId);
 
         Appointment appointment = null;
         if (request.appointmentId() != null) {
             appointment = appointmentRepository.findById(request.appointmentId())
+                    .filter(record -> record.getPet().getId().equals(petId))
                     .orElseThrow(() -> new ResourceNotFoundException("Consulta não encontrada"));
         }
         Medication medication = medicationMapper.toEntity(request, pet, appointment);
@@ -47,7 +45,7 @@ public class MedicationService {
     }
     @Transactional(readOnly = true)
     public List<MedicationResponse> findAllByPet(UUID petId) {
-        findPetIfOwner(petId);
+        petAccessService.requireAccess(petId);
         return medicationRepository.findAllByPetIdOrderByStartDateDesc(petId)
                 .stream()
                 .map(medicationMapper::toResponse)
@@ -57,7 +55,7 @@ public class MedicationService {
     @CacheEvict(value = "medications", key = "#p0")
     public MedicationResponse update(UUID petId, UUID medicationId, MedicationRequest request) {
         log.info("Atualizando medicamento ID: {} para o pet ID: {}", medicationId, petId);
-        findPetIfOwner(petId);
+        petAccessService.requireOwnerOrAdmin(petId);
 
         Medication medication = medicationRepository.findById(medicationId)
                 .filter(m -> m.getPet().getId().equals(petId))
@@ -68,24 +66,14 @@ public class MedicationService {
 
     @CacheEvict(value = "medications", key = "#p0")
     public void delete(UUID petId, UUID medicationId) {
-        findPetIfOwner(petId);
-        medicationRepository.deleteById(medicationId);
+        petAccessService.requireOwnerOrAdmin(petId);
+        medicationRepository.findById(medicationId)
+                .filter(record -> record.getPet().getId().equals(petId))
+                .ifPresentOrElse(medicationRepository::delete, () -> {
+                    throw new ResourceNotFoundException("Medicamento não encontrado para este pet");
+                });
     }
 
-    @Transactional(readOnly = true)
-    private Pet findPetIfOwner(UUID petId) {
-        var auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isPartnerOrAdmin = auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_PARTNER"));
-        return petRepository.findById(petId)
-                .filter(p -> isPartnerOrAdmin || p.getOwnerId().equals(UUID.fromString(auth.getCredentials().toString())))
-                .orElseThrow(() -> new ResourceNotFoundException("Pet não encontrado ou acesso negado"));
-    }
-
-    private UUID getCurrentUserId() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-        return UUID.fromString(authentication.getCredentials().toString());
-    }
 
     private void updateMedicationFromRequest(Medication medication, MedicationRequest request) {
         medication.setName(request.name());

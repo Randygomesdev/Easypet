@@ -93,24 +93,6 @@ function StatusBadge({ status }: { status: BookingStatus }) {
   )
 }
 
-/* ─────────────────────────────────────────────
-   Mock data (layout fallback)
-───────────────────────────────────────────── */
-const MOCK_PET_MAP: Record<string, PetResponse> = {
-  'pet-1': { id: 'pet-1', name: 'Ozzy',    breed: 'Shih Tzu',      species: 'DOG', gender: 'MALE',   weight: 5,  birthDate: '2020-03-10', active: true, ownerId: 'u1' },
-  'pet-2': { id: 'pet-2', name: 'Juca',    breed: 'Spitz Alemão',  species: 'DOG', gender: 'MALE',   weight: 8,  birthDate: '2019-07-22', active: true, ownerId: 'u2' },
-  'pet-3': { id: 'pet-3', name: 'Madonna', breed: 'Pug',           species: 'DOG', gender: 'FEMALE', weight: 7,  birthDate: '2021-01-05', active: true, ownerId: 'u3' },
-  'pet-4': { id: 'pet-4', name: 'Spike',   breed: 'Pug',           species: 'DOG', gender: 'MALE',   weight: 9,  birthDate: '2018-11-14', active: true, ownerId: 'u4' },
-  'pet-5': { id: 'pet-5', name: 'Luna',    breed: 'Golden Retriever', species: 'DOG', gender: 'FEMALE', weight: 28, birthDate: '2021-06-18', active: true, ownerId: 'u5' },
-}
-const MOCK_BOOKINGS: BookingResponse[] = [
-  { id: 'b1', petId: 'pet-1', partnerId: 'p1', userId: 'u1', type: 'CONSULTATION', status: 'PENDING',   price: 120, createdAt: '2026-06-11T08:00:00', bookingDate: '2026-06-11T08:00:00' },
-  { id: 'b2', petId: 'pet-2', partnerId: 'p1', userId: 'u2', type: 'VACCINATION',  status: 'CONFIRMED', price: 80,  createdAt: '2026-06-11T09:00:00', bookingDate: '2026-06-11T09:00:00' },
-  { id: 'b3', petId: 'pet-3', partnerId: 'p1', userId: 'u3', type: 'GROOMING',     status: 'COMPLETED', price: 90,  createdAt: '2026-06-11T10:00:00', bookingDate: '2026-06-11T10:00:00' },
-  { id: 'b4', petId: 'pet-4', partnerId: 'p1', userId: 'u4', type: 'CONSULTATION', status: 'PENDING',   price: 120, createdAt: '2026-06-11T11:00:00', bookingDate: '2026-06-11T11:00:00', isFittingRequest: true },
-  { id: 'b5', petId: 'pet-5', partnerId: 'p1', userId: 'u5', type: 'BOARDING',     status: 'CANCELLED', price: 150, createdAt: '2026-06-11T13:00:00', bookingDate: '2026-06-11T13:00:00' },
-]
-
 const ALL_TYPES: BookingType[] = ['CONSULTATION','VACCINATION','GROOMING','BOARDING','OTHER']
 const PAGE_SIZE = 10
 
@@ -125,6 +107,7 @@ export default function AgendamentosPage() {
   const [staffList,     setStaffList]     = useState<StaffResponse[]>([])
   const [petMap,        setPetMap]        = useState<Record<string, PetResponse>>({})
   const [loading,       setLoading]       = useState(true)
+  const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [page,          setPage]          = useState(0)
   const [totalPages,    setTotalPages]    = useState(0)
@@ -160,7 +143,8 @@ export default function AgendamentosPage() {
         const list = await staffService.getByPartner(p.id)
         setStaffList(list)
       } catch { /* opcional */ }
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(() => setError('Não foi possível carregar o estabelecimento. Confira seu cadastro.'))
+      .finally(() => setLoading(false))
   }, [])
 
   /* carrega bookings */
@@ -175,27 +159,20 @@ export default function AgendamentosPage() {
 
       const res = await bookingService.getByPartner(partnerId, params)
 
-      if (res.content.length > 0) {
-        setBookings(res.content)
-        setTotalPages(res.totalPages)
-        setTotalItems(res.totalElements)
-        res.content.forEach(b => {
-          if (b.petId && !petMap[b.petId])
-            petService.getById(b.petId)
-              .then(pet => setPetMap(prev => ({ ...prev, [pet.id]: pet })))
-              .catch(() => {})
-        })
-      } else {
-        setBookings(MOCK_BOOKINGS)
-        setTotalPages(1)
-        setTotalItems(MOCK_BOOKINGS.length)
-        setPetMap(MOCK_PET_MAP)
-      }
+      setBookings(res.content)
+      setTotalPages(res.totalPages)
+      setTotalItems(res.totalElements)
+      const ids = [...new Set(res.content.map(booking => booking.petId).filter(Boolean))]
+      const pets = await Promise.allSettled(ids.map(id => petService.getById(id)))
+      setPetMap(Object.fromEntries(pets.flatMap(result =>
+        result.status === 'fulfilled' ? [[result.value.id, result.value]] : []
+      )))
     } catch {
-      setBookings(MOCK_BOOKINGS)
-      setTotalPages(1)
-      setTotalItems(MOCK_BOOKINGS.length)
-      setPetMap(MOCK_PET_MAP)
+      setBookings([])
+      setTotalPages(0)
+      setTotalItems(0)
+      setPetMap({})
+      setError('Não foi possível carregar os agendamentos. Tente novamente.')
     } finally { setLoading(false) }
   }, [partnerId, chipFilters, fStatus, fType, fStaff, fStart, fEnd, page])
 
@@ -221,14 +198,14 @@ export default function AgendamentosPage() {
   async function handleStatusChange(id: string, status: BookingStatus) {
     setActionLoading(id)
     try { await bookingService.updateStatus(id, status); await load() }
-    catch { /* silently fail */ }
+    catch { setError('Não foi possível atualizar o agendamento. Tente novamente.') }
     finally { setActionLoading(null) }
   }
 
   async function handleFitting(id: string, decision: 'APPROVE' | 'REJECT') {
     setActionLoading(id)
     try { await bookingService.processFittingDecision(id, decision); await load() }
-    catch { /* silently fail */ }
+    catch { setError('Não foi possível atualizar o agendamento. Tente novamente.') }
     finally { setActionLoading(null) }
   }
 
@@ -303,6 +280,10 @@ export default function AgendamentosPage() {
           Gerencie e acompanhe todos os atendimentos da sua equipe
         </p>
       </div>
+
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {/* ── KPIs ── */}
       <div className="bg-(--color-surface) border border-(--color-border) rounded-2xl shadow-sm overflow-hidden">

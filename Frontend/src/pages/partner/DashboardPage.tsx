@@ -310,7 +310,7 @@ export default function DashboardPage() {
               <Tooltip
                 contentStyle={{ borderRadius: '12px', border: '1px solid #ebebef', fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,.06)' }}
                 cursor={{ fill: '#f6f6f8', radius: 6 }}
-                formatter={(v: number) => [v, 'Agendamentos']}
+                formatter={value => [value, 'Agendamentos']}
               />
               <Bar dataKey="total" fill={C_PRIMARY} radius={[6, 6, 0, 0]} name="Agendamentos" />
             </BarChart>
@@ -349,7 +349,7 @@ export default function DashboardPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{ borderRadius: '12px', border: '1px solid #ebebef', fontSize: 12 }}
-                    formatter={(v: number, _: string, props: { payload: { name: string } }) => [v, props.payload.name]}
+                    formatter={(value, name) => [value, name]}
                   />
                 </PieChart>
               </ResponsiveContainer>

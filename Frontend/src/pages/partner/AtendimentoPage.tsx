@@ -11,7 +11,6 @@ import {
   type PetHistoryResponse,
   type AppointmentRequest,
   type MedicationRequest,
-  type ExamRequest,
   type VaccineRequest,
 } from '../../services/pet.service'
 import {
@@ -380,7 +379,6 @@ export default function AtendimentoPage() {
   const navigate       = useNavigate()
   const initialId      = searchParams.get('bookingId')
 
-  const [partnerId,  setPartnerId]  = useState<string | null>(null)
   const [queue,      setQueue]      = useState<BookingResponse[]>([])
   const [petMap,     setPetMap]     = useState<Record<string, PetResponse>>({})
   const [historyMap, setHistoryMap] = useState<Record<string, PetHistoryResponse>>({})
@@ -392,7 +390,6 @@ export default function AtendimentoPage() {
   /* carrega parceiro + fila do dia */
   useEffect(() => {
     partnerService.getMe().then(async p => {
-      setPartnerId(p.id)
       const todayStr = today()
       try {
         const res = await bookingService.getByPartner(p.id, {

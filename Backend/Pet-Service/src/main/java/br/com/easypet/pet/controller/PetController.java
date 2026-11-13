@@ -48,8 +48,7 @@ public class PetController {
     @GetMapping("/{id}")
     @Operation(summary = "Buscar detalhes de um pet pelo ID")
     public ResponseEntity<PetResponse> findById(@PathVariable(name = "id") UUID id) {
-        UUID userId = getCurrentUserId();
-        return ResponseEntity.ok(petService.findById(userId, id));
+        return ResponseEntity.ok(petService.findById(id));
     }
 
     @PutMapping("/{id}")

@@ -1,0 +1,215 @@
+name: easypet-homolog
+
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+
+x-database: &database
+  <<: *common
+  image: postgres:15-alpine
+  mem_limit: ${HOMOLOG_DB_MEMORY:-256m}
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+    interval: 5s
+    timeout: 3s
+    retries: 12
+    start_period: 90s
+
+x-java: &java
+  <<: *common
+  mem_limit: ${HOMOLOG_JAVA_MEMORY:-512m}
+  healthcheck:
+    test: ["CMD", "curl", "--fail", "--silent", "--max-time", "3", "http://127.0.0.1:8089/actuator/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 12
+    start_period: 90s
+
+x-java-env: &java-env
+  JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET no .env.homolog}
+  SPRING_PROFILES_ACTIVE: prod
+  MANAGEMENT_SERVER_PORT: '8089'
+  MANAGEMENT_SERVER_ADDRESS: 127.0.0.1
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
+  MANAGEMENT_HEALTH_MAIL_ENABLED: 'false'
+  JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=55.0 -Duser.timezone=America/Sao_Paulo
+
+services:
+  frontend:
+    <<: *common
+    build: ./Frontend
+    mem_limit: 64m
+    ports:
+      - "127.0.0.1:${HOMOLOG_PORT:-18080}:80"
+    depends_on:
+      gateway-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  gateway-service:
+    <<: *java
+    build: ./Backend/Gateway-Service
+    environment:
+      <<: *java-env
+      ALLOWED_ORIGINS: ${HOMOLOG_ORIGIN:?defina HOMOLOG_ORIGIN no .env.homolog}
+      REDIS_HOST: redis
+      AUTH_SERVICE_URL: http://auth-service:8081
+      PET_SERVICE_URL: http://pet-service:8082
+      PARTNER_SERVICE_URL: http://partner-service:8083
+      BOOKING_SERVICE_URL: http://booking-service:8084
+      PAYMENT_SERVICE_URL: http://payment-service:8085
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      pet-service:
+        condition: service_healthy
+      partner-service:
+        condition: service_healthy
+      booking-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+
+  auth-service:
+    <<: *java
+    build: ./Backend/Auth-Service
+    environment:
+      <<: *java-env
+      AUTH_DB_URL: jdbc:postgresql://auth-db:5432/auth_db
+      AUTH_DB_USERNAME: auth
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:?defina AUTH_DB_PASSWORD no .env.homolog}
+      SPRING_PROFILES_ACTIVE: prod,homolog
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+  pet-service:
+    <<: *java
+    build: ./Backend/Pet-Service
+    environment:
+      <<: *java-env
+      PET_DB_URL: jdbc:postgresql://pet-db:5432/pet_db
+      PET_DB_USERNAME: pet
+      PET_DB_PASSWORD: ${PET_DB_PASSWORD:?defina PET_DB_PASSWORD no .env.homolog}
+      SPRING_DATA_REDIS_HOST: redis
+      BOOKING_SERVICE_URL: http://booking-service:8084/api/v1
+    depends_on:
+      pet-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  partner-service:
+    <<: *java
+    build: ./Backend/Partner-Service
+    environment:
+      <<: *java-env
+      PARTNER_DB_URL: jdbc:postgresql://partner-db:5432/partner_db
+      PARTNER_DB_USERNAME: partner
+      PARTNER_DB_PASSWORD: ${PARTNER_DB_PASSWORD:?defina PARTNER_DB_PASSWORD no .env.homolog}
+    depends_on:
+      partner-db:
+        condition: service_healthy
+
+  booking-service:
+    <<: *java
+    build: ./Backend/Booking-Service
+    environment:
+      <<: *java-env
+      BOOKING_DB_URL: jdbc:postgresql://booking-db:5432/booking_db
+      BOOKING_DB_USERNAME: booking
+      BOOKING_DB_PASSWORD: ${BOOKING_DB_PASSWORD:?defina BOOKING_DB_PASSWORD no .env.homolog}
+      PARTNER_SERVICE_URL: http://partner-service:8083/api/v1
+      PAYMENT_SERVICE_URL: http://payment-service:8085/api/v1
+      PET_SERVICE_URL: http://pet-service:8082/api/v1
+      APP_PACKAGE_CREDITS_ENABLED: 'false'
+    depends_on:
+      booking-db:
+        condition: service_healthy
+
+  payment-service:
+    <<: *java
+    build: ./Backend/Payment-Service
+    environment:
+      <<: *java-env
+      PAYMENT_DB_URL: jdbc:postgresql://payment-db:5432/payment_db
+      PAYMENT_DB_USERNAME: payment
+      PAYMENT_DB_PASSWORD: ${PAYMENT_DB_PASSWORD:?defina PAYMENT_DB_PASSWORD no .env.homolog}
+      PARTNER_SERVICE_URL: http://partner-service:8083/api/v1
+      APP_PACKAGE_CREDITS_ENABLED: 'false'
+    depends_on:
+      payment-db:
+        condition: service_healthy
+
+  auth-db:
+    <<: *database
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:?defina AUTH_DB_PASSWORD no .env.homolog}
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+
+  pet-db:
+    <<: *database
+    environment:
+      POSTGRES_DB: pet_db
+      POSTGRES_USER: pet
+      POSTGRES_PASSWORD: ${PET_DB_PASSWORD:?defina PET_DB_PASSWORD no .env.homolog}
+    volumes:
+      - pet-data:/var/lib/postgresql/data
+
+  partner-db:
+    <<: *database
+    environment:
+      POSTGRES_DB: partner_db
+      POSTGRES_USER: partner
+      POSTGRES_PASSWORD: ${PARTNER_DB_PASSWORD:?defina PARTNER_DB_PASSWORD no .env.homolog}
+    volumes:
+      - partner-data:/var/lib/postgresql/data
+
+  booking-db:
+    <<: *database
+    environment:
+      POSTGRES_DB: booking_db
+      POSTGRES_USER: booking
+      POSTGRES_PASSWORD: ${BOOKING_DB_PASSWORD:?defina BOOKING_DB_PASSWORD no .env.homolog}
+    volumes:
+      - booking-data:/var/lib/postgresql/data
+
+  payment-db:
+    <<: *database
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: payment
+      POSTGRES_PASSWORD: ${PAYMENT_DB_PASSWORD:?defina PAYMENT_DB_PASSWORD no .env.homolog}
+    volumes:
+      - payment-data:/var/lib/postgresql/data
+
+  redis:
+    <<: *common
+    image: redis:7.2-alpine
+    mem_limit: 128m
+    command: ["redis-server", "--save", "", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  auth-data:
+  pet-data:
+  partner-data:
+  booking-data:
+  payment-data:
