@@ -76,8 +76,8 @@ class PackageServiceTest {
                 partnerId, "Pacote 4 Banhos", "Descrição", serviceId, 4, BigDecimal.valueOf(180.00), 30
         );
 
-        ServiceResponseDto serviceDto = new ServiceResponseDto(serviceId, "Banho", "Banho Pet", BigDecimal.valueOf(50.00), 60);
-        PartnerResponseDto partnerDto = new PartnerResponseDto(partnerId, "Pet Shop", List.of(serviceDto));
+        ServiceResponseDto serviceDto = new ServiceResponseDto(serviceId);
+        PartnerResponseDto partnerDto = new PartnerResponseDto(partnerId, List.of(serviceDto));
         
         PackageTemplate template = PackageTemplate.builder()
                 .partnerId(partnerId)
@@ -92,7 +92,7 @@ class PackageServiceTest {
                 UUID.randomUUID(), partnerId, "Pacote 4 Banhos", "Descrição", serviceId, 4, BigDecimal.valueOf(180.00), 30, true
         );
 
-        when(partnerServiceClient.getPartnerById(partnerId)).thenReturn(partnerDto);
+        when(partnerServiceClient.getOperations(partnerId)).thenReturn(partnerDto);
         when(packageMapper.toEntity(request)).thenReturn(template);
         when(packageTemplateRepository.save(any(PackageTemplate.class))).thenReturn(template);
         when(packageMapper.toResponse(any(PackageTemplate.class))).thenReturn(expectedResponse);

@@ -5,6 +5,5 @@ import java.util.UUID;
 
 public record PartnerResponseDto(
     UUID id,
-    String name,
     List<ServiceResponseDto> services
 ) {}

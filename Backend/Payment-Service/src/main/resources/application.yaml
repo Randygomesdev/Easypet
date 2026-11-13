@@ -38,12 +38,13 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
-jwt:
-  secret: ${JWT_SECRET}
-
 services:
+  auth-service:
+    url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1}
   partner-service:
     url: ${PARTNER_SERVICE_URL:http://localhost:8083/api/v1}
+  booking-service:
+    url: ${BOOKING_SERVICE_URL:http://localhost:8084/api/v1}
 
 mercadopago:
   access-token: ${MERCADOPAGO_ACCESS_TOKEN:TEST-ACCESS-TOKEN}

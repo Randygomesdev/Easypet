@@ -22,8 +22,8 @@ public class PartnerServiceClient {
     @Value("${services.partner-service.url:http://localhost:8083/api/v1}")
     private String partnerServiceUrl;
 
-    public PartnerResponseDto getPartnerById(UUID partnerId) {
-        String url = partnerServiceUrl + "/partners/" + partnerId;
+    public PartnerResponseDto getOperations(UUID partnerId) {
+        String url = partnerServiceUrl + "/internal/partners/" + partnerId + "/operations";
         log.info("Buscando dados do parceiro síncrono no partner-service via client do payment-service: {}", url);
         try {
             return restTemplate.getForObject(url, PartnerResponseDto.class);

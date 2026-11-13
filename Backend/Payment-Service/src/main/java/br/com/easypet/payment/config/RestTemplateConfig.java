@@ -20,8 +20,7 @@ public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate() {
-        /* ObjectMapper tolerante: ignora campos desconhecidos (ex: billingUnit
-           que existe em ServiceResponse mas não em ServiceResponseDto) */
+        // A projeção operacional inclui campos que outros serviços consomem.
         ObjectMapper mapper = new ObjectMapper()
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .registerModule(new JavaTimeModule());

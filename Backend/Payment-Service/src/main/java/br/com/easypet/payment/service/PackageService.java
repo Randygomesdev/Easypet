@@ -48,7 +48,7 @@ public class PackageService {
         log.info("Iniciando criação de modelo de pacote '{}' para o parceiro {}", request.name(), request.partnerId());
 
         // Validar se o parceiro e o serviço existem no partner-service
-        PartnerResponseDto partnerDto = partnerServiceClient.getPartnerById(request.partnerId());
+        PartnerResponseDto partnerDto = partnerServiceClient.getOperations(request.partnerId());
         if (partnerDto == null) {
             throw new ResourceNotFoundException("Parceiro não encontrado com o ID fornecido.");
         }
@@ -84,7 +84,7 @@ public class PackageService {
 
         // Validar parceiro e serviço se mudarem
         if (!template.getPartnerId().equals(request.partnerId()) || !template.getServiceId().equals(request.serviceId())) {
-            br.com.easypet.payment.client.dto.PartnerResponseDto partnerDto = partnerServiceClient.getPartnerById(request.partnerId());
+            PartnerResponseDto partnerDto = partnerServiceClient.getOperations(request.partnerId());
             if (partnerDto == null) {
                 throw new br.com.easypet.payment.exception.ResourceNotFoundException("Parceiro não encontrado com o ID fornecido.");
             }
