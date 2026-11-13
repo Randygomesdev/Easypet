@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -59,7 +60,8 @@ public class PartnerController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar todos os parceiros", description = "Retorna uma lista paginada de parceiros ativos. Pode ser filtrada por categoria ou nome.")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar todos os parceiros", description = "Consulta administrativa paginada dos parceiros ativos. Pode ser filtrada por categoria ou nome.")
     public ResponseEntity<Page<PartnerResponse>> findAll(
             @RequestParam(name = "category", required = false) PartnerCategory category,
             @RequestParam(name = "name", required = false) String name,
@@ -81,7 +83,7 @@ public class PartnerController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar parceiro por ID", description = "Retorna os detalhes de um parceiro específico.")
+    @Operation(summary = "Buscar parceiro por ID", description = "Consulta completa para o titular do estabelecimento ou administrador.")
     public ResponseEntity<PartnerResponse> findById(@PathVariable(name = "id") UUID id) {
         return ResponseEntity.ok(partnerService.findById(id));
     }
@@ -96,7 +98,7 @@ public class PartnerController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Desativar um parceiro", description = "Realiza a exclusão lógica (desativação) de um parceiro. Requer autenticação.")
+    @Operation(summary = "Rota legada de desativação", description = "A alteração de situação exige motivo e auditoria administrativa.")
     public ResponseEntity<Void> delete(@PathVariable(name = "id") UUID id) {
         partnerService.delete(id);
         return ResponseEntity.noContent().build();

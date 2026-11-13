@@ -3,12 +3,14 @@ package br.com.easypet.partner.domain.entity;
 import br.com.easypet.partner.domain.model.StaffStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@DynamicUpdate
 @Table(name = "staff")
 @Getter
 @Setter
@@ -50,6 +52,12 @@ public class Staff {
     @Column(nullable = false)
     @Builder.Default
     private StaffStatus status = StaffStatus.ACTIVE;
+
+    @Column(name = "team_user_id")
+    private UUID teamUserId;
+
+    @Column(name = "team_access_id", unique = true)
+    private UUID teamAccessId;
 
     @ManyToMany
     @JoinTable(

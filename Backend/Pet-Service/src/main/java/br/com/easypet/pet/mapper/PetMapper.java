@@ -25,6 +25,10 @@ public class PetMapper {
     }
 
     public PetResponse toResponse(Pet pet) {
+        return toResponse(pet, pet.getOwnerId());
+    }
+
+    public PetResponse toResponse(Pet pet, UUID ownerId) {
         return new PetResponse(
                 pet.getId(),
                 pet.getName(),
@@ -36,7 +40,7 @@ public class PetMapper {
                 pet.getBirthDate(),
                 pet.getPictureUrl(),
                 pet.getActive(),
-                pet.getOwnerId()
+                ownerId
         );
     }
 

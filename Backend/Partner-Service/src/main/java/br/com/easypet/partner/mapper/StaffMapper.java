@@ -26,6 +26,8 @@ public interface StaffMapper {
     @Mapping(target = "partner", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "services", ignore = true)
+    @Mapping(target = "teamUserId", ignore = true)
+    @Mapping(target = "teamAccessId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     Staff toEntity(StaffRequest request);
 
@@ -37,6 +39,8 @@ public interface StaffMapper {
     @Mapping(target = "partner", ignore = true)
     @Mapping(target = "services", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "teamUserId", ignore = true)
+    @Mapping(target = "teamAccessId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     void updateEntityFromRequest(StaffRequest request, @MappingTarget Staff staff);
 

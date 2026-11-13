@@ -8,6 +8,7 @@ import br.com.easypet.partner.domain.entity.Partner;
 import br.com.easypet.partner.domain.model.PartnerCategory;
 import br.com.easypet.partner.dto.request.PartnerRequest;
 import br.com.easypet.partner.dto.response.PartnerResponse;
+import br.com.easypet.partner.dto.response.PartnerOperationsResponse;
 import br.com.easypet.partner.dto.request.ReviewRequest;
 import br.com.easypet.partner.dto.response.ReviewResponse;
 import br.com.easypet.partner.domain.entity.PartnerReview;
@@ -26,6 +27,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -62,34 +67,23 @@ public class PartnerService {
     }
 
     public PartnerResponse create(PartnerRequest request) {
+        requireProfileFields(request);
         log.info("Cadastrando novo parceiro: {}", request.name());
         Partner partner = partnerMapper.toEntity(request);
         partner.setActive(true);
 
         // Vincula o parceiro ao usuário autenticado
         UserPrincipal principal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        partner.setUserId(UUID.fromString(principal.id()));
+        UUID userId = UUID.fromString(principal.id());
+        if (partnerRepository.existsByUserId(userId)) throw duplicatePartner();
+        partner.setUserId(userId);
         
         // Se as coordenadas não foram enviadas manualmente, resolvemos via Geocoding
         if (partner.getLatitude() == null || partner.getLongitude() == null) {
             fillPartnerCoordinates(partner);
         }
         
-        if (request.services() != null) {
-            List<ServiceOffer> services = request.services().stream()
-                    .map(s -> ServiceOffer.builder()
-                            .name(s.name())
-                            .description(s.description())
-                            .price(s.price())
-                            .durationMinutes(s.durationMinutes())
-                            .partner(partner)
-                            .active(true)
-                            .build())
-                    .collect(Collectors.toList());
-            partner.setServices(services);
-        }
-        
-        return partnerMapper.toResponse(partnerRepository.save(partner));
+        return saveProfile(partner);
     }
 
     @Transactional(readOnly = true)
@@ -113,9 +107,18 @@ public class PartnerService {
 
     @Transactional(readOnly = true)
     public PartnerResponse findById(UUID id) {
-        log.info("Buscando detalhes do parceiro ID: {}", id);
+        Partner partner = requirePartner(id);
+        PartnerAccess.requireOwnerOrAdmin(partner);
+        return partnerMapper.toResponse(partner);
+    }
+
+    @Transactional(readOnly = true)
+    public PartnerOperationsResponse findOperations(UUID id) {
+        return partnerMapper.toOperationsResponse(requirePartner(id));
+    }
+
+    private Partner requirePartner(UUID id) {
         return partnerRepository.findById(id)
-                .map(partnerMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado"));
     }
 
@@ -131,6 +134,7 @@ public class PartnerService {
         Partner partner = partnerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado"));
         PartnerAccess.requireOwnerOrAdmin(partner);
+        requireProfileFields(request);
         
         // Armazenamos o endereço anterior para comparar se houve alterações
         String oldAddress = partner.getAddress();
@@ -159,33 +163,33 @@ public class PartnerService {
             log.info("Geocoding ignorado: endereço não mudou e coordenadas já existem.");
         }
         
-        if (request.services() != null) {
-            if (partner.getServices() == null) {
-                partner.setServices(new java.util.ArrayList<>());
-            } else {
-                partner.getServices().clear();
+        return saveProfile(partner);
+    }
+
+    private PartnerResponse saveProfile(Partner partner) {
+        try {
+            return partnerMapper.toResponse(partnerRepository.saveAndFlush(partner));
+        } catch (DataIntegrityViolationException failure) {
+            if (failure.getCause() instanceof ConstraintViolationException violation && "23505".equals(violation.getSQLState())) {
+                throw duplicatePartner();
             }
-            List<ServiceOffer> newServices = request.services().stream()
-                    .map(s -> {
-                        ServiceCategory cat = s.categoryId() != null
-                                ? serviceCategoryRepository.findById(s.categoryId()).orElse(null)
-                                : null;
-                        return ServiceOffer.builder()
-                                .name(s.name())
-                                .description(s.description())
-                                .price(s.price())
-                                .durationMinutes(s.durationMinutes())
-                                .billingUnit(s.billingUnit() != null ? s.billingUnit() : br.com.easypet.partner.domain.model.BillingUnit.HOURLY)
-                                .category(cat)
-                                .partner(partner)
-                                .active(true)
-                                .build();
-                    })
-                    .collect(Collectors.toList());
-            partner.getServices().addAll(newServices);
+            throw failure;
         }
-        
-        return partnerMapper.toResponse(partnerRepository.save(partner));
+    }
+
+    private static ResponseStatusException duplicatePartner() {
+        return new ResponseStatusException(HttpStatus.CONFLICT,
+                "Já existe um estabelecimento para esta conta ou para o CNPJ informado.");
+    }
+
+    private static void requireProfileFields(PartnerRequest request) {
+        if (request.active() != null || request.services() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Altere serviços e situação pelas operações específicas do estabelecimento.");
+        }
+        if (request.businessHours() != null) {
+            OpeningHours.validate(request.businessHours());
+        }
     }
 
     private void fillPartnerCoordinates(Partner partner) {
@@ -229,13 +233,8 @@ public class PartnerService {
     }
 
     public void delete(UUID id) {
-        log.info("Desativando parceiro ID: {}", id);
-        Partner partner = partnerRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Parceiro não encontrado"));
-        PartnerAccess.requireOwnerOrAdmin(partner);
-        
-        partner.setActive(false);
-        partnerRepository.save(partner);
+        PartnerAccess.requireOwnerOrAdmin(requirePartner(id));
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Use a alteração de situação administrativa com motivo.");
     }
 
     public ServiceResponse addService(UUID partnerId, ServiceOfferRequest request) {

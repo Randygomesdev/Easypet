@@ -1,6 +1,7 @@
 package br.com.easypet.pet.service;
 
 import br.com.easypet.pet.client.BookingAccessClient;
+import br.com.easypet.pet.client.CustomerMembershipClient;
 import br.com.easypet.pet.domain.entity.Pet;
 import br.com.easypet.pet.domain.model.HistorySource;
 import br.com.easypet.pet.exception.ResourceNotFoundException;
@@ -18,6 +19,7 @@ public class PetAccessService {
 
     private final PetRepository petRepository;
     private final BookingAccessClient bookingAccessClient;
+    private final CustomerMembershipClient memberships;
 
     public Pet requireAccess(UUID petId) {
         return findActivePet(petId, true);
@@ -49,6 +51,11 @@ public class PetAccessService {
     }
 
     private boolean canAccess(Pet pet, Authentication auth, boolean allowPartner) {
+        if (pet.getOwnerId() == null) {
+            return hasRole(auth, "ROLE_CUSTOMER") && memberships.findClaimedCustomers().stream()
+                    .anyMatch(owned -> owned.customerId().equals(pet.getReceptionCustomerId())
+                            && owned.partnerId().equals(pet.getReceptionPartnerId()));
+        }
         if (pet.getOwnerId().toString().equals(auth.getCredentials()) || hasRole(auth, "ROLE_ADMIN")) {
             return true;
         }

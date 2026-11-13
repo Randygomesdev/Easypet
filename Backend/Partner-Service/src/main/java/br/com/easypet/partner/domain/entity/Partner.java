@@ -3,6 +3,7 @@ package br.com.easypet.partner.domain.entity;
 import br.com.easypet.partner.domain.model.PartnerCategory;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@DynamicUpdate
 @Table(name = "partners")
 @Getter
 @Setter
@@ -94,7 +96,7 @@ public class Partner {
     @Column(name = "boarding_capacity")
     private Integer boardingCapacity;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", unique = true)
     private UUID userId;
 
     @Column(name = "active")

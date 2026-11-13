@@ -47,8 +47,15 @@ public class StaffService {
     }
 
     public void requireStaffAccess(UUID staffId) {
+        requireStaffAccess(staffId, null);
+    }
+
+    public void requireStaffAccess(UUID staffId, UUID partnerId) {
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado"));
+        if (partnerId != null && !partnerId.equals(staff.getPartner().getId())) {
+            throw new ResourceNotFoundException("Profissional não encontrado neste estabelecimento.");
+        }
         PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
     }
 
@@ -139,14 +146,22 @@ public class StaffService {
 
     public List<StaffScheduleResponse> updateStaffSchedule(UUID staffId, List<StaffScheduleRequest> scheduleRequests) {
         log.info("Atualizando grade horária do profissional ID: {}", staffId);
-        Staff staff = staffRepository.findById(staffId)
+        Staff staff = staffRepository.lockForSchedule(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado com ID: " + staffId));
         PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
+
+        if (scheduleRequests == null) throw OpeningHours.invalid();
+        Set<Integer> days = new HashSet<>();
+        for (var shift : scheduleRequests) {
+            if (shift == null || shift.dayOfWeek() == null || shift.dayOfWeek() < 1
+                    || shift.dayOfWeek() > 7 || !days.add(shift.dayOfWeek())) throw OpeningHours.invalid();
+            OpeningHours.validatePeriod(shift.startTime(), shift.endTime(), shift.lunchStartTime(), shift.lunchEndTime());
+        }
 
         // Limpa a grade horária anterior
         staffScheduleRepository.deleteByStaffId(staffId);
 
-        if (scheduleRequests == null || scheduleRequests.isEmpty()) {
+        if (scheduleRequests.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -178,6 +193,10 @@ public class StaffService {
         Staff staff = staffRepository.findById(staffId)
                 .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado com ID: " + staffId));
         PartnerAccess.requireOwnerOrAdmin(staff.getPartner());
+        if (!request.startDate().isBefore(request.endDate())) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "O término do afastamento deve ser após o início.");
+        }
 
         StaffAbsence absence = staffMapper.toEntity(request);
         absence.setStaff(staff);

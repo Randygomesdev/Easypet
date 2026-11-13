@@ -58,9 +58,10 @@ public class StaffController {
 
     @GetMapping("/staff/{staffId}")
     @Operation(summary = "Buscar profissional por ID", description = "Retorna detalhes e especialidades de um profissional específico.")
-    public ResponseEntity<StaffResponse> getStaffById(@PathVariable(name = "staffId") UUID staffId) {
+    public ResponseEntity<StaffResponse> getStaffById(@PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId) {
         log.info("Recebida requisição para buscar profissional ID: {}", staffId);
-        staffService.requireStaffAccess(staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         StaffResponse response = staffService.getStaffById(staffId);
         return ResponseEntity.ok(response);
     }
@@ -69,16 +70,20 @@ public class StaffController {
     @Operation(summary = "Atualizar profissional", description = "Atualiza os dados de perfil e especialidades do profissional. Requer role ADMIN.")
     public ResponseEntity<StaffResponse> updateStaff(
             @PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId,
             @Valid @RequestBody StaffRequest request) {
         log.info("Recebida requisição para atualizar profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         StaffResponse response = staffService.updateStaff(staffId, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/staff/{staffId}")
     @Operation(summary = "Excluir/Inativar profissional", description = "Inativa temporariamente um profissional para preservar dados históricos de agendamentos. Requer role ADMIN.")
-    public ResponseEntity<Void> deleteStaff(@PathVariable(name = "staffId") UUID staffId) {
+    public ResponseEntity<Void> deleteStaff(@PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId) {
         log.info("Recebida requisição para inativar profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         staffService.deleteStaff(staffId);
         return ResponseEntity.noContent().build();
     }
@@ -87,17 +92,20 @@ public class StaffController {
     @Operation(summary = "Configurar grade horária semanal", description = "Define a escala de expediente semanal regular do profissional. Requer role ADMIN.")
     public ResponseEntity<List<StaffScheduleResponse>> updateSchedule(
             @PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId,
             @Valid @RequestBody List<StaffScheduleRequest> request) {
         log.info("Recebida requisição para configurar escala do profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         List<StaffScheduleResponse> response = staffService.updateStaffSchedule(staffId, request);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/staff/{staffId}/schedule")
     @Operation(summary = "Consultar grade horária semanal", description = "Retorna a escala horária regular configurada para o profissional.")
-    public ResponseEntity<List<StaffScheduleResponse>> getSchedule(@PathVariable(name = "staffId") UUID staffId) {
+    public ResponseEntity<List<StaffScheduleResponse>> getSchedule(@PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId) {
         log.info("Recebida requisição para consultar escala do profissional ID: {}", staffId);
-        staffService.requireStaffAccess(staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         List<StaffScheduleResponse> response = staffService.getStaffSchedule(staffId);
         return ResponseEntity.ok(response);
     }
@@ -106,8 +114,10 @@ public class StaffController {
     @Operation(summary = "Cadastrar ausência/férias", description = "Registra um período específico de ausência que bloqueará a agenda regular. Requer role ADMIN.")
     public ResponseEntity<StaffAbsenceResponse> createAbsence(
             @PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId,
             @Valid @RequestBody StaffAbsenceRequest request) {
         log.info("Recebida requisição para cadastrar ausência do profissional ID: {}", staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         StaffAbsenceResponse response = staffService.createStaffAbsence(staffId, request);
         URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
@@ -118,9 +128,10 @@ public class StaffController {
 
     @GetMapping("/staff/{staffId}/absences")
     @Operation(summary = "Consultar ausências/férias", description = "Retorna a lista de ausências temporárias cadastradas para o profissional.")
-    public ResponseEntity<List<StaffAbsenceResponse>> getAbsences(@PathVariable(name = "staffId") UUID staffId) {
+    public ResponseEntity<List<StaffAbsenceResponse>> getAbsences(@PathVariable(name = "staffId") UUID staffId,
+            @RequestParam(required = false) UUID partnerId) {
         log.info("Recebida requisição para consultar ausências do profissional ID: {}", staffId);
-        staffService.requireStaffAccess(staffId);
+        staffService.requireStaffAccess(staffId, partnerId);
         List<StaffAbsenceResponse> response = staffService.getStaffAbsences(staffId);
         return ResponseEntity.ok(response);
     }

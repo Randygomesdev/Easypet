@@ -2,7 +2,7 @@ package br.com.easypet.partner.dto.request;
 
 import br.com.easypet.partner.domain.model.PartnerCategory;
 import jakarta.validation.constraints.NotBlank;
-import org.hibernate.validator.constraints.br.CNPJ;
+import jakarta.validation.Valid;
 import java.util.Set;
 
 public record PartnerRequest(
@@ -42,6 +42,7 @@ public record PartnerRequest(
     String phone,
     Double latitude,
     Double longitude,
-    java.util.List<PartnerBusinessHourRequest> businessHours,
-    java.util.List<ServiceOfferRequest> services
+    java.util.List<@Valid PartnerBusinessHourRequest> businessHours,
+    java.util.List<@Valid ServiceOfferRequest> services,
+    Boolean active
 ) {}

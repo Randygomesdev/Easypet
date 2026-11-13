@@ -33,5 +33,6 @@ public record PartnerResponse(
     Double latitude,
     Double longitude,
     java.util.List<PartnerBusinessHourResponse> businessHours,
-    java.util.List<ServiceResponse> services
+    java.util.List<ServiceResponse> services,
+    Boolean active
 ) {}

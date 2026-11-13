@@ -53,8 +53,16 @@ public class Pet {
     @Column(nullable = false)
     private Boolean active = true;
 
-    @Column(nullable = false)
     private UUID ownerId;
+
+    @Column(updatable = false)
+    private UUID receptionCustomerId;
+
+    @Column(updatable = false)
+    private UUID receptionPartnerId;
+
+    @Column(length = 510)
+    private String receptionNameKey;
 
     @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL)
     private List<Vaccine> vaccinations;
