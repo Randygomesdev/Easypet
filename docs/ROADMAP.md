@@ -8,6 +8,8 @@ A primeira versão é para testes internos. As mudanças recuperadas das branche
 
 **Versionamento:** entregas organizadas em commits na branch `codex/unificar-develop`, preservando os aceites históricos. [Organização e verificações](sprints/R01-review/versionamento.md). A publicação da aplicação na VPS continua pendente.
 
+**Login social para homologação:** domínio definido como `https://easypet.innker.com.br`. Consulta ao Google Cloud em 13/11/2026 confirmou cliente OAuth existente e chave ativada, mas somente URLs locais autorizadas; público em teste sem usuários cadastrados e branding incompleto. O artefato H1 ainda desabilita Google. [Diagnóstico e critérios do próximo aceite](sprints/R01-review/google-oauth-preflight.md).
+
 ## 1. Entregas e pendências
 
 A implementação está organizada em [specs e missions de sete sprints paralelas](sprints/README.md), com ownership de arquivos, contratos de integração e critérios de aceite. A primeira onda cobre fatias das etapas 0 a 5; pagamentos online, piloto e expansão preservam as dependências abaixo.
@@ -20,6 +22,8 @@ A implementação está organizada em [specs e missions de sete sprints paralela
 - [x] **Graphify.** Gerar o índice local e validar o caminho da mudança de status da reserva.
 - [x] **Administração — Rotas de consulta.** Reservar a lista e o detalhe de parceiros ao papel `ADMIN` e validar os três perfis na stack local.
 - [ ] **Etapa 0 — Recorte e homologação — parcial.** Stack descartável validada; faltam decisões do piloto e publicação na VPS.
+- [x] **Google — Diagnóstico no console.** Conferir cliente, status da chave, URLs, público e branding; cliente existente, sem revogação evidenciada. Consulta somente de leitura em 13/11/2026; login não testado.
+- [ ] **Google — Retomar login social antes da publicação.** S02/S01: Auth e interface; S07: configuração, ingresso HTTPS e novo aceite integrado. Configurar domínio/retorno no Google, público de homologação e segredo por ambiente; preservar restrições do piloto. Entrega ainda não implementada nem validada.
 - [ ] **Etapa 1 — Entrada e operação de balcão — parcial.** Recuperação, recepção, reserva, emissão/resgate de reivindicação e checklist de configuração validados; falta publicação.
 - [ ] **Etapa 2 — Agenda e atendimento confiáveis — parcial.** Concorrência, retomada, chaves na UI, atribuição profissional e aviso de retirada validados; faltam regras de interrupção e autorização de adicionais.
 - [ ] **Etapa 3 — Comunicação e autonomia do tutor — parcial.** Jornada móvel, preço/duração/política, SMTP local e administração validados. Faltam busca por nome de serviço/filtros combinados, preferências/canal externo, avisos de balcão e contato operacional de suporte.
