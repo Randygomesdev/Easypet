@@ -3,6 +3,7 @@ import { closeSync, createReadStream, openSync } from 'node:fs'
 import { lstat, mkdtemp, readFile, rename, rmdir, unlink, writeFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 import { composeClient, databases, disposableConfig, notificationDatabase, readOptions } from './compose.mjs'
+import { cgroupCommand, parseCgroup } from './setoriza-homolog/resource-probe.mjs'
 
 const manifestName = 'manifest.json'
 
@@ -76,10 +77,18 @@ async function restoreDrill(directory, evidencePath) {
   }
 
   const config = disposableConfig('restore')
+  const measured = process.env.E2E_MEASURE_RESOURCES === '1'
+  if (measured) {
+    config.overlays = ['Frontend/e2e/compose.measure.yml']
+    if (process.env.E2E_RESOURCE_PROFILE === 'compact') {
+      config.overlays.push('scripts/production/setoriza-homolog/compose.compact.yml')
+    }
+  }
   const compose = composeClient(config)
   console.log(`Restauração descartável em ${config.project}.`)
   try {
     for (const name of names) {
+      if (measured) console.log(`Medição EasyPet: restore-${name}`)
       compose(['up', '-d', '--wait', '--wait-timeout', '300', `${name}-db`], {
         operation: `Subida de ${name} para restauração`,
       })
@@ -99,6 +108,11 @@ async function restoreDrill(directory, evidencePath) {
         if (restored !== expected) throw new Error(`Os registros verificados em ${name} divergiram após a restauração.`)
       }
       if (evidence[name]?.length) console.log(`${name}: registros de referência conferidos.`)
+      if (measured) {
+        const cgroup = parseCgroup(compose(['exec', '-T', `${name}-db`, 'sh', '-c', cgroupCommand]))
+        console.log(`Medição final de restauração: ${JSON.stringify({ service: `${name}-db`, cgroup })}`)
+        console.log(`Medição EasyPet: restored-${name}`)
+      }
       compose(['stop', `${name}-db`], { operation: `Parada de ${name} após verificação` })
     }
   } finally {

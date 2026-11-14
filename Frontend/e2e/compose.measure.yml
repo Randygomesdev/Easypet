@@ -1,0 +1,20 @@
+# Restrict runtime CPU affinity for both local comparison runs.
+x-cpus: &cpus { cpuset: '0-3' }
+
+services:
+  frontend: *cpus
+  gateway-service: *cpus
+  auth-service: *cpus
+  pet-service: *cpus
+  partner-service: *cpus
+  booking-service: *cpus
+  payment-service: *cpus
+  notification-service: *cpus
+  smtp-capture: *cpus
+  auth-db: *cpus
+  pet-db: *cpus
+  partner-db: *cpus
+  booking-db: *cpus
+  payment-db: *cpus
+  notification-db: *cpus
+  redis: *cpus

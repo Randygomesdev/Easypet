@@ -1,0 +1,81 @@
+# Opt-in for the shared homologation host. Load after compose.homolog.yml.
+x-java-options: &java-options >-
+  -Duser.timezone=America/Sao_Paulo -XX:+UseSerialGC -XX:ActiveProcessorCount=2 -Xss512k
+x-servlet: &servlet
+  JDK_JAVA_OPTIONS: *java-options
+  SERVER_TOMCAT_THREADS_MINSPARE: '2'
+  SERVER_TOMCAT_THREADS_MAX: '32'
+  SPRING_DATASOURCE_HIKARI_MINIMUMIDLE: '1'
+  SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE: '6'
+x-db: &db
+  mem_limit: 128m
+  memswap_limit: 128m
+  command:
+    - postgres
+    - -c
+    - shared_buffers=32MB
+    - -c
+    - max_connections=24
+    - -c
+    - work_mem=2MB
+    - -c
+    - maintenance_work_mem=16MB
+
+services:
+  auth-service:
+    mem_limit: 448m
+    memswap_limit: 448m
+    environment:
+      <<: *servlet
+      JAVA_TOOL_OPTIONS: -Xms48m -Xmx144m -XX:MaxDirectMemorySize=32m
+  partner-service:
+    mem_limit: 416m
+    memswap_limit: 416m
+    environment:
+      <<: *servlet
+      JAVA_TOOL_OPTIONS: -Xms48m -Xmx144m -XX:MaxDirectMemorySize=32m
+  booking-service:
+    mem_limit: 368m
+    memswap_limit: 368m
+    environment:
+      <<: *servlet
+      JAVA_TOOL_OPTIONS: -Xms48m -Xmx144m -XX:MaxDirectMemorySize=32m
+  pet-service:
+    mem_limit: 352m
+    memswap_limit: 352m
+    environment:
+      <<: *servlet
+      JAVA_TOOL_OPTIONS: -Xms48m -Xmx128m -XX:MaxDirectMemorySize=32m
+  payment-service:
+    mem_limit: 320m
+    memswap_limit: 320m
+    environment:
+      <<: *servlet
+      JAVA_TOOL_OPTIONS: -Xms48m -Xmx128m -XX:MaxDirectMemorySize=32m
+  gateway-service:
+    mem_limit: 288m
+    memswap_limit: 288m
+    environment:
+      JDK_JAVA_OPTIONS: *java-options
+      JAVA_TOOL_OPTIONS: -Xms40m -Xmx112m -XX:MaxDirectMemorySize=48m -Dreactor.netty.ioWorkerCount=2
+  notification-service:
+    mem_limit: 256m
+    memswap_limit: 256m
+    environment:
+      <<: *servlet
+      JAVA_TOOL_OPTIONS: -Xms32m -Xmx96m -XX:MaxDirectMemorySize=32m
+  auth-db: *db
+  pet-db: *db
+  partner-db: *db
+  booking-db: *db
+  payment-db: *db
+  notification-db: *db
+  frontend:
+    mem_limit: 64m
+    memswap_limit: 64m
+  redis:
+    mem_limit: 128m
+    memswap_limit: 128m
+  smtp-capture:
+    mem_limit: 96m
+    memswap_limit: 96m

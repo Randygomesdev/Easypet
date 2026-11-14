@@ -41,9 +41,10 @@ export function disposableConfig(prefix) {
   }
 }
 
-export function composeClient({ project, envFile, env }) {
+export function composeClient({ project, envFile, env, overlays = [] }) {
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(project)) throw new Error('Nome de projeto Compose inválido.')
   const baseArgs = ['compose', '-p', project, '-f', 'compose.homolog.yml']
+  for (const file of overlays) baseArgs.push('-f', file)
   if (envFile) baseArgs.push('--env-file', resolve(envFile))
   return (args, options = {}) => {
     const { operation = args[0], ...spawnOptions } = options

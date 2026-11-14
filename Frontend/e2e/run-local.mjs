@@ -16,14 +16,24 @@ const password = secret()
 const waveB = process.env.E2E_WAVE_B === '1'
 const h1 = process.env.E2E_H1 === '1'
 const oauth = process.env.E2E_GOOGLE_OAUTH === '1'
+const measured = process.env.E2E_MEASURE_RESOURCES === '1'
+const compact = process.env.E2E_RESOURCE_PROFILE === 'compact'
 const apiOnly = process.env.E2E_API_ONLY === '1'
 if (waveB && apiOnly) throw new Error('A onda B inclui cenários de navegador. Execute com E2E_API_ONLY desativado.')
 const review = waveB || process.env.E2E_R01 === '1'
 const composeFiles = ['-f', 'compose.homolog.yml']
+if (compact) {
+  if (!measured) throw new Error('O perfil compacto deste runner exige medição de recursos.')
+  composeFiles.push('-f', 'scripts/production/setoriza-homolog/compose.compact.yml')
+}
 if (apiOnly) composeFiles.push('-f', 'Frontend/e2e/compose.api.yml')
 if (review) composeFiles.push('-f', 'Frontend/e2e/compose.r01.yml')
 if (waveB) composeFiles.push('-f', 'Frontend/e2e/compose.smtp-fixture.yml')
 if (oauth) composeFiles.push('-f', 'Frontend/e2e/compose.oauth-fixture.yml')
+if (measured) {
+  if (!oauth || !h1 || process.argv.length !== 2) throw new Error('A medição exige H1 e OAuth, sem filtros.')
+  composeFiles.push('-f', 'Frontend/e2e/compose.measure.yml')
+}
 const env = {
   ...process.env,
   COMPOSE_DISABLE_ENV_FILE: '1',
@@ -118,6 +128,7 @@ function publishedAddress(service, port) {
 }
 
 let snapshot
+const phase = name => { if (measured) console.log(`Medição EasyPet: ${name}`) }
 try {
   if (h1 && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_H1=1.')
   if (oauth && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_GOOGLE_OAUTH=1.')
@@ -131,11 +142,13 @@ try {
   }
   if (h1) verifyPublicationConfig()
   console.log(`Stack descartável: ${project}`)
+  phase('startup')
   if (oauth) {
     check(compose(['up', '-d', '--wait', '--wait-timeout', '420',
       'auth-db', 'pet-db', 'partner-db', 'booking-db', 'payment-db', 'notification-db']), 'Inicialização dos bancos OAuth')
   }
   check(compose(['up', '-d', '--build', '--wait', '--wait-timeout', '420']), 'Subida do Compose')
+  phase('ready')
   if (oauth) {
     const envFile = join(tlsDir, 'diagnose.env')
     writeFileSync(envFile, '', { flag: 'wx' })
@@ -188,6 +201,7 @@ try {
     input: sql, stdio: ['pipe', 'inherit', 'inherit'],
   }), 'Criação de contas fictícias')
   const tests = apiOnly ? ['--grep', '@api'] : []
+  phase('playwright')
   const playwright = spawnSync(process.execPath, ['node_modules/@playwright/test/cli.js', 'test', ...tests, ...process.argv.slice(2)], {
     cwd: frontend,
     env: {
@@ -203,12 +217,14 @@ try {
     },
     stdio: 'inherit',
   })
+  phase('playwright-end')
   if (playwright.error || playwright.status !== 0) {
     console.error(playwright.error?.message ?? `Playwright falhou (código ${playwright.status}).`)
     compose(['ps'])
     process.exitCode = 1
   }
   if (!process.exitCode && waveB && process.argv.length === 2) {
+    phase('backup')
     await recoverFixtures(root, env, project, args => check(compose(args,
       { stdio: ['ignore', 'pipe', 'inherit'] }), 'Ensaio de recuperação da onda B'))
   }
@@ -228,6 +244,7 @@ try {
       process.exitCode = 1
     }
   }
+  phase('cleanup')
   const cleanup = compose(['down', '--volumes', '--remove-orphans', '--rmi', 'local'])
   if (cleanup && cleanup.status !== 0) {
     console.error(`Não foi possível remover a stack descartável ${project}.`)
