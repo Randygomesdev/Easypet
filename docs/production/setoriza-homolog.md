@@ -1,5 +1,7 @@
 # EasyPet na VPS de homologação do Setoriza
 
+**Publicado em 13/11/2026:** domínio HTTPS ativo, Google validado com parceiro e tutor, ADMIN por senha, 16 serviços saudáveis e monitoramento habilitado. Checkout final `354eebb`; imagens construídas fora da VPS. [Resultado, evidências e limites](publicacao-homolog-2026-11-13.md). As inspeções abaixo preservam o estado anterior à instalação; a sequência serve de referência para a primeira publicação, não deve ser repetida integralmente sobre o ambiente existente.
+
 Preparação em 13/11/2026, após inspeção SSH autorizada. Destino confirmado pelo usuário: `Setoriza-Homolog`, IP público `13.140.225.50`. Release funcional de referência: `e682f10`. Esta preparação não publicou o EasyPet nem alterou o Setoriza.
 
 ## Resultado da inspeção
@@ -44,7 +46,7 @@ Foi preparado `.env.easypet-vps.local` na estação do operador, ignorado pelo G
 
 O log HTTP externo registra apenas horário, IDs, método, status e duração. Não registra URL, query, cabeçalhos, cookies nem corpo. O error log desse vhost é desabilitado porque pode incluir códigos de retorno e recuperação; diagnóstico usa o access log e os serviços internos. O Nginx do frontend continua responsável por `no-store`/`no-referrer`.
 
-## Sequência de publicação, ainda não executada
+## Sequência de referência da primeira publicação
 
 1. Usar o orçamento e o aceite supervisionado de demonstração acima. O usuário definiu acesso público ao site, com login apenas para convidados; o preflight aceita `public-invited`. Provisione apenas contas aprovadas, inclusive para login por senha, e valide as recusas de acesso. Esta decisão não abre cadastro público, checkout ou créditos.
 2. Instalar Node.js 24 no host para os scripts operacionais, por um canal oficial, e conferir `/usr/bin/python3`. Preparar checkout próprio em `/srv/easypet`, diretório de configuração protegido `/etc/easypet` e backups em `/srv/easypet-backups`. Transferir a configuração privada para `/etc/easypet/homolog.env`, proprietário root e modo 600. Acrescentar `HOMOLOG_MONITOR_DIR=/var/lib/easypet/monitor` nesse arquivo. Nunca usar `.env` do Setoriza nem imprimir `docker compose config` completo com segredos. Preparar o coletor com os candidatos revisados:

@@ -35,6 +35,8 @@ A auditoria dos 64 arquivos candidatos presentes encontrou 386 alertas Gitleaks,
 
 ## Configuração externa e limites
 
+**Atualização posterior — publicação de 13/11/2026:** DNS/TLS, configuração protegida e contas instalados na VPS. Google habilitado para quatro contas Gmail convidadas, com login real aprovado para parceiro e tutor, cancelamento recuperável e papéis corretos. ADMIN corporativo usa senha por decisão explícita do usuário e não integra a allowlist OAuth publicada. Nova chave comprovada; desativação da antiga segue separada. [Aceite da publicação](../../production/publicacao-homolog-2026-11-13.md). As observações abaixo descrevem a inspeção anterior ao deploy.
+
 O callback `https://easypet.innker.com.br/api/v1/login/oauth2/code/google` foi salvo no cliente existente após autorização humana e conferido por reabertura da página. URLs locais foram preservadas; não são necessárias ao deploy. A lista de cinco contas recebida foi guardada somente em arquivo local ignorado, sem endereços pessoais nestas evidências.
 
 O usuário informou perda do segredo e gerou uma nova chave. R01 conferiu chave nova ativa no console e presença/formato esperado no arquivo local ignorado, sem revelar o valor. A chave antiga permanece ativa até validar a nova no aplicativo. DNS A do domínio retornou NXDOMAIN na consulta desta rodada. Provisionamento das contas, instalação da configuração no ambiente, DNS/TLS, deploy e smoke Google real permanecem requisitos separados. Não houve login Google real nem publicação na VPS nesta revisão.

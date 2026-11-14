@@ -4,6 +4,8 @@ Pedido de 13/11/2026: verificar redução de memória do EasyPet antes de amplia
 
 ## Atualização de escopo — demonstrações controladas
 
+**Publicação posterior concluída em 13/11/2026:** o perfil de demonstração foi instalado na VPS atual após preflight com 4.765 MiB disponíveis, sem ampliação de RAM. Login Google, jornada de demonstração e monitoramento aprovados; [métricas de convivência e limites](../../production/publicacao-homolog-2026-11-13.md). Os parágrafos seguintes preservam a decisão e os ensaios anteriores à instalação.
+
 Após o parecer abaixo, o usuário esclareceu que o deploy é exclusivamente para testes internos e demonstrações controladas, sem fluxo real. **Recomendação atual: tentar a VPS existente antes de ampliar RAM**, com demonstração supervisionada e poucos acessos. A exigência anterior de carga sustentada deixa de ser gate desta publicação interna; permanece relevante antes de operação real. O aceite no endereço publicado continua pendente, assim como DNS/TLS e preparação do host.
 
 Foi preparado `compose.demo.yml`, aplicado após o compacto: eleva Auth de 448 para 480 MiB, Partner de 416 para 480 MiB e Booking de 368 para 400 MiB. Soma 3.632 MiB. A comparação estrutural dos Composes confirmou que somente esses três limites e seus limites de memória+swap mudaram; heaps, serviços, pools, redes e portas são iguais. Swap segue desabilitado. Os 28 testes e o pico de 2.526,59 MiB são evidências do compacto anterior.

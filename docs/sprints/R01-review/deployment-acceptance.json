@@ -1,0 +1,344 @@
+{
+  "publishedOrigin": "https://easypet.innker.com.br",
+  "releaseHead": "354eebb426ef85428ce8d5196d9db45ef73b2ba8",
+  "backendSourceHead": "4f6ce3c52c79cf9d51a4701d018f58fbfcb0307e",
+  "buildLocation": "local workstation, not VPS",
+  "observation": {
+    "startedAt": "2026-11-14T02:14:49.172966+00:00",
+    "endedAt": "2026-11-14T02:47:43.137578+00:00",
+    "samples": 124,
+    "firstSixteenRunningAt": "2026-11-14T02:27:32.053367+00:00",
+    "minutesSinceFirstSixteenRunning": 20.18,
+    "fullStackSamples": 68,
+    "rollbackTriggered": false
+  },
+  "memory": {
+    "minimumHostAvailableMiB": 2532.62,
+    "lastHostAvailableMiB": 2591.07,
+    "maximumSampledEasyPetSumMiB": 2209.21,
+    "lastEasyPetSumMiB": 2116.27,
+    "configuredTotalMiB": 3632,
+    "perServiceMaxCurrentMiB": {
+      "auth-db": 71.93,
+      "auth-service": 395.3,
+      "booking-db": 57.42,
+      "booking-service": 330.57,
+      "frontend": 9.76,
+      "gateway-service": 219.88,
+      "notification-db": 64.49,
+      "notification-service": 182.78,
+      "partner-db": 75.13,
+      "partner-service": 350.39,
+      "payment-db": 72.82,
+      "payment-service": 296.09,
+      "pet-db": 59.2,
+      "pet-service": 311.46,
+      "redis": 4.94,
+      "smtp-capture": 39.2
+    }
+  },
+  "cpuStealPercentAcrossWindow": 32.33,
+  "setoriza": {
+    "before": {
+      "samples": 35,
+      "statuses": [
+        200
+      ],
+      "maxSeconds": 0.2695,
+      "p95Seconds": 0.251
+    },
+    "during": {
+      "samples": 89,
+      "statuses": [
+        200
+      ],
+      "maxSeconds": 0.2088,
+      "p95Seconds": 0.1044
+    },
+    "preexistingContainersCompared": 15,
+    "changedPreexistingContainers": [],
+    "changedPreexistingNginxFiles": []
+  },
+  "easyPet": {
+    "healthyServices": 16,
+    "observedOomKilled": false,
+    "observedRestartCounterNonzero": false,
+    "observedSwapUsed": false,
+    "monitorTimerEnabled": "enabled",
+    "monitorTimerActive": "active",
+    "networkContainsOnlyEasyPet": true
+  },
+  "rawSha256": {
+    "watch": "d6ba44c51a39f96afbf7dc227877138579ecb863232f927a3e1347293012af7e",
+    "beforeInstall": "ccb38d4f7e2591e2b78058e5b677d202f41b165d71fd668a42b877ce7f293e34",
+    "releaseManifest": "c773e3a127ce4b3b43d693218e28d1ff227c850875c2db2e9deaa4a760897796",
+    "imagesArchive": "06d11b84f58776f82c039b5c295bec7a1dd4b778ebe98f9b54e139f30355928c",
+    "finalFrontendArchive": "32c4ce96953bcf2f99cd4a3dd66d8f0dd2604c68ca9a337dbbb06f25d074082b"
+  },
+  "limitations": [
+    "Controlled demonstration only; no sustained load capacity certification.",
+    "Setoriza HTTP probe checks the public page and container identity/restart metadata, not every business journey.",
+    "Auth/Gateway and frontend were deliberately recreated for Google activation; frontend was recreated twice more for requested branding corrections.",
+    "One terminal notification failure is expected because a demonstration Gmail recipient is blocked by the homologation mail policy.",
+    "Old Google credential was not disabled.",
+    "Backup consists of six individually consistent dumps; no restore drill on the shared VPS."
+  ],
+  "smoke": {
+    "at": "2026-11-14T02:29:06.726Z",
+    "passed": true,
+    "checks": [
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/auth/login",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/admin/platform/status",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/admin/platform/status",
+        "status": 403
+      },
+      {
+        "method": "GET",
+        "path": "/admin/platform/status",
+        "status": 403
+      },
+      {
+        "method": "GET",
+        "path": "/admin/platform/status",
+        "status": 401
+      },
+      {
+        "method": "POST",
+        "path": "/auth/register",
+        "status": 404
+      },
+      {
+        "method": "POST",
+        "path": "/payments/checkout",
+        "status": 404
+      },
+      {
+        "method": "GET",
+        "path": "/internal/booking-events",
+        "status": 404
+      },
+      {
+        "method": "GET",
+        "path": "/partners/me",
+        "status": 404
+      },
+      {
+        "method": "POST",
+        "path": "/partners",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "path": "/partners/me",
+        "status": 404
+      },
+      {
+        "method": "POST",
+        "path": "/partners",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "path": "/partners/me",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/partners/{id}/staff",
+        "status": 201
+      },
+      {
+        "method": "PUT",
+        "path": "/partners/staff/{id}/schedule",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/categories",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/partners/{id}/services",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/partners/me",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/pets",
+        "status": 201
+      },
+      {
+        "method": "POST",
+        "path": "/bookings",
+        "status": 201
+      },
+      {
+        "method": "GET",
+        "path": "/bookings/{id}",
+        "status": 404
+      },
+      {
+        "method": "PATCH",
+        "path": "/bookings/{id}/status?status=CONFIRMED",
+        "status": 404
+      },
+      {
+        "method": "PATCH",
+        "path": "/bookings/{id}/status?status=CONFIRMED",
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/bookings/{id}/status?status=IN_PROGRESS",
+        "status": 200
+      },
+      {
+        "method": "PATCH",
+        "path": "/bookings/{id}/status?status=COMPLETED",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/bookings/{id}",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/pets/{id}/history",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/admin/partners?active=true&page=0&size=1",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/admin/customers?active=true&page=0&size=1",
+        "status": 200
+      }
+    ],
+    "accounts": {
+      "ADMIN": 1,
+      "PARTNER": 2,
+      "CUSTOMER": 2
+    },
+    "masterServices": 16,
+    "completedBooking": true
+  },
+  "oauthHttp": {
+    "at": "2026-11-14T02:32:16.440Z",
+    "authorizationStatus": 302,
+    "providerOrigin": "https://accounts.google.com",
+    "callback": "https://easypet.innker.com.br/api/v1/login/oauth2/code/google",
+    "stateAndNonce": true,
+    "pkceS256": true,
+    "secureHttpOnlyCookie": true,
+    "invalidExchangeStatus": 400
+  },
+  "monitorStale": {
+    "at": "2026-11-14T02:35:05.016Z",
+    "expected": "STALE",
+    "state": "STALE",
+    "sampleAgeSeconds": 136,
+    "services": 16,
+    "healthy": 16,
+    "availableHostMiB": 2605
+  },
+  "monitorRecovered": {
+    "at": "2026-11-14T02:35:15.122Z",
+    "expected": "AVAILABLE",
+    "state": "AVAILABLE",
+    "sampleAgeSeconds": 5,
+    "services": 16,
+    "healthy": 16,
+    "availableHostMiB": 2543
+  },
+  "branding": {
+    "at": "2026-11-14T02:41:31.736Z",
+    "title": "EasyPet",
+    "language": "pt-BR",
+    "favicon": "/assets/LogoEasypet-D8BygPtg.svg",
+    "status": 200,
+    "contentType": "image/svg+xml",
+    "sha256": "e8aebbbe03197b830577fc6503d1a2a5ddeb43a9f1a178af3c5ea40eee9ccaae",
+    "footer": {
+      "text": "Developed by Innker Tecnologia",
+      "href": "https://innker.com.br",
+      "target": "_blank",
+      "browserVerified": true,
+      "targetedLintPassed": true
+    }
+  },
+  "googleBrowser": {
+    "partnerLogin": true,
+    "customerLogin": true,
+    "cancelReturnedRecoverableError": true,
+    "customerAdminRouteDenied": true,
+    "googleLinksConfirmedByRole": {
+      "PARTNER": 1,
+      "CUSTOMER": 1,
+      "ADMIN": 0
+    },
+    "individualGoogleAccountsTested": 2,
+    "googleInvitedAccounts": 4,
+    "adminPasswordOnly": true,
+    "oldCredentialDisabled": false
+  },
+  "tls": {
+    "domain": "easypet.innker.com.br",
+    "notAfterUtc": "2027-02-12T01:12:58Z",
+    "renewalDryRunPassed": true,
+    "dedicatedWebroot": true
+  },
+  "backup": {
+    "databases": 6,
+    "directory": "/srv/easypet-backups/2026-11-13-publicacao",
+    "restoreOnVpsPerformed": false
+  },
+  "finalDiagnostic": {
+    "exitCode": 0,
+    "healthyServices": 16,
+    "notificationDue": 0,
+    "notificationSending": 0,
+    "notificationRetryScheduled": 0,
+    "notificationFailed": 1,
+    "notificationFailureCode": "RECIPIENT_UNAVAILABLE",
+    "releaseManifestVerified": true
+  }
+}

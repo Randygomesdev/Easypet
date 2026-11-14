@@ -48,6 +48,8 @@ A primeira rodada parou antes do navegador porque o template de `docker inspect`
 
 ## Autorização das consultas
 
+**Atualização de publicação em 13/11/2026:** ADMIN por senha aprovado no domínio HTTPS; API do master retornou os 16 serviços saudáveis e a RAM real do host. Parceiro/tutor receberam 403, e tutor autenticado pelo Google foi redirecionado ao próprio painel ao tentar abrir `/admin/sistema`. Pausa controlada da coleta produziu `STALE` em 136 segundos; reativação retornou `AVAILABLE` com amostra de cinco segundos. Timer reativado e habilitado. O smoke publicado incluiu 33 verificações e reserva/atendimento concluídos; não substitui toda a matriz administrativa abaixo. [Aceite da publicação](production/publicacao-homolog-2026-11-13.md).
+
 1. O Gateway exige JWT válido para a lista e o detalhe administrativos. O Partner valida a assinatura e exige o papel `ADMIN` do token. Cabeçalhos `X-User-Role` enviados pelo cliente não concedem acesso.
 2. O Nginx e o Gateway mantêm fechadas as leituras legadas de lista e detalhe de parceiros. Booking e Payment usam o endpoint de detalhe completo diretamente na rede dos serviços. O catálogo tem seu próprio DTO e `/partners/me` atende à conta parceira.
 3. O aceite deste card cobre leitura. O aceite de escrita deve conferir a persistência das alterações de cadastro, equipe e reservas com dados fictícios. O fluxo de desativação também precisa considerar que a lista atual só mostra estabelecimentos ativos.
