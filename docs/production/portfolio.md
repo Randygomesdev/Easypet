@@ -1,6 +1,6 @@
 # Vitrine EasyPet
 
-A landing de portfólio usa HTML, CSS, imagens e seis vídeos WebM com narração em português, trilha e legendas WebVTT. Cada vídeo abre com o logo e o título da jornada e encerra com o crédito à Innker Tecnologia. O build fica em `Frontend/dist-portfolio` e pode ser servido por um servidor estático.
+A landing de portfólio usa HTML, CSS, imagens e seis vídeos WebM com narração em português, trilha e legendas WebVTT. Cada vídeo abre com o logo e o título da jornada e termina com a assinatura narrada “Innker Tecnologia. Desenvolvemos o digital que impulsiona o seu negócio.” O build fica em `Frontend/dist-portfolio` e pode ser servido por um servidor estático.
 
 Para revisar a vitrine localmente, execute em `Frontend`:
 
