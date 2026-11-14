@@ -1,0 +1,174 @@
+{
+  "at": "2026-11-14T07:44:49.389Z",
+  "checks": [
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/assets/index--r_riHXR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/assets/index-CNZt8ZLM.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/healthz",
+      "status": 204
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/oauth2/authorization/google",
+      "status": 302
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/identity-audit",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/identity-audit",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/identity-audit",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox/unread",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox/unread",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox/unread",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/platform/status",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox?kind=ALERT&status=RESOLVED",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/notifications/preferences",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/notifications/preferences",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/internal/operations/alerts",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/payments/checkout",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/register",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets",
+      "status": 201
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/support/tickets",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{id}",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/operations/inbox?kind=TICKET&status=OPEN",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/operations/inbox/{id}/acknowledge",
+      "status": 204
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/admin/operations/inbox/{id}/resolve",
+      "status": 204
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/support/tickets/{id}",
+      "status": 200
+    }
+  ],
+  "services": 16,
+  "recoveredBackupAlert": true,
+  "privateTicketResolution": true,
+  "googleRedirect": true
+}

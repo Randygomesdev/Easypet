@@ -6,7 +6,7 @@ A primeira versão é para testes internos. As mudanças recuperadas das branche
 
 **Recorte proposto:** iniciar com banho e tosa e poucos parceiros convidados. Confirmar esse segmento na etapa 0. A primeira operação real pode registrar pagamentos realizados no estabelecimento; checkout online e créditos continuam desabilitados até o aceite financeiro da etapa 7. App nativo, IA e gestão completa de clínica ou hospedagem não são requisitos desse primeiro lançamento.
 
-**Versionamento:** entregas organizadas em commits na branch `codex/unificar-develop`, preservando os aceites históricos. [Organização e verificações](sprints/R01-review/versionamento.md). Publicação de demonstração concluída; backend/painel em `4f6ce3c`, frontend em `210e8df`. Base de código da rodada H2: `daabe0a`.
+**Versionamento:** entregas organizadas em commits na branch `codex/unificar-develop`. A revisão H2 `c5fc018` está publicada para demonstração na VPS de homologação. [Publicação H2](production/publicacao-h2-2026-11-14.md)
 
 **Escopo deste deploy confirmado:** testes internos e demonstrações controladas, sem operação real. Tentar a VPS atual antes de ampliar RAM, com perfil de demonstração e aceite supervisionado. Decisões comerciais do piloto e ensaio de capacidade sustentada ficam para uma etapa posterior. DNS/TLS, cinco contas convidadas, monitoramento e smoke no endereço publicado foram concluídos. [Orçamento e roteiro](production/setoriza-homolog.md).
 
@@ -17,6 +17,7 @@ A primeira versão é para testes internos. As mudanças recuperadas das branche
 A implementação está organizada em [specs e missions de sete sprints paralelas](sprints/README.md), com ownership de arquivos, contratos de integração e critérios de aceite. A primeira onda cobre fatias das etapas 0 a 5; pagamentos online, piloto e expansão preservam as dependências abaixo.
 
 - [x] **H2 — Entregas técnicas aceitas localmente.** S01–S07 fecharam o recorte da rodada. A S07 aprovou 35 cenários, incluindo auditoria, busca, adicionais e interrupção, avisos de balcão, preferências e central ADMIN. Restaurou 61 tabelas nos seis bancos e conferiu 20 consultas. O controle separado com Google desligado passou. [Revisão e aceite](sprints/H2-fechamento/aceite.md)
+- [x] **H2 — Publicada e validada na VPS de homologação.** 33 verificações HTTPS, 16 serviços saudáveis, alertas ADMIN ativos e primeiro backup periódico dos seis bancos conferido. A VPS registrou 32 sondas HTTP 200 do Setoriza durante as janelas. [Publicação e evidências](production/publicacao-h2-2026-11-14.md)
 
 - [x] **P0 — Base da primeira versão interna.** Preparar o Compose, provisionar contas de teste, isolar dados entre parceiros e validar a stack em localhost.
 - [x] **Unificação — Auditoria.** Comparar os oito repositórios com os commits importados e identificar mudanças que ficaram de fora.
@@ -260,7 +261,8 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 - [ ] Preparar ambiente de produção com domínio, HTTPS, credenciais próprias, serviços internos restritos e separação dos dados de homologação.
 - [x] Entregar scripts de backup com manifesto e integridade, incluindo os seis bancos; recusar destino existente e dump adulterado em ensaio descartável.
 - [x] Restaurar dados sintéticos nos seis bancos em ambiente isolado, verificar uma tabela por banco e remover os recursos do ensaio.
-- [ ] Agendar backups, incluir arquivos/anexos e definir retenção, perda de dados tolerável e prazo de recuperação.
+- [x] Agendar o backup da homologação às 05h30 em America/Sao_Paulo com retenção inicial de sete dias. Primeira execução da unidade e integridade dos seis dumps conferidas.
+- [ ] Definir retenção e objetivos de recuperação de produção, cópia fora do host e escopo de arquivos e anexos.
 - [x] Validar o wrapper de backup agendável, a trava e a retenção configurável. A S07 publicou um conjunto íntegro em ambiente descartável e restaurou 61 tabelas e 20 consultas dos seis bancos após migration incompatível simulada.
 - [x] Demonstrar recuperação nos seis bancos com dados das jornadas aprovadas: tutor/pet, estabelecimento, cadastro de balcão reivindicado, reservas, cobrança/recebimento/reversão/autoria, outbox com ACK e Notification; H1 restaurou 55 tabelas e conferiu 12 consultas de referência.
 - [ ] Incluir arquivos/anexos externos e exercitar a recuperação completa na configuração publicada, com responsáveis e objetivos de recuperação definidos.
@@ -271,7 +273,8 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 - [x] Revalidar alerta local: saudável, limiar excedido por fixture sintética, recuperação, endpoint indisponível e recuperação; códigos `0 → 2 → 0 → 1 → 0`. Recebimento pelo operador permanece no card seguinte.
 - [x] Revalidar provisionamento ADMIN no console da stack H1 e acesso pelo ingresso HTTP; duplicidade, senha recusada, ausência de terminal, perfil e domínio indevidos tratados conforme contrato. [Parecer operacional R01](sprints/R01-review/h1-ops-review.md).
 - [x] Validar alerta operacional no ADMIN, reenvio após falha e recuperação correlacionada ao mesmo incidente na H2 local.
-- [ ] Habilitar a operação de alertas na VPS e definir canal independente para indisponibilidade total.
+- [x] Habilitar a coleta de alertas na VPS a cada minuto e verificar no ADMIN a abertura e a recuperação de um incidente de backup.
+- [ ] Definir canal independente para indisponibilidade total.
 - [x] Documentar publicação, migrations, reversão de versão e operação dos scripts em [Operação](production/operacao.md).
 - [x] Exercitar recuperação após migration incompatível simulada no banco Booking: parar escritores, conferir dumps e restaurar os seis bancos em volumes novos, preservando as 12 consultas de referência. Ensaio local H1; operação na VPS ainda pendente.
 - [ ] Definir acesso e compartilhamento de dados de tutor e pet, termos e privacidade, retenção e processo de solicitações de exportação e exclusão, com revisão apropriada antes da abertura pública.
