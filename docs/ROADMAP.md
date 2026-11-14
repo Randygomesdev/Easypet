@@ -2,7 +2,7 @@
 
 A primeira versão é para testes internos. As mudanças recuperadas das branches `develop` estão integradas ao monorepo. A H1 passou em 22 cenários integrados com serviços reais, Chromium e SMTP local, incluindo as 18 regressões da onda B, administração e jornada móvel. A restauração dos seis bancos após migration incompatível também passou. Os achados R01 anteriores permanecem corrigidos e revalidados. A homologação foi publicada em https://easypet.innker.com.br para demonstrações controladas; [aceite no ambiente](production/publicacao-homolog-2026-11-13.md).
 
-**Atualizado em 14/11/2026: rodada H2 preparada para fechar pendências técnicas com S01–S07.** Publicação de demonstração: 33 verificações no domínio, Google real e monitoramento. Histórico H1/S07/R01 preservado: 22/22 cenários, 162 testes Java e restauração dos seis bancos. O objetivo da próxima versão é permitir que um parceiro cadastre, agende, atenda, receba e feche o dia sem intervenção técnica, com suporte capaz de investigar e resolver falhas. `[x]` indica a entrega validada no escopo e ambiente descritos; uma etapa parcial continua aberta até seu aceite completo. Testes com APIs simuladas, testes entre serviços reais e publicação são registrados separadamente.
+**Atualizado em 14/11/2026 após o aceite integrado H2.** A S07 aprovou 35 cenários locais e restaurou os seis bancos em ambiente descartável. Publicação de demonstração: 33 verificações no domínio, Google real e monitoramento. Histórico H1/S07/R01 preservado: 22/22 cenários, 162 testes Java e restauração dos seis bancos. O objetivo da próxima versão é permitir que um parceiro cadastre, agende, atenda, receba e feche o dia sem intervenção técnica, com suporte capaz de investigar e resolver falhas. `[x]` indica a entrega validada no escopo e ambiente descritos; uma etapa parcial continua aberta até seu aceite completo. Testes com APIs simuladas, testes entre serviços reais e publicação são registrados separadamente.
 
 **Recorte proposto:** iniciar com banho e tosa e poucos parceiros convidados. Confirmar esse segmento na etapa 0. A primeira operação real pode registrar pagamentos realizados no estabelecimento; checkout online e créditos continuam desabilitados até o aceite financeiro da etapa 7. App nativo, IA e gestão completa de clínica ou hospedagem não são requisitos desse primeiro lançamento.
 
@@ -16,7 +16,7 @@ A primeira versão é para testes internos. As mudanças recuperadas das branche
 
 A implementação está organizada em [specs e missions de sete sprints paralelas](sprints/README.md), com ownership de arquivos, contratos de integração e critérios de aceite. A primeira onda cobre fatias das etapas 0 a 5; pagamentos online, piloto e expansão preservam as dependências abaixo.
 
-- [ ] **H2 — Fechamento técnico em execução.** Auditoria administrativa (S02), busca e contato autorizado de balcão (S04), interrupção/adicionais aprovados (S03/S05), preferências e central de alertas/suporte ADMIN (S06/S01), preparação operacional e novo aceite integrado (S07). Usuário aprovou interrupção sem cobrança/estorno automático e adicionais com autorização explícita, incluindo aceite presencial registrado, para testes internos. Provedor/remetente transacional seguem em definição; Zoho em avaliação, sem envio externo. Docker/navegador locais exigem diagnóstico antes dos testes dependentes. [Spec, limites e missões](sprints/H2-fechamento/spec.md). Implementação/validação/publicação não serão confundidas.
+- [x] **H2 — Entregas técnicas aceitas localmente.** S01–S07 fecharam o recorte da rodada. A S07 aprovou 35 cenários, incluindo auditoria, busca, adicionais e interrupção, avisos de balcão, preferências e central ADMIN. Restaurou 61 tabelas nos seis bancos e conferiu 20 consultas. O controle separado com Google desligado passou. [Revisão e aceite](sprints/H2-fechamento/aceite.md)
 
 - [x] **P0 — Base da primeira versão interna.** Preparar o Compose, provisionar contas de teste, isolar dados entre parceiros e validar a stack em localhost.
 - [x] **Unificação — Auditoria.** Comparar os oito repositórios com os commits importados e identificar mudanças que ficaram de fora.
@@ -36,12 +36,12 @@ A implementação está organizada em [specs e missions de sete sprints paralela
 - [x] **Google — Homologação publicada.** DNS/TLS, configuração exclusiva, cinco contas provisionadas e login Google real com parceiro/tutor aprovados em `easypet.innker.com.br`. ADMIN usa senha por decisão do usuário. Cancelamento e retorno aos papéis corretos conferidos; não equivale à abertura pública do piloto. [Aceite](production/publicacao-homolog-2026-11-13.md).
 - [ ] **Google — Encerrar a rotação da chave.** Nova chave comprovada no ambiente; desativar a antiga no console em ação separada.
 - [x] **Identidade da aplicação publicada.** Título da aba `EasyPet`, favicon oficial versionado e rodapé `Developed by Innker Tecnologia` com link para `https://innker.com.br`.
-- [x] **Menu compacto como no Setoriza.** Publicado em 14/11/2026, ajustado em `210e8df`: barra de ícones no desktop; a expansão por mouse ou foco de teclado empurra e redimensiona a área principal. Menu completo no celular. Build, lint do componente e suíte de interface aprovados; arquivos públicos conferidos, 16 serviços saudáveis e demais 30 containers preservados. Conferência visual da correção pendente por indisponibilidade do navegador. [Registro da validação](production/publicacao-homolog-2026-11-13.md#ajuste-da-expansão--14112026).
+- [x] **Menu compacto como no Setoriza.** Publicado em 14/11/2026, ajustado em `210e8df`. A expansão no desktop empurra e redimensiona a área principal. A H2 confirmou o deslocamento no Chrome local e a abertura, fechamento e retorno de foco no menu móvel. Na publicação anterior, os arquivos públicos foram conferidos e os 16 serviços estavam saudáveis. [Publicação](production/publicacao-homolog-2026-11-13.md#ajuste-da-expansão--14112026) · [Aceite local H2](sprints/H2-fechamento/aceite.md)
 - [ ] **Etapa 1 — Entrada e operação de balcão — parcial.** Recuperação, recepção, reserva, emissão/resgate de reivindicação e checklist validados localmente; reserva/atendimento publicados. Recuperação e convites por e-mail real seguem fora do escopo de demonstração.
-- [ ] **Etapa 2 — Agenda e atendimento confiáveis — parcial.** Concorrência, retomada, chaves na UI, atribuição profissional e aviso de retirada validados; faltam regras de interrupção e autorização de adicionais.
-- [ ] **Etapa 3 — Comunicação e autonomia do tutor — parcial.** Jornada móvel, preço/duração/política, SMTP local e administração validados. Faltam busca por nome de serviço/filtros combinados, preferências/canal externo, avisos de balcão e contato operacional de suporte.
-- [ ] **Etapa 4 — Caixa, equipe e suporte — parcial.** Reversão no painel, três papéis de equipe, gestão de contas/estabelecimentos e negativas de contexto validados; faltam trilha administrativa completa e investigação de ocorrências.
-- [ ] **Etapa 5 — Preparação para dados reais — parcial.** Artefato real de homologação, 22 jornadas e restauração após migration incompatível validados localmente; faltam arquivos/anexos externos, operação de alertas, privacidade e recuperação completa para dados reais; smoke de demonstração na VPS aprovado.
+- [x] **Etapa 2 — Agenda e atendimento no recorte interno.** A H2 validou interrupção com histórico, adicionais autorizados e aplicação única no caixa. A H1 já havia validado concorrência, retomada, equipe e aviso de retirada.
+- [ ] **Etapa 3 — Comunicação e autonomia do tutor — parcial.** Busca combinada, preferências e destinatário autorizado de balcão passaram com serviços reais e SMTP local. Entrega externa e contato operacional seguem pendentes.
+- [ ] **Etapa 4 — Caixa, equipe e suporte — parcial.** A H2 validou adicionais no caixa, investigação de reserva interrompida, auditoria de identidade e privacidade dos chamados no ADMIN. A escrita de ADMIN no ambiente publicado permanece em card próprio.
+- [ ] **Etapa 5 — Preparação para dados reais — parcial.** A H2 validou o alerta no ADMIN e sua recuperação local. Agendamento de backups e alertas na VPS, anexos externos, privacidade e recuperação integral para dados reais permanecem pendentes.
 - [ ] **Etapa 6 — Piloto e abertura da produção.** Operar com convidados, corrigir problemas e liberar acesso gradualmente.
 - [ ] **Etapa 7 — Pagamentos online e créditos.** Habilitar checkout, pacotes, conciliação e estornos após validação completa.
 - [ ] **Etapa 8 — Retenção e expansão.** Evoluir recorrência, importação, gestão comercial e novos segmentos.
@@ -193,11 +193,11 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 - [x] Enviar chave estável por intenção no catálogo e balcão; catálogo real conserva chave/corpo após resposta perdida e reload, com uma reserva/evento. Carrinho e retry do balcão também passaram em navegador com APIs simuladas; créditos continuam bloqueados.
 - [x] Implementar reagendamento por tutor e parceiro com histórico e rollback que preserva a reserva original; validar backend e interface isolada.
 - [x] Implementar falta, motivo de cancelamento e antecedência configurável; tratar `NO_SHOW` como terminal e corrigir os mapas de apresentação.
-- [ ] Definir o tratamento de interrupção após início do atendimento.
+- [x] Interromper atendimento iniciado com motivo, autor e histórico. A H2 confirmou a transição, a repetição sem duplicação e a ausência de cobrança ou estorno automático no ambiente descartável.
 - [x] Implementar bloqueios excepcionais que recusam conflito com reservas ocupantes, sem alterá-las silenciosamente.
 - [x] Entregar checklist de entrada, observações e estado de pronto para retirada para banho e tosa, com histórico e evento; validar interface com API simulada.
 - [x] Integrar aviso de retirada ao destinatário Auth e comprovar a mensagem correta no SMTP local, sem duplicação.
-- [ ] Integrar autorização de adicionais ao atendimento e definir destinatário/autorização para avisos de balcão.
+- [x] Registrar autorização explícita de adicionais, digital ou presencial, e aplicar o valor aprovado no caixa uma única vez. A H2 também confirmou autorização e revogação do destinatário de balcão com SMTP local.
 - [x] Corrigir R01-002: limitar chamadas HTTP e espera transacional; validar rollback sem registros parciais no PostgreSQL e retomada da agenda no aceite integrado S07.
 - [x] Validar reserva, reagendamento, cancelamento, atendimento e isolamento no recorte implementado: H1 real inclui troca de contexto/IDs por ADMIN, parceiro e tutor; concorrência e rollback também cobertos nos 47 testes Booking (21 com PostgreSQL). Interrupção após início e autorização de adicionais continuam fora do aceite.
 
@@ -208,11 +208,12 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 **Estado:** fila, destinatário, administração e jornada móvel validados até a H1; busca ampliada e envio externo pendentes. **Evidências:** [S06](sprints/S06-notificacoes/status.md), 29 testes H2/doubles, e [S07](sprints/S07-infra-integracao/status.md), SMTP local e PostgreSQL reais com falhas, reinícios e administração em 13/11/2026. **Dependência:** canal/provedor externo, preferências e contrato de destinatário de balcão.
 
 - [x] Validar no Chromium móvel de 390 px, com serviços reais, busca de estabelecimento, escolha do serviço/pet/horário, acompanhamento, cancelamento e reagendamento.
-- [ ] Completar busca por nome de serviço ativo e combinação de texto/categoria; a busca atual aceita nome do estabelecimento ou cidade, com categoria como alternativa.
+- [x] Buscar por nome de serviço ativo e combinar texto com categoria. A H2 conferiu resultados, paginação sem duplicação e combinação sem correspondência.
 - [x] Implementar outbox e fila persistente para confirmação, reagendamento, cancelamento, lembrete e serviço pronto; validar os eventos e a invalidação de mensagens obsoletas em testes isolados.
 - [x] Validar o percurso Booking → Notification → captura LOCAL com PostgreSQL real, registrando uma confirmação sem duplicidade na consulta final.
 - [x] Resolver destinatário Auth por contrato interno autenticado e validar confirmação, reagendamento, cancelamento e retirada no SMTP local; lembretes antigos ficam obsoletos.
-- [ ] Integrar preferências e canal externo; cadastros de balcão dependem de contrato próprio de destinatário.
+- [x] Validar preferências do tutor pela interface, persistência após recarga e consentimento de balcão com entrega e supressão no SMTP local, na H2.
+- [ ] Configurar e validar entrega externa de notificações com provedor, remetente e credenciais próprios.
 - [ ] Definir canal inicial e provedor: e-mail transacional e/ou WhatsApp; configurar credenciais e modelos necessários por ambiente.
 - [x] Registrar tentativas, falhas e resultado incerto `UNKNOWN`, deduplicar eventos e permitir retry/reenvio auditado; validar em H2 com Auth, Booking e transporte simulados.
 - [x] Conectar a tela administrativa e validar consulta/reenvio com ADMIN real, falha SMTP, replay do ACK e reinícios. SENDING ambíguo vira UNKNOWN e não permite reenvio automático; sessão revogada e Auth indisponível recusados.
@@ -243,9 +244,10 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 - [ ] Executar ativação/desativação pela própria tela administrativa contra Auth real no ambiente publicado.
 - [x] Executar ativação/desativação CUSTOMER pela tela administrativa contra Auth real na H1 local; JWT antigo continua recusado após reativação e novo login funciona.
 - [x] Consultar parceiros inativos e suspender/reativar estabelecimento pela UI real, com motivo/autor/histórico; inatividade bloqueia novas operações e preserva histórico e cancelamento permitido.
-- [ ] Completar acompanhamento e investigação de reservas problemáticas pelo suporte.
+- [x] Consultar a ocorrência e o histórico de reserva interrompida no ADMIN, com consulta correlacionada ao caixa. A H2 validou a investigação no ambiente descartável.
 - [x] Registrar histórico de mudanças da agenda e movimentos/correções de caixa com autoria e vínculo ao estabelecimento, validados nos testes dos respectivos serviços.
-- [ ] Completar a trilha consultável de permissões e administração e a investigação de ocorrências pela interface; ativação/desativação CUSTOMER ainda não persiste o autor administrativo de cada mudança.
+- [x] Consultar a trilha de identidade no ADMIN, com autoria de ativação/desativação CUSTOMER e alterações de acesso da equipe. Auth validou os eventos em PostgreSQL e a H2 confirmou a consulta pela interface.
+- [x] Abrir chamado privado e consultar a resolução pelo próprio solicitante. A H2 validou reenvio idempotente, recusa de outro tutor e reconhecimento e resolução pelo ADMIN.
 - [x] Corrigir R01-001: restringir leituras completas de Partner no próprio serviço e preservar consumidores com projeção mínima autenticada; validar autorização e Booking/Payment no aceite S07.
 - [x] Validar na H1 as escritas administrativas de conta/estabelecimento e negativas em edição de serviço, consulta de escala sob contexto alheio e mudança de status de reserva, com tutor, parceiro, ADMIN e ausência de JWT nos cenários aplicáveis. A cobertura restante do [mapa administrativo](ACEITE-ADMIN.md) e o smoke publicado permanecem sujeitos aos respectivos cards abertos.
 
@@ -259,6 +261,7 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 - [x] Entregar scripts de backup com manifesto e integridade, incluindo os seis bancos; recusar destino existente e dump adulterado em ensaio descartável.
 - [x] Restaurar dados sintéticos nos seis bancos em ambiente isolado, verificar uma tabela por banco e remover os recursos do ensaio.
 - [ ] Agendar backups, incluir arquivos/anexos e definir retenção, perda de dados tolerável e prazo de recuperação.
+- [x] Validar o wrapper de backup agendável, a trava e a retenção configurável. A S07 publicou um conjunto íntegro em ambiente descartável e restaurou 61 tabelas e 20 consultas dos seis bancos após migration incompatível simulada.
 - [x] Demonstrar recuperação nos seis bancos com dados das jornadas aprovadas: tutor/pet, estabelecimento, cadastro de balcão reivindicado, reservas, cobrança/recebimento/reversão/autoria, outbox com ACK e Notification; H1 restaurou 55 tabelas e conferiu 12 consultas de referência.
 - [ ] Incluir arquivos/anexos externos e exercitar a recuperação completa na configuração publicada, com responsáveis e objetivos de recuperação definidos.
 - [x] Validar healthchecks, identificação de requisições e restrições do ingresso Nginx/Gateway, mantendo a publicação de testes em loopback.
@@ -267,7 +270,8 @@ R01 conferiu **140 testes Java em 22 relatórios, sem falhas ou skips**, e typec
 - [x] Revalidar diagnóstico no Compose H1 real sem overlays, com 16 serviços: saudável, Notification parada e recuperada, códigos `0 → 1 → 0`.
 - [x] Revalidar alerta local: saudável, limiar excedido por fixture sintética, recuperação, endpoint indisponível e recuperação; códigos `0 → 2 → 0 → 1 → 0`. Recebimento pelo operador permanece no card seguinte.
 - [x] Revalidar provisionamento ADMIN no console da stack H1 e acesso pelo ingresso HTTP; duplicidade, senha recusada, ausência de terminal, perfil e domínio indevidos tratados conforme contrato. [Parecer operacional R01](sprints/R01-review/h1-ops-review.md).
-- [ ] Completar alertas recebidos pelo responsável e correlação entre serviços.
+- [x] Validar alerta operacional no ADMIN, reenvio após falha e recuperação correlacionada ao mesmo incidente na H2 local.
+- [ ] Habilitar a operação de alertas na VPS e definir canal independente para indisponibilidade total.
 - [x] Documentar publicação, migrations, reversão de versão e operação dos scripts em [Operação](production/operacao.md).
 - [x] Exercitar recuperação após migration incompatível simulada no banco Booking: parar escritores, conferir dumps e restaurar os seis bancos em volumes novos, preservando as 12 consultas de referência. Ensaio local H1; operação na VPS ainda pendente.
 - [ ] Definir acesso e compartilhamento de dados de tutor e pet, termos e privacidade, retenção e processo de solicitações de exportação e exclusão, com revisão apropriada antes da abertura pública.
