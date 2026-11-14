@@ -69,7 +69,7 @@ async function checkCustomerList(page, apiPath) {
     json: { content: [], number: 0, size: 10, totalElements: 0, totalPages: 0 },
   }))
 
-  await page.getByRole('link', { name: 'Clientes', exact: true }).click()
+  await page.getByRole('link', { name: apiPath.startsWith('admin/') ? 'Tutores' : 'Clientes', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Clientes', exact: true })).toBeVisible()
   await expect(page.getByRole('searchbox', { name: 'Buscar clientes' })).toBeVisible()
   await expect(page.getByText('Nenhum cliente cadastrado.')).toBeVisible()

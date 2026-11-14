@@ -1,0 +1,61 @@
+.panel-sidebar {
+  overflow: hidden;
+}
+
+.sidebar-item,
+.sidebar-footer a {
+  padding-inline: 23px;
+}
+
+.sidebar-footer {
+  padding-block: 8px;
+}
+
+@media (min-width: 48rem) {
+  .sidebar-rail {
+    position: relative;
+    width: 64px;
+    flex-shrink: 0;
+  }
+
+  .panel-sidebar {
+    width: 64px;
+  }
+
+  .panel-sidebar .sidebar-label {
+    opacity: 0;
+  }
+
+  .panel-sidebar:hover,
+  .panel-sidebar:focus-within {
+    width: 224px;
+    box-shadow: 8px 0 24px rgb(0 0 0 / 12%);
+  }
+
+  .panel-sidebar:hover .sidebar-label,
+  .panel-sidebar:focus-within .sidebar-label {
+    opacity: 1;
+  }
+}
+
+/* Tablets with a touch-only pointer need labels without relying on hover. */
+@media (min-width: 48rem) and (hover: none) {
+  .sidebar-rail,
+  .panel-sidebar {
+    width: 224px;
+  }
+
+  .panel-sidebar .sidebar-label {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel-sidebar {
+    transition: width 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  }
+
+  .sidebar-label {
+    transition: opacity 150ms ease;
+  }
+}

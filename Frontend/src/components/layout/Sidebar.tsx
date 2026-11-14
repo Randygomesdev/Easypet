@@ -3,13 +3,14 @@ import { useEffect, useRef, type KeyboardEvent } from 'react'
 import {
   LayoutDashboard, ClipboardList, Users, Wrench, Package,
   CalendarDays, Stethoscope, X, LogOut, Server,
-  Bell, Building2, LifeBuoy, Link2, Palette, PawPrint, ShieldCheck, Store, Wallet,
+  Bell, Building2, LifeBuoy, Link2, Palette, PawPrint, ShieldCheck, Store, Wallet, CodeXml,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import LogoEasypet from '../../assets/LogoEasypet.svg'
 import { useAuth } from '../../contexts/AuthContext'
 import { env } from '../../config/env'
 import { access, canAccess, waveBEnabled, type AccessPolicy } from '../../routes/access'
+import './Sidebar.css'
 
 type NavItem = { icon: LucideIcon; label: string; path: string; policy: AccessPolicy }
 
@@ -68,7 +69,8 @@ export default function Sidebar({ open, onClose }: Props) {
       onClose()
     }
     if (event.key !== 'Tab') return
-    const items = event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+    const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'))
+      .filter(item => item.getClientRects().length > 0)
     const first = items[0]
     const last = items[items.length - 1]
     if (event.shiftKey && document.activeElement === first) {
@@ -95,7 +97,8 @@ export default function Sidebar({ open, onClose }: Props) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Reserve only the icon rail on desktop; expansion overlays the content. */}
+      <div className="sidebar-rail">
       <aside
         id="painel-navegacao"
         role={open ? 'dialog' : undefined}
@@ -103,17 +106,17 @@ export default function Sidebar({ open, onClose }: Props) {
         aria-label={open ? 'Menu do painel' : undefined}
         onKeyDown={handleMenuKey}
         className={`
-          fixed z-30 top-0 left-0 h-full bg-surface flex flex-col motion-safe:transition-transform motion-safe:duration-300
-          md:visible md:relative md:translate-x-0
+          panel-sidebar fixed z-30 top-0 left-0 h-full bg-surface flex flex-col
+          md:visible md:absolute md:translate-x-0
           ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}
           w-56
         `}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 shrink-0">
+        <div className="h-16 flex items-center justify-between px-4 shrink-0 overflow-hidden">
           <div className="flex items-center gap-2">
             <img src={LogoEasypet} alt="Easypet" className="w-8 h-8 shrink-0" />
-            <span className="text-(--color-text-heading) font-bold text-lg tracking-tight whitespace-nowrap">
+            <span className="sidebar-label text-(--color-text-heading) font-bold text-lg tracking-tight whitespace-nowrap">
               Easypet
             </span>
           </div>
@@ -132,7 +135,7 @@ export default function Sidebar({ open, onClose }: Props) {
         </div>
 
         {/* Nav */}
-        <nav aria-label="Navegação principal" className="flex-1 overflow-y-auto">
+        <nav aria-label="Navegação principal" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           {navItems.map(({ icon: Icon, label, path }) => {
             const isActive = pathname === path || pathname.startsWith(path + '/')
             return (
@@ -140,8 +143,9 @@ export default function Sidebar({ open, onClose }: Props) {
                 key={path}
                 to={path}
                 onClick={onClose}
+                title={label}
                 aria-current={isActive ? 'page' : undefined}
-                className={`w-full flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors relative
+                className={`sidebar-item w-full flex min-h-11 items-center gap-3 py-3 text-sm font-medium transition-colors relative
                   focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400
                   ${isActive
                     ? 'text-(--color-text-heading) bg-(--color-bg)'
@@ -151,46 +155,53 @@ export default function Sidebar({ open, onClose }: Props) {
                 <Icon
                   size={18}
                   aria-hidden="true"
-                  className={isActive ? 'text-(--color-icon-active)' : 'text-(--color-icon-default)'}
+                  className={`shrink-0 ${isActive ? 'text-(--color-icon-active)' : 'text-(--color-icon-default)'}`}
                 />
-                {label}
+                <span className="sidebar-label whitespace-nowrap">{label}</span>
                 {isActive && (
                   <span className="absolute right-0 top-0 bottom-0 w-1 bg-(--color-secondary-500) rounded-l" />
                 )}
               </Link>
             )
           })}
-          <Link to="/suporte" onClick={onClose}
-            className="flex min-h-11 items-center gap-3 px-6 py-3 text-sm font-medium text-text-body hover:bg-bg
+          <Link to="/suporte" onClick={onClose} title="Suporte interno"
+            aria-current={pathname === '/suporte' ? 'page' : undefined}
+            className="sidebar-item flex min-h-11 items-center gap-3 py-3 text-sm font-medium text-text-body hover:bg-bg
                        focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400">
-            <LifeBuoy size={18} aria-hidden="true" /> Suporte interno
+            <LifeBuoy size={18} aria-hidden="true" className="shrink-0" />
+            <span className="sidebar-label whitespace-nowrap">Suporte interno</span>
           </Link>
         </nav>
 
         {/* Logout */}
-        <div className="px-4 pb-2 shrink-0">
-          <button onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg
+        <div className="pb-2 shrink-0 overflow-hidden">
+          <button onClick={handleLogout} title="Sair"
+                  className="sidebar-item w-full flex min-h-11 items-center gap-3 py-3 text-sm font-medium
                              text-red-400 hover:bg-red-50 hover:text-red-500
-                             transition-colors cursor-pointer">
-            <LogOut size={18} />
-            Sair
+                             transition-colors cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400">
+            <LogOut size={18} aria-hidden="true" className="shrink-0" />
+            <span className="sidebar-label whitespace-nowrap">Sair</span>
           </button>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 text-xs text-(--color-text-muted) text-center shrink-0">
-          Developed by{' '}
+        <div className="sidebar-footer text-xs text-(--color-text-muted) shrink-0">
           <a
             href="https://innker.com.br"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-red-500 font-semibold hover:underline"
+            title="Developed by Innker Tecnologia"
+            className="flex min-h-11 items-center gap-3 text-red-500 font-semibold hover:underline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400"
           >
-            Innker Tecnologia
+            <CodeXml size={18} aria-hidden="true" className="sidebar-credit-icon shrink-0" />
+            <span className="sidebar-label whitespace-nowrap">
+              <span className="block font-normal text-(--color-text-muted)">Developed by</span>
+              Innker Tecnologia
+            </span>
           </a>
         </div>
       </aside>
+      </div>
     </>
   )
 }

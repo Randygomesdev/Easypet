@@ -84,7 +84,7 @@ export async function checkOnboarding(page, baseUrl, partnerId) {
   await expect(page.getByRole('main')).toHaveCount(0)
   await expect(page.locator('main').locator('..')).toHaveAttribute('inert', '')
   await page.keyboard.press('Shift+Tab')
-  await expect(menu.getByRole('button', { name: 'Sair' })).toBeFocused()
+  await expect(menu.getByRole('link', { name: 'Developed by Innker Tecnologia' })).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(close).toBeFocused()
   await page.keyboard.press('Escape')
