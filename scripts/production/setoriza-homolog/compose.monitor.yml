@@ -1,0 +1,12 @@
+# Optional read-only snapshot, collected on the host. No Docker socket in the app.
+services:
+  auth-service:
+    environment:
+      APP_MASTER_STATUS_FILE: /run/easypet-monitor/status.json
+    volumes:
+      - type: bind
+        source: ${HOMOLOG_MONITOR_DIR:?defina o diretorio do coletor master}
+        target: /run/easypet-monitor
+        read_only: true
+        bind:
+          create_host_path: false

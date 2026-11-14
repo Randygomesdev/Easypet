@@ -1,0 +1,16 @@
+[Unit]
+Description=EasyPet master status snapshot
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+Environment=DOCKER_CONFIG=/etc/easypet/docker-monitor
+ExecStart=/usr/bin/python3 /srv/easypet/scripts/production/master_status.py --project easypet-homolog --output /var/lib/easypet/monitor/status.json
+TimeoutStartSec=45
+UMask=0022
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/easypet/monitor
+PrivateTmp=true

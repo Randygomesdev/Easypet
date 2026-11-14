@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { createServer } from 'node:net'
-import { mkdtempSync, rmSync, rmdirSync, writeFileSync } from 'node:fs'
+import { chmodSync, mkdtempSync, rmSync, rmdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,7 +17,10 @@ const waveB = process.env.E2E_WAVE_B === '1'
 const h1 = process.env.E2E_H1 === '1'
 const oauth = process.env.E2E_GOOGLE_OAUTH === '1'
 const measured = process.env.E2E_MEASURE_RESOURCES === '1'
-const compact = process.env.E2E_RESOURCE_PROFILE === 'compact'
+const demo = process.env.E2E_RESOURCE_PROFILE === 'demo'
+const compact = demo || process.env.E2E_RESOURCE_PROFILE === 'compact'
+const monitorDir = mkdtempSync(join(tmpdir(), 'easypet-master-'))
+chmodSync(monitorDir, 0o755)
 const apiOnly = process.env.E2E_API_ONLY === '1'
 if (waveB && apiOnly) throw new Error('A onda B inclui cenários de navegador. Execute com E2E_API_ONLY desativado.')
 const review = waveB || process.env.E2E_R01 === '1'
@@ -25,7 +28,9 @@ const composeFiles = ['-f', 'compose.homolog.yml']
 if (compact) {
   if (!measured) throw new Error('O perfil compacto deste runner exige medição de recursos.')
   composeFiles.push('-f', 'scripts/production/setoriza-homolog/compose.compact.yml')
+  if (demo) composeFiles.push('-f', 'scripts/production/setoriza-homolog/compose.demo.yml')
 }
+composeFiles.push('-f', 'scripts/production/setoriza-homolog/compose.monitor.yml')
 if (apiOnly) composeFiles.push('-f', 'Frontend/e2e/compose.api.yml')
 if (review) composeFiles.push('-f', 'Frontend/e2e/compose.r01.yml')
 if (waveB) composeFiles.push('-f', 'Frontend/e2e/compose.smtp-fixture.yml')
@@ -54,6 +59,7 @@ const env = {
   HOMOLOG_INGRESS_TOKEN: secret(),
   HOMOLOG_TRUSTED_EDGE: 'unix:',
   HOMOLOG_SUPPORT_URL: '',
+  HOMOLOG_MONITOR_DIR: monitorDir.replaceAll('\\', '/'),
   GOOGLE_AUTH_ENABLED: oauth ? 'true' : 'false',
   GOOGLE_CLIENT_ID: oauth ? 'easypet-fixture' : '',
   GOOGLE_CLIENT_SECRET: oauth ? secret() : '',
@@ -149,6 +155,9 @@ try {
   }
   check(compose(['up', '-d', '--build', '--wait', '--wait-timeout', '420']), 'Subida do Compose')
   phase('ready')
+  check(spawnSync(process.env.E2E_PYTHON ?? 'python', ['scripts/production/master_status.py',
+    '--project', project, '--output', join(monitorDir, 'status.json')],
+  { cwd: root, env, stdio: 'inherit' }), 'Coleta master da stack real')
   if (oauth) {
     const envFile = join(tlsDir, 'diagnose.env')
     writeFileSync(envFile, '', { flag: 'wx' })
@@ -214,6 +223,7 @@ try {
       E2E_SMTP_URL: smtpUrl,
       E2E_NOTIFICATION_SMTP: waveB ? '1' : '',
       E2E_H1: h1 ? '1' : '',
+      E2E_MASTER_STATUS_DIR: monitorDir,
     },
     stdio: 'inherit',
   })
@@ -256,4 +266,6 @@ try {
     rmSync(join(tlsDir, 'diagnose.env'), { force: true })
     rmdirSync(tlsDir)
   }
+  rmSync(join(monitorDir, 'status.json'), { force: true })
+  rmdirSync(monitorDir)
 }

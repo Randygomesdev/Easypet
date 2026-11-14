@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, type KeyboardEvent } from 'react'
 import {
   LayoutDashboard, ClipboardList, Users, Wrench, Package,
-  CalendarDays, Stethoscope, X, LogOut,
+  CalendarDays, Stethoscope, X, LogOut, Server,
   Bell, Building2, LifeBuoy, Link2, Palette, PawPrint, ShieldCheck, Store, Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -30,8 +30,10 @@ const NAV_ITEMS: NavItem[] = [
   ...(waveBEnabled ? [
     { icon: Wallet, label: 'Caixa', path: '/partner/caixa', policy: access.cashier },
   ] : []),
-  { icon: Building2, label: 'Parceiros', path: '/admin/parceiros', policy: access.admin },
-  { icon: Users, label: 'Clientes', path: '/admin/clientes', policy: access.admin },
+  { icon: LayoutDashboard, label: 'Visão geral', path: '/admin/visao-geral', policy: access.admin },
+  { icon: Server, label: 'Sistema', path: '/admin/sistema', policy: access.admin },
+  { icon: Building2, label: 'Estabelecimentos', path: '/admin/parceiros', policy: access.admin },
+  { icon: Users, label: 'Tutores', path: '/admin/clientes', policy: access.admin },
   ...(waveBEnabled ? [
     { icon: Bell, label: 'Notificações', path: '/admin/notificacoes', policy: access.admin },
   ] : []),

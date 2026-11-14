@@ -45,7 +45,7 @@ test('ADMIN investiga e reenvia após falha SMTP; reagendamento e reinício pres
   }
 
   await signIn(page, 'admin@example.test')
-  await expect(page).toHaveURL(/\/admin\/parceiros$/)
+  await expect(page).toHaveURL(/\/admin\/visao-geral$/)
   await page.goto('/admin/notificacoes')
   await expect(page.getByRole('heading', { name: /notificações/i }).first()).toBeVisible()
   await page.getByLabel('ID da reserva').fill(booking.id)

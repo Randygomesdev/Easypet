@@ -15,7 +15,7 @@ test('ADMIN desativa e reativa conta pela interface; papéis sem acesso não esc
   await json(request, 'PATCH', operation, 403, partner, { active: false })
 
   await signIn(page, 'admin@example.test')
-  await expect(page).toHaveURL(/\/admin\/parceiros$/)
+  await expect(page).toHaveURL(/\/admin\/visao-geral$/)
   await page.goto('/admin/clientes')
   await page.getByRole('button', { name: 'Contas da plataforma' }).click()
   await page.getByLabel('Buscar contas').fill(email)

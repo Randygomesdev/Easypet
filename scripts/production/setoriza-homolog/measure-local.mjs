@@ -9,8 +9,8 @@ import { cgroupCommand, parseCgroup } from './resource-probe.mjs'
 const docker = promisify(execFile)
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const [directory, profile = 'baseline', ...extra] = process.argv.slice(2)
-if (!directory || extra.length || !['baseline', 'compact'].includes(profile)) {
-  throw new Error('Informe um diretório novo e, opcionalmente, o perfil baseline ou compact.')
+if (!directory || extra.length || !['baseline', 'compact', 'demo'].includes(profile)) {
+  throw new Error('Informe um diretório novo e, opcionalmente, o perfil baseline, compact ou demo.')
 }
 const output = resolve(directory)
 mkdirSync(output)

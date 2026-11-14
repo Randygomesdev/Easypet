@@ -80,8 +80,9 @@ async function restoreDrill(directory, evidencePath) {
   const measured = process.env.E2E_MEASURE_RESOURCES === '1'
   if (measured) {
     config.overlays = ['Frontend/e2e/compose.measure.yml']
-    if (process.env.E2E_RESOURCE_PROFILE === 'compact') {
+    if (['compact', 'demo'].includes(process.env.E2E_RESOURCE_PROFILE)) {
       config.overlays.push('scripts/production/setoriza-homolog/compose.compact.yml')
+      if (process.env.E2E_RESOURCE_PROFILE === 'demo') config.overlays.push('scripts/production/setoriza-homolog/compose.demo.yml')
     }
   }
   const compose = composeClient(config)

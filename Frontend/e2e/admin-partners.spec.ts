@@ -97,8 +97,9 @@ test('somente ADMIN lista, busca e abre o cadastro completo de parceiros', async
   const initialList = page.waitForResponse(response =>
     new URL(response.url()).pathname === adminPath && response.request().method() === 'GET',
   )
-  await login(page, adminEmail, /\/admin\/parceiros$/)
+  await login(page, adminEmail, /\/admin\/visao-geral$/)
   expect((await initialList).status()).toBe(200)
+  await page.goto('/admin/parceiros')
   await expect(page.getByRole('heading', { name: 'Parceiros', exact: true })).toBeVisible()
   const filteredList = page.waitForResponse(response => {
     const url = new URL(response.url())
@@ -208,7 +209,7 @@ test('galeria de design system carrega direto apenas para ADMIN', async ({ page 
   await expect(page).toHaveURL(/\/partner\/dashboard$/)
 
   await page.evaluate(() => localStorage.clear())
-  await login(page, adminEmail, /\/admin\/parceiros$/)
+  await login(page, adminEmail, /\/admin\/visao-geral$/)
   await page.goto('/design-system')
   await expect(page.getByRole('heading', { name: 'Design system', exact: true })).toBeVisible()
   await page.reload()

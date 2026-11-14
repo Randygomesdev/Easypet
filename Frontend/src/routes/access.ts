@@ -37,7 +37,7 @@ export function canAccess(session: SessionAccess | null | undefined, policy: Acc
 }
 
 export function panelDestination(session: SessionAccess) {
-  if (session.role === 'ADMIN') return '/admin/parceiros'
+  if (session.role === 'ADMIN') return '/admin/visao-geral'
   if (session.role === 'PARTNER') return '/partner/dashboard'
   if (session.role === 'CUSTOMER') return '/app/home'
   if (!waveBEnabled || !session.partnerId || session.role !== 'TEAM_MEMBER') return undefined

@@ -37,6 +37,8 @@ import PaymentSuccessPage     from './pages/app/PaymentSuccessPage'
 import PaymentPendingPage     from './pages/app/PaymentPendingPage'
 import PaymentFailurePage     from './pages/app/PaymentFailurePage'
 import ParceirosPage       from './pages/admin/ParceirosPage'
+import MasterDashboardPage from './pages/admin/MasterDashboardPage'
+import MasterSystemPage from './pages/admin/MasterSystemPage'
 import ParceiroDetailPage from './pages/admin/ParceiroDetailPage'
 import ClientesPage        from './pages/admin/ClientesPage'
 import NotificationsPage from './features/notifications/NotificationsPage'
@@ -95,7 +97,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Painel admin (a construir)
+  // Administração da plataforma
   {
     path: '/admin',
     element: (
@@ -104,7 +106,9 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true,           element: <Navigate to="parceiros" replace /> },
+      { index: true,           element: <Navigate to="visao-geral" replace /> },
+      { path: 'visao-geral', element: <MasterDashboardPage /> },
+      { path: 'sistema', element: <MasterSystemPage /> },
       { path: 'parceiros',     element: <ParceirosPage /> },
       { path: 'parceiros/:id', element: <ParceiroDetailPage /> },
       { path: 'parceiros/:partnerId/colaboradores/novo',      element: <AdminColaboradorWrapper /> },

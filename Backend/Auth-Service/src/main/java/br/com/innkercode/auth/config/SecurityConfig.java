@@ -68,6 +68,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                             .requestMatchers(HttpMethod.GET, "/auth/session").authenticated()
+                            .requestMatchers(HttpMethod.GET, "/admin/platform/status").hasRole("ADMIN")
                             .requestMatchers(HttpMethod.GET, "/internal/notification-recipients/{userId}",
                                     "/internal/reception-claim-customers/{userId}").permitAll()
                             .requestMatchers("/internal/**").denyAll();
