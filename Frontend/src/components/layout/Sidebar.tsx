@@ -181,7 +181,14 @@ export default function Sidebar({ open, onClose }: Props) {
         {/* Footer */}
         <div className="px-6 py-3 text-xs text-(--color-text-muted) text-center shrink-0">
           Developed by{' '}
-          <span className="text-red-500 font-semibold">Innker Code</span>
+          <a
+            href="https://innker.com.br"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-red-500 font-semibold hover:underline"
+          >
+            Innker Tecnologia
+          </a>
         </div>
       </aside>
     </>
