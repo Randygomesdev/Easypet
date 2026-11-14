@@ -4,7 +4,7 @@ O aceite de homologação interna cobre consulta de parceiros, situação audit�
 
 ## Navegação e dependências
 
-Depois do login, o papel `ADMIN` leva a `/admin/parceiros`. O roteador protege toda a árvore `/admin`. Sem sessão, a navegação leva a `/login`. Com outro papel, passa por `/unauthorized` e retorna à área daquele perfil. O Nginx entrega o HTML da SPA ao abrir uma rota diretamente. A autorização dos dados precisa ser aplicada também pelos serviços. [Rotas](../Frontend/src/App.tsx), [controle de acesso da SPA](../Frontend/src/routes/ProtectedRoute.tsx), [redirecionamento por papel](../Frontend/src/routes/RoleRouter.tsx).
+Depois do login, o papel `ADMIN` leva a `/admin/visao-geral`. O roteador protege toda a árvore `/admin`. Sem sessão, a navegação leva a `/login`. Com outro papel, passa por `/unauthorized` e retorna à área daquele perfil. O Nginx entrega o HTML da SPA ao abrir uma rota diretamente. A autorização dos dados precisa ser aplicada também pelos serviços. [Rotas](../Frontend/src/App.tsx), [controle de acesso da SPA](../Frontend/src/routes/ProtectedRoute.tsx), [redirecionamento por papel](../Frontend/src/routes/RoleRouter.tsx).
 
 As rotas de API da tabela são relativas a `/api/v1`.
 
@@ -24,6 +24,28 @@ As rotas de API da tabela são relativas a `/api/v1`.
 
 Evidências da interface e dos serviços. [Lista de parceiros](../Frontend/src/pages/admin/ParceirosPage.tsx), [detalhe e abas](../Frontend/src/pages/admin/ParceiroDetailPage.tsx), [serviços](../Frontend/src/pages/admin/tabs/ServicosTab.tsx), [agendamentos](../Frontend/src/pages/admin/tabs/AgendamentosTab.tsx), [clientes](../Frontend/src/pages/admin/ClientesPage.tsx), [provisionador](../Backend/Auth-Service/src/main/java/br/com/innkercode/auth/ProvisionPilotUser.java), [API de usuários](../Backend/Auth-Service/src/main/java/br/com/innkercode/auth/controller/UserController.java).
 
+## Painel master — primeira versão
+
+Prioridade confirmada: entregar antes do deploy para testes internos e demonstrações controladas. O painel evolui o papel `ADMIN`; não cria outro tipo de conta nem altera o painel dos estabelecimentos.
+
+| Área | Entrega da primeira versão |
+| --- | --- |
+| `/admin/visao-geral` | Destino inicial do ADMIN, totais reais de estabelecimentos e tutores ativos/inativos, acessos às gestões e falha parcial explícita nos indicadores. |
+| `/admin/sistema` | Saúde dos 16 serviços EasyPet, memória por serviço e teto, reinícios automáticos, último início e indicação de OOM. Memória disponível do host quando coletada no Linux da VPS. |
+| `/admin/parceiros` | Reaproveita busca, detalhe, serviços/equipe e situação do estabelecimento com motivo/autor/histórico. |
+| `/admin/clientes` | Reaproveita contas de tutores, ativação/desativação e consulta separada de cadastros de balcão. |
+| `/admin/notificacoes` | Reaproveita investigação e reenvio controlado existentes. |
+
+`GET /api/v1/admin/platform/status` passa pelo Nginx, Gateway e Auth, exige sessão válida e ADMIN e retorna `Cache-Control: no-store`. O Auth lê um JSON local limitado a 64 KiB e devolve apenas campos e serviços conhecidos. Não executa comandos nem recebe o socket Docker. O coletor no host seleciona apenas o projeto EasyPet e publica um arquivo por substituição atômica em diretório montado somente para leitura. Não coleta ambientes, segredos, conteúdo de logs nem dados de contas.
+
+Amostras de mais de 120 segundos aparecem como desatualizadas, sem confirmar saúde atual. Arquivo ausente, inválido ou grande demais gera estado indisponível. Ausência de medição nunca vira consumo zero. A interface consulta a cada minuto enquanto visível e aceita atualização manual. A coleta não mede SLA, capacidade de carga ou sucesso das jornadas; a RAM total do host também inclui Setoriza. CPU, logs centralizados, ações de reinício pelo painel e auditoria administrativa consolidada ficam fora desta primeira versão. A trilha completa de alterações CUSTOMER continua pendente no roadmap.
+
+Aceite local concluído em 13/11/2026 neste chat, sem atribuição de nova revisão à S07: **30 cenários aprovados em 5 minutos**, incluindo ingresso e Auth direto com ADMIN, parceiro, tutor, JWT inválido e cabeçalho forjado; coleta Docker real; indicadores e navegação; dados antigos/inválidos e recuperação; tela móvel e regressões H1/OAuth. Um cenário condicional de Google desabilitado foi ignorado porque a rodada usa OAuth habilitado com provedor de teste. Os seis bancos foram restaurados, com 55 tabelas e 14 consultas de referência verificadas. Seis testes do leitor Java e seis do coletor Python, TypeScript e lint dos arquivos da interface também passaram. Capturas de desktop e celular foram inspecionadas visualmente.
+
+No perfil de demonstração, o maior somatório amostrado foi **2.532,68 MiB**, com tetos de 3.632 MiB, sem OOM, reinício inesperado ou swap observado. As 661 entradas do código monitorado permaneceram iguais durante a execução. A limpeza dos projetos Docker de teste e restauração foi confirmada. Houve um erro de inventário da medição durante a limpeza, registrado separadamente no [resumo verificável](sprints/R01-review/master-acceptance.json), que inclui hashes, resultados e limites da medição. Essa execução local não substitui o smoke na VPS nem valida o provedor Google real.
+
+A primeira rodada parou antes do navegador porque o template de `docker inspect` acessava `State.Health` ausente nas fixtures. A leitura foi corrigida com acesso opcional, e uma reprodução Docker sem healthcheck aprovou coleta e publicação antes da rodada final. O Compose de cinco arquivos mantém 16 serviços e a montagem do snapshot somente para leitura. A sintaxe das unidades systemd foi validada na VPS, sem instalação ou ativação. Publicação e ativação do timer na VPS continuam pendentes.
+
 ## Autorização das consultas
 
 1. O Gateway exige JWT válido para a lista e o detalhe administrativos. O Partner valida a assinatura e exige o papel `ADMIN` do token. Cabeçalhos `X-User-Role` enviados pelo cliente não concedem acesso.
@@ -39,7 +61,7 @@ A suíte local passou com `ADMIN`, `PARTNER`, `CUSTOMER` e sessão anônima. Ela
 | Cenário | Resultado esperado |
 | --- | --- |
 | Abrir uma URL administrativa sem sessão ou como `PARTNER` ou `CUSTOMER` | A SPA redireciona e as APIs administrativas recusam a chamada. Testar também JWT expirado e cabeçalhos `X-User-Role: ADMIN` forjados. |
-| Entrar com a conta `ADMIN`, atualizar a página e abrir um detalhe diretamente | Login leva à lista. Busca, paginação e detalhe funcionam pelos endereços expostos no proxy local. |
+| Entrar com a conta `ADMIN`, atualizar a página e abrir um detalhe diretamente | Login leva ao painel master em `/admin/visao-geral`; o menu Estabelecimentos abre a lista. Busca, paginação e detalhe continuam funcionando nos endereços existentes. |
 | Conferir catálogo e dados privados com uma conta tutora | A vitrine mantém o DTO do catálogo. Dados completos e operações administrativas ficam inacessíveis ao tutor. |
 | Alterar cadastro, serviço ou equipe de A, quando a escrita fizer parte do teste | Após recarregar, a mudança persiste em A e não altera B. A conta de B não pode editar A, inclusive se trocar os IDs na URL ou no corpo. |
 | Abrir o colaborador de B sob a URL do estabelecimento A como administrador | Conferir o vínculo com o estabelecimento mostrado. O componente reutilizado carrega a equipe por `staffId`, de modo que a UI precisa evitar edição sob contexto divergente. |

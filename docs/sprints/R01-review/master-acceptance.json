@@ -1,0 +1,305 @@
+{
+  "baseHead": "bfc1c11d2c0a206a75d5c560236b544d19bb3506",
+  "profile": "demo",
+  "projects": [
+    "easypet-e2e-00d6d120b1",
+    "easypet-restore-0bba13bbf7cdda81"
+  ],
+  "runnerExitCode": 0,
+  "startedAt": "2026-11-14T01:31:56.138Z",
+  "endedAt": "2026-11-14T01:46:50.468Z",
+  "playwright": {
+    "passed": 30,
+    "duration": "5.0m",
+    "conditionalSkipped": 1
+  },
+  "unitTests": {
+    "javaReader": 6,
+    "pythonCollector": 6
+  },
+  "typecheck": true,
+  "targetedLint": true,
+  "systemdSyntaxOnVps": {
+    "exitCode": 0,
+    "installed": false
+  },
+  "tables": {
+    "auth": 4,
+    "pet": 8,
+    "partner": 17,
+    "booking": 8,
+    "payment": 11,
+    "notification": 7
+  },
+  "referenceQueries": 14,
+  "coverage": {
+    "completePublicationSamples": 28,
+    "finalRestoreServices": [
+      "auth-db",
+      "pet-db",
+      "partner-db",
+      "booking-db",
+      "payment-db",
+      "notification-db"
+    ]
+  },
+  "checks": {
+    "hasOom": false,
+    "unexpectedRestarts": false,
+    "swapDisabled": true,
+    "usedSwap": false
+  },
+  "samples": 95,
+  "completePublicationSamplesAllPhases": 29,
+  "configuredTotalMiB": 3632,
+  "maximumSampledSum": {
+    "MiB": 2532.68,
+    "at": "2026-11-14T01:40:47.178Z",
+    "finishedAt": "2026-11-14T01:40:49.532Z",
+    "phase": "playwright"
+  },
+  "services": [
+    {
+      "service": "auth-db",
+      "limitMiB": 128,
+      "maxCurrentMiB": 77.94,
+      "observedLifetimePeakMiB": 81.88,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "auth-service",
+      "limitMiB": 480,
+      "maxCurrentMiB": 382.24,
+      "observedLifetimePeakMiB": 395.91,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "booking-db",
+      "limitMiB": 128,
+      "maxCurrentMiB": 81.22,
+      "observedLifetimePeakMiB": 88.46,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "booking-service",
+      "limitMiB": 400,
+      "maxCurrentMiB": 333.53,
+      "observedLifetimePeakMiB": 351.58,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "frontend",
+      "limitMiB": 64,
+      "maxCurrentMiB": 7.1,
+      "observedLifetimePeakMiB": 10.99,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "gateway-service",
+      "limitMiB": 288,
+      "maxCurrentMiB": 212.57,
+      "observedLifetimePeakMiB": 218.33,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "notification-db",
+      "limitMiB": 128,
+      "maxCurrentMiB": 74.29,
+      "observedLifetimePeakMiB": 78.06,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "notification-service",
+      "limitMiB": 256,
+      "maxCurrentMiB": 173.35,
+      "observedLifetimePeakMiB": 182.38,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "partner-db",
+      "limitMiB": 128,
+      "maxCurrentMiB": 80,
+      "observedLifetimePeakMiB": 84.07,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "partner-service",
+      "limitMiB": 480,
+      "maxCurrentMiB": 390.81,
+      "observedLifetimePeakMiB": 399.69,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "payment-db",
+      "limitMiB": 128,
+      "maxCurrentMiB": 77.41,
+      "observedLifetimePeakMiB": 80.91,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "payment-service",
+      "limitMiB": 320,
+      "maxCurrentMiB": 271.95,
+      "observedLifetimePeakMiB": 277.87,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "pet-db",
+      "limitMiB": 128,
+      "maxCurrentMiB": 78.66,
+      "observedLifetimePeakMiB": 82.54,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "pet-service",
+      "limitMiB": 352,
+      "maxCurrentMiB": 309.08,
+      "observedLifetimePeakMiB": 318.86,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "redis",
+      "limitMiB": 128,
+      "maxCurrentMiB": 4.92,
+      "observedLifetimePeakMiB": 8.95,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    },
+    {
+      "service": "smtp-capture",
+      "limitMiB": 96,
+      "maxCurrentMiB": 26.99,
+      "observedLifetimePeakMiB": 34.43,
+      "maxOom": 0,
+      "maxOomKills": 0,
+      "maxSwapBytes": 0
+    }
+  ],
+  "errors": [
+    {
+      "at": "2026-11-14T01:46:41.078Z",
+      "phase": "cleanup",
+      "operation": "inventário Docker",
+      "code": 1
+    }
+  ],
+  "restoreFinal": [
+    {
+      "service": "auth-db",
+      "peakMiB": 76.57,
+      "oom": 0,
+      "oomKills": 0,
+      "swapBytes": 0
+    },
+    {
+      "service": "pet-db",
+      "peakMiB": 73.68,
+      "oom": 0,
+      "oomKills": 0,
+      "swapBytes": 0
+    },
+    {
+      "service": "partner-db",
+      "peakMiB": 77.82,
+      "oom": 0,
+      "oomKills": 0,
+      "swapBytes": 0
+    },
+    {
+      "service": "booking-db",
+      "peakMiB": 73.64,
+      "oom": 0,
+      "oomKills": 0,
+      "swapBytes": 0
+    },
+    {
+      "service": "payment-db",
+      "peakMiB": 73.64,
+      "oom": 0,
+      "oomKills": 0,
+      "swapBytes": 0
+    },
+    {
+      "service": "notification-db",
+      "peakMiB": 73.67,
+      "oom": 0,
+      "oomKills": 0,
+      "swapBytes": 0
+    }
+  ],
+  "source": {
+    "entries": 661,
+    "stableDuringRun": true,
+    "currentDrift": [],
+    "beforeSha256": "4d47e53b0650ecaa99e86e00522f1772d9106cd0707ff01ab6b72a5d5a0dd81e",
+    "afterSha256": "e28b37b5687b703a8bf863b574fb897e6f486a1a51a8158245a7c221c5a2316c"
+  },
+  "raw": {
+    "directory": "%TEMP%/easypet-master-demo2-bfc1c11",
+    "resourcesSha256": "e472ac44a0191b463b0d89b5f0ae011fb23b60bfe7d6a774bb8e85bc016f68e4",
+    "logSha256": "8bfae5721a3ce599eee6b0458fab2036684fdcdf09125106d8c71b9c30bb4ee4"
+  },
+  "failedAttempt": {
+    "project": "easypet-e2e-20dff3da59",
+    "reason": "Docker inspection template failed on missing State.Health in fixtures; no browser/restore approval.",
+    "resourcesSha256": "7fccdb6919fd6c068c14ea5084d96136f345e225ff443a20a635542b9a0640cb",
+    "logSha256": "763792e79a661faa5f9c49bb0dc7d357957d4938072057625878377f0f05df65"
+  },
+  "notes": [
+    "Windows Docker Desktop, cgroup v2, runtime affinity 0-3. Host RAM unavailable in the local UI, not zero.",
+    "Memory sums approximate concurrent usage over each sampling window and exclude fixtures, builds, browser and host collector processes.",
+    "No deploy or timer activation on VPS. Google uses local provider fixtures."
+  ],
+  "cleanupVerified": [
+    {
+      "project": "easypet-e2e-20dff3da59",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0,
+      "images": 0
+    },
+    {
+      "project": "easypet-e2e-00d6d120b1",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0,
+      "images": 0
+    },
+    {
+      "project": "easypet-restore-0bba13bbf7cdda81",
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0,
+      "images": 0
+    }
+  ]
+}

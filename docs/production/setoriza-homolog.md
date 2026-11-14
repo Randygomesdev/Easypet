@@ -35,7 +35,9 @@ Arquivos em [`scripts/production/setoriza-homolog`](../../scripts/production/set
 - `nginx-access.conf`: permite entrada pública, conforme decisão explícita do usuário nesta preparação. A aplicação exige contas provisionadas e allowlist Google, mantendo cadastro público e APIs internas bloqueados.
 - `compose.host.yml`: rede padrão exclusiva `172.30.80.0/24`, gateway `172.30.80.1`. Não sobrepõe as rotas observadas `172.17.0.0/16`, `172.18.0.0/16` e `172.19.0.0/16`. Revalidar na instalação; não conectar serviços Setoriza à rede EasyPet.
 - `compose.compact.yml`: perfil opcional com teto somado de 3.504 MiB e swap desabilitado nos 16 serviços. Aplique como terceiro arquivo Compose, após o base e o de rede, quando o perfil for aprovado para o ambiente. Mantenha os mesmos arquivos nas operações que recriam a stack. Para voltar ao perfil padrão, recrie os serviços com os arquivos base e de rede, preservando os volumes. [Aceite e medição local](../sprints/S07-infra-integracao/status.md#memória-da-stack-de-homologação-compartilhada).
-- `compose.demo.yml`: quarto arquivo, após o compacto; eleva três tetos e soma 3.632 MiB. Configuração validada por renderização, ainda sem execução na VPS. Os 28 testes se referem ao compacto anterior, não a uma nova rodada com este overlay. Na VPS atual, a reversão operacional é parar somente o EasyPet, preservando seus volumes; não trocar automaticamente para o perfil padrão maior.
+- `compose.demo.yml`: quarto arquivo, após o compacto; eleva três tetos e soma 3.632 MiB. O aceite local posterior do painel master aprovou 30 cenários e restauração de seis bancos com este overlay e o monitoramento, com pico amostrado de 2.532,68 MiB; ainda sem execução na VPS. [Evidência](../sprints/R01-review/master-acceptance.json). Na VPS atual, a reversão operacional é parar somente o EasyPet, preservando seus volumes; não trocar automaticamente para o perfil padrão maior.
+- `compose.monitor.yml`: quinto arquivo; monta o diretório do status somente para leitura no Auth. Não acrescenta serviços nem altera tetos de memória. `HOMOLOG_MONITOR_DIR` deve apontar para um diretório já existente.
+- `easypet-monitor.service` e `.timer`: candidatos para coleta no host uma vez por minuto. O script Python `scripts/production/master_status.py` lê estado e memória apenas dos containers do projeto `easypet-homolog` e a RAM disponível do host. Publica somente os campos conhecidos; não lê ambientes nem logs. O processo que acessa Docker roda no host, separado da aplicação.
 - `renewal-hook.sh`: testa e recarrega Nginx somente após renovação do certificado EasyPet.
 
 Foi preparado `.env.easypet-vps.local` na estação do operador, ignorado pelo Git. Contém segredos independentes, credencial Google e lista privada de convidados; não foi transferido para a VPS. `GOOGLE_AUTH_ENABLED=false` até configurar contas e realizar a ativação controlada. O IP de proxy previsto é `172.30.80.1`, correspondente ao gateway da rede Docker dedicada; confirmar o caminho real até o frontend antes de aceitar a identificação do cliente.
@@ -45,7 +47,18 @@ O log HTTP externo registra apenas horário, IDs, método, status e duração. N
 ## Sequência de publicação, ainda não executada
 
 1. Usar o orçamento e o aceite supervisionado de demonstração acima. O usuário definiu acesso público ao site, com login apenas para convidados; o preflight aceita `public-invited`. Provisione apenas contas aprovadas, inclusive para login por senha, e valide as recusas de acesso. Esta decisão não abre cadastro público, checkout ou créditos.
-2. Instalar Node.js 24 no host para os scripts operacionais, por um canal oficial. Preparar checkout próprio em `/srv/easypet`, diretório de configuração protegido `/etc/easypet` e backups em `/srv/easypet-backups`. Transferir a configuração privada para `/etc/easypet/homolog.env`, proprietário root e modo 600. Nunca usar `.env` do Setoriza nem imprimir `docker compose config` completo com segredos.
+2. Instalar Node.js 24 no host para os scripts operacionais, por um canal oficial, e conferir `/usr/bin/python3`. Preparar checkout próprio em `/srv/easypet`, diretório de configuração protegido `/etc/easypet` e backups em `/srv/easypet-backups`. Transferir a configuração privada para `/etc/easypet/homolog.env`, proprietário root e modo 600. Acrescentar `HOMOLOG_MONITOR_DIR=/var/lib/easypet/monitor` nesse arquivo. Nunca usar `.env` do Setoriza nem imprimir `docker compose config` completo com segredos. Preparar o coletor com os candidatos revisados:
+
+   ```bash
+   install -d -m 0755 /var/lib/easypet/monitor /etc/easypet/docker-monitor
+   install -m 0644 scripts/production/setoriza-homolog/easypet-monitor.service /etc/systemd/system/easypet-monitor.service
+   install -m 0644 scripts/production/setoriza-homolog/easypet-monitor.timer /etc/systemd/system/easypet-monitor.timer
+   systemd-analyze verify /etc/systemd/system/easypet-monitor.service /etc/systemd/system/easypet-monitor.timer
+   systemctl daemon-reload
+   systemctl enable --now easypet-monitor.timer
+   ```
+
+   Executar os comandos a partir de `/srv/easypet`. O coletor usa o socket Docker local do host; a aplicação recebe somente o JSON sanitizado. Diretório legível pelo usuário do container, arquivo `status.json` modo 0644. A leitura do Auth é limitada a 64 KiB; amostras com mais de 120 segundos ficam desatualizadas. A instalação do timer ainda não foi executada na VPS.
 3. No DNS de `innker.com.br`, criar **A `easypet` → `13.140.225.50`**. Inicialmente usar DNS direto, sem proxy CDN, para preservar o contrato de IP de origem. Não criar AAAA nesta etapa: o candidato não habilita entrada IPv6. Confirmar a resolução antes de solicitar certificado.
 4. Criar `/var/www/easypet-acme/.well-known/acme-challenge`. Instalar somente o candidato bootstrap em `/etc/nginx/sites-available/easypet.innker.com.br` e criar seu link em `sites-enabled`. Guardar configuração anterior se esse destino passar a existir; nunca sobrescrever o vhost Setoriza. Executar `nginx -t` e só então `systemctl reload nginx`. Conferir que o Setoriza continua respondendo.
 5. Emitir certificado próprio com webroot, sem parar o Nginx:
@@ -75,17 +88,19 @@ O log HTTP externo registra apenas horário, IDs, método, status e duração. N
      docker compose --parallel 1 -p easypet-homolog --env-file /etc/easypet/homolog.env \
        -f compose.homolog.yml -f scripts/production/setoriza-homolog/compose.host.yml \
        -f scripts/production/setoriza-homolog/compose.compact.yml \
-       -f scripts/production/setoriza-homolog/compose.demo.yml "$@"
+       -f scripts/production/setoriza-homolog/compose.demo.yml \
+       -f scripts/production/setoriza-homolog/compose.monitor.yml "$@"
    }
    easypet_compose config --quiet
    easypet_compose up -d --no-build --wait
+   systemctl start easypet-monitor.service
    curl --fail --silent http://127.0.0.1:18080/healthz
    node scripts/production/diagnose.mjs --project easypet-homolog --env-file /etc/easypet/homolog.env
    ```
 
-   Manter os quatro arquivos nas operações que criem/recriem a stack. Os scripts de diagnóstico/backup consultam containers existentes pelo mesmo projeto. Confirmar a rede e o IP do proxy observado pelo frontend antes do aceite do limitador. Para interromper a demonstração por pressão de recursos, executar `easypet_compose stop`; isso preserva os volumes. Não executar builds Maven/Gradle/Vite no host compartilhado.
+   Manter os cinco arquivos nas operações que criem/recriem a stack. Os scripts de diagnóstico/backup consultam containers existentes pelo mesmo projeto. Confirmar a rede e o IP do proxy observado pelo frontend antes do aceite do limitador. Para interromper a demonstração por pressão de recursos, executar `easypet_compose stop`; isso preserva os volumes. Não executar builds Maven/Gradle/Vite no host compartilhado.
 8. Instalar `/etc/nginx/snippets/easypet-access.conf` com a política aprovada. Substituir o bootstrap pelo candidato HTTPS no mesmo vhost EasyPet; nunca habilitar ambos simultaneamente. Testar `nginx -t`, recarregar e conferir Setoriza/EasyPet, página pública, APIs protegidas, cabeçalhos, cookies e logs.
-9. Provisionar convidados com papéis definidos, preservando as restrições do provisionador ADMIN. Confirmar Google Workspace para o endereço corporativo. Habilitar Google no arquivo protegido, reconstruir o frontend fora da VPS e recriar os serviços com os mesmos quatro arquivos Compose. Realizar login Google real, cancelamento, recusa de conta não convidada, papéis e jornadas da demonstração. Só desativar a chave antiga depois de confirmar uso da nova.
+9. Provisionar convidados com papéis definidos, preservando as restrições do provisionador ADMIN. Confirmar Google Workspace para o endereço corporativo. Habilitar Google no arquivo protegido, reconstruir o frontend fora da VPS e recriar os serviços com os mesmos cinco arquivos Compose. Realizar login Google real, cancelamento, recusa de conta não convidada, papéis e jornadas da demonstração. Conferir o painel master com ADMIN, os totais de estabelecimentos/tutores e o status dos 16 serviços; validar a recusa de acesso com parceiro/tutor e a indicação de coleta vencida ao parar temporariamente somente o timer EasyPet. Reativar o timer após o teste. Só desativar a chave antiga depois de confirmar uso da nova.
 
 Em caso de problema na primeira instalação, retirar somente o link do vhost EasyPet, testar Nginx e recarregar. Não parar o Nginx compartilhado, não alterar o Setoriza e não apagar volumes EasyPet para reverter uma falha. O rollback de dados segue o [roteiro operacional](operacao.md).
 
@@ -95,6 +110,7 @@ Em caso de problema na primeira instalação, retirar somente o link do vhost Ea
 - Candidatos bootstrap/HTTPS: `nginx -t` aprovado com o binário 1.24.0 da VPS em diretório temporário. Include de acesso/logs redirecionados ao temporário e certificado existente substituído apenas para verificar sintaxe. Nenhum candidato ativado e nenhum reload executado.
 - Após a decisão de site público, o candidato HTTPS foi incluído em uma cópia temporária do `nginx.conf` real, junto aos vhosts existentes. `nginx -t` passou, e Setoriza continuou respondendo 200. A nova política `public-invited` do preflight passou na checagem de sintaxe Node; o preflight completo permanece pendente no host sem Node.js.
 - Hook: `sh -n` aprovado. Configurações ativas do Nginx mantiveram os mesmos hashes antes/depois.
+- Monitor master: unidades `.service` e `.timer` passaram em `systemd-analyze verify` no próprio host, em diretório temporário removido ao terminar. Nenhum serviço foi instalado/ativado e não houve `daemon-reload`. O Compose com os cinco arquivos manteve 16 serviços, 3.632 MiB, única porta em loopback e montagem de status somente para leitura.
 - Sem criação de registro DNS, emissão de certificado, instalação de Node, subida de containers EasyPet ou execução de login Google real nesta preparação.
 
 Referências: [proxy Nginx](https://nginx.org/en/docs/http/ngx_http_proxy_module.html) e [webroot/renovação Certbot](https://eff-certbot.readthedocs.io/en/stable/using.html).
