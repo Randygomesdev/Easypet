@@ -1,6 +1,6 @@
 # Vitrine EasyPet
 
-A landing de portfólio usa HTML, CSS, imagens e três vídeos WebM. O build fica em `Frontend/dist-portfolio` e pode ser servido por um servidor estático.
+A landing de portfólio usa HTML, CSS, imagens e três vídeos WebM com narração em português, trilha e legendas WebVTT. O build fica em `Frontend/dist-portfolio` e pode ser servido por um servidor estático.
 
 Para revisar a vitrine localmente, execute em `Frontend`:
 
@@ -18,12 +18,13 @@ node node_modules/@playwright/test/cli.js install ffmpeg
 $env:E2E_CHROMIUM_CHANNEL = 'chrome'
 $env:E2E_WAVE_B = '1'
 $env:E2E_PORTFOLIO_VIDEO = '1'
-$env:E2E_PORTFOLIO_OUTPUT = Join-Path (Get-Location) 'portfolio/public/portfolio'
+$env:E2E_PORTFOLIO_OUTPUT = Join-Path (Get-Location) '../.env.portfolio-capturas'
 npm run test:e2e -- portfolio.spec.ts
-npm run build:portfolio
 ```
 
 O runner cria um projeto Compose descartável com credenciais próprias, PostgreSQL e SMTP de captura. O roteiro usa `example.test`, dois estabelecimentos com serviços e escalas e três tutores com pets e reservas. A gravação começa após autenticar cada perfil. Confira os vídeos e as capas antes de publicar.
+
+O roteiro narrado de cada vídeo está nas legendas em `Frontend/portfolio/public/portfolio`. A edição usa a voz `pt-BR-ThalitaMultilingualNeural` a `+3%` e `+2Hz`, com a trilha do Setoriza a partir do segundo 16. Ao substituir capturas, sincronize novamente a narração e as legendas, revise a reprodução e copie os WebMs editados e as respectivas capas para a pasta pública antes de gerar o build.
 
 ## Trocar a publicação
 
