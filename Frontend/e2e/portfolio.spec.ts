@@ -37,6 +37,7 @@ test('grava jornadas do EasyPet com dados fictícios', async ({ request, browser
     shops.push({ partner, service })
   }
   const day = futureDate(2)
+  const tutorExtrasOnly = process.env.E2E_PORTFOLIO_TUTOR_EXTRAS === '1'
   for (const [index, name] of ['Amora', 'Bento', 'Luna'].entries()) {
     const tutor = bearer(tutors[index])
     const pet = await json(request, 'POST', '/pets', 201, tutor, {
@@ -50,6 +51,24 @@ test('grava jornadas do EasyPet com dados fictícios', async ({ request, browser
         price: 60, type: 'CONSULTATION',
       })
     await json(request, 'PATCH', `/bookings/${booking.id}/status?status=CONFIRMED`, 200, bearer(partners[index % shops.length]))
+    if (tutorExtrasOnly && index === 0) {
+      const clinic = bearer(partners[0])
+      await json(request, 'PATCH', `/bookings/${booking.id}/status?status=IN_PROGRESS`, 200, clinic)
+      await json(request, 'POST', `/pets/${pet.id}/vaccines`, 200, clinic, {
+        name: 'Vacina V10', applicationDate: day, nextDoseDate: futureDate(32),
+        status: 'UPDATED', vetName: 'Marina Alves', partnerName: partner.name, bookingId: booking.id,
+      })
+      await json(request, 'POST', `/pets/${pet.id}/vaccines`, 200, tutor, {
+        name: 'Antirrábica', applicationDate: futureDate(-359), nextDoseDate: futureDate(6),
+        status: 'DUE_SOON',
+      })
+      await json(request, 'POST', `/pets/${pet.id}/appointments`, 200, clinic, {
+        date: `${day}T13:00:00`, reason: 'Consulta de acompanhamento',
+        clinicalNotes: 'Revisão de rotina. Carteira de vacinação atualizada.',
+        status: 'COMPLETED', vetName: 'Marina Alves', partnerName: partner.name, bookingId: booking.id,
+      })
+      await json(request, 'PATCH', `/bookings/${booking.id}/status?status=COMPLETED`, 200, clinic)
+    }
   }
   const subject = 'Como acompanhar a reserva da Amora?'
   await json(request, 'POST', '/support/tickets', 201,
@@ -83,6 +102,54 @@ test('grava jornadas do EasyPet com dados fictícios', async ({ request, browser
     } finally { await context.close() }
     await page.video()!.saveAs(resolve(output!, name + '.webm'))
     console.log(`Vídeo gravado: ${name}.`)
+  }
+
+  if (tutorExtrasOnly) {
+    await clip('tutor-busca', 'tutor@example.test', /\/app\/home$/, async page => {
+      await page.goto('/app/home')
+      const clinic = page.getByRole('heading', { name: 'Clínica Pata Serena', exact: true })
+      await expect(clinic).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Centro Veterinário Jardim Animal' })).toBeVisible()
+      await page.waitForTimeout(2900)
+      await page.getByRole('button', { name: 'Clínica', exact: true }).click()
+      const search = page.getByRole('searchbox', { name: 'Buscar no catálogo' })
+      await search.pressSequentially('Pata Serena', { delay: 95 })
+      await expect(page.getByRole('heading', { name: 'Centro Veterinário Jardim Animal' })).toHaveCount(0)
+      await expect(clinic).toBeVisible()
+      await page.waitForTimeout(3900)
+      await clinic.click()
+      await expect(page).toHaveURL(new RegExp(`/app/parceiros/${shops[0].partner.id}$`))
+      await expect(page.getByText('Consulta veterinária', { exact: true })).toBeVisible()
+      await page.waitForTimeout(1900)
+    })
+
+    await clip('tutor-saude', 'tutor@example.test', /\/app\/home$/, async page => {
+      await page.clock.setFixedTime(new Date(`${day}T16:00:00-03:00`))
+      await page.goto('/app/home')
+      await page.getByRole('button', { name: /Amora.*Cão/ }).click()
+      await expect(page.getByRole('heading', { name: 'Amora' })).toBeVisible()
+      await page.waitForTimeout(2700)
+      await page.getByRole('button', { name: /^Vacinas/ }).click()
+      const vaccinePanel = page.getByRole('heading', { name: 'Vacinas', exact: true }).locator('../..')
+      await expect(vaccinePanel.getByText('Vacina V10')).toBeVisible()
+      await expect(vaccinePanel.getByText('Em dia')).toBeVisible()
+      await expect(vaccinePanel.getByText('Antirrábica')).toBeVisible()
+      await expect(vaccinePanel.getByText('A vencer')).toBeVisible()
+      await page.waitForTimeout(4600)
+      await vaccinePanel.getByRole('button', { name: '', exact: true }).first().click()
+      await page.getByRole('button', { name: /^Consultas/ }).click()
+      await expect(page.getByText('Consulta de acompanhamento')).toBeVisible()
+      await expect(page.getByText('Revisão de rotina. Carteira de vacinação atualizada.')).toBeVisible()
+      await page.waitForTimeout(3800)
+      await page.goto('/app/agendamentos')
+      await page.getByRole('button', { name: 'Finalizados', exact: true }).click()
+      await page.getByRole('button', { name: /Consulta veterinária.*Amora/ }).click()
+      const details = page.getByRole('dialog', { name: 'Detalhes do agendamento' })
+      await expect(details.getByText('Amora')).toBeVisible()
+      await expect(details.getByText('Finalizado', { exact: true }).first()).toBeVisible()
+      await page.waitForTimeout(1900)
+    })
+    return
   }
 
   await clip('tutor', 'tutor@example.test', /\/app\/home$/, async page => {
