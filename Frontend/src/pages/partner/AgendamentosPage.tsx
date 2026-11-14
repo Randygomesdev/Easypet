@@ -93,6 +93,7 @@ const STATUS_STYLE: Record<BookingStatus, string> = {
   PENDING:     'bg-amber-100   text-amber-700',
   CANCELLED:   'bg-pink-100    text-pink-600',
   NO_SHOW:     'bg-pink-100    text-pink-600',
+  INTERRUPTED: 'bg-pink-100    text-pink-700',
 }
 
 function StatusBadge({ booking }: { booking: BookingResponse }) {
@@ -442,6 +443,7 @@ export default function AgendamentosPage() {
                   <option value="COMPLETED">Finalizado</option>
                   <option value="CANCELLED">Cancelado</option>
                   <option value="NO_SHOW">Falta</option>
+                  <option value="INTERRUPTED">Interrompido</option>
                 </select>
               </div>
               <div>

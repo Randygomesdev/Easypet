@@ -17,6 +17,7 @@ import br.com.easypet.booking.dto.response.TutorBookingActions;
 import br.com.easypet.booking.dto.response.BookingHistoryEntry;
 import br.com.easypet.booking.exception.BookingConflictException;
 import br.com.easypet.booking.repository.BookingAgendaStore;
+import br.com.easypet.booking.repository.BookingExtraStore;
 import br.com.easypet.booking.repository.BookingAgendaStore.EventType;
 import br.com.easypet.booking.repository.BookingAgendaStore.Snapshot;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -83,6 +84,7 @@ public class BookingService {
     private final ObjectMapper objectMapper;
     private final Clock bookingClock;
     private final BookingAuthorization authorization;
+    private final BookingExtraStore extras;
 
     @Value("${app.booking-tutor-notice-minutes:120}")
     private long tutorNoticeMinutes = 120;
@@ -181,9 +183,7 @@ public class BookingService {
             }
             Booking saved = bookingRepository.saveAndFlush(booking);
             agenda.addHistory(saved, actorId, "CREATED", new Snapshot(null, null, null, null), null);
-            if (saved.getUserId() != null) {
-                agenda.addEvent(saved, EventType.BOOKING_CREATED, null);
-            }
+            agenda.addEvent(saved, EventType.BOOKING_CREATED, null);
             if (saved.getStatus() == BookingStatus.CONFIRMED) {
                 agenda.addEvent(saved, EventType.BOOKING_CONFIRMED, null);
             }
@@ -414,6 +414,9 @@ public class BookingService {
     }
 
     public BookingResponse updateStatus(UUID id, BookingStatus status, String reason) {
+        if (status == BookingStatus.INTERRUPTED) {
+            throw new BusinessException("Use a operação de interrupção com motivo.");
+        }
         Booking booking;
         switch (status) {
             case IN_PROGRESS, COMPLETED -> booking = findForAttendance(id);
@@ -435,6 +438,37 @@ public class BookingService {
         } else {
             transition(booking, status, reason);
         }
+        return bookingMapper.toResponse(bookingRepository.saveAndFlush(booking));
+    }
+
+    public BookingResponse interrupt(UUID id, String reason) {
+        if (reason == null || reason.isBlank() || reason.length() > 500) {
+            throw new BusinessException("Informe o motivo da interrupção, com até 500 caracteres.");
+        }
+        UUID partnerId = bookingRepository.findPartnerIdByBookingId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Agendamento não encontrado."));
+        authorization.requireAttendanceAt(partnerId);
+        // Keep the allocation lock order used by creation and rescheduling.
+        agenda.lockPartner(partnerId);
+        Booking booking = findForAttendance(id);
+        UUID actor = getCurrentUserId();
+        String normalized = reason.strip();
+        if (booking.getStatus() == BookingStatus.INTERRUPTED) {
+            if (actor.equals(booking.getInterruptedBy()) && normalized.equals(booking.getInterruptionReason())) {
+                return bookingMapper.toResponse(booking);
+            }
+            throw new BookingConflictException("A interrupção já foi registrada com outro motivo ou autor.");
+        }
+        if (!booking.getStatus().canTransitionTo(BookingStatus.INTERRUPTED)) {
+            throw new BusinessException("Somente atendimentos em andamento podem ser interrompidos.");
+        }
+        var before = Snapshot.of(booking);
+        booking.setStatus(BookingStatus.INTERRUPTED);
+        booking.setInterruptionReason(normalized);
+        booking.setInterruptedBy(actor);
+        booking.setInterruptedAt(bookingClock.instant().truncatedTo(ChronoUnit.MICROS));
+        extras.expirePending(id);
+        recordChange(booking, "INTERRUPTED", before, normalized, EventType.BOOKING_INTERRUPTED);
         return bookingMapper.toResponse(bookingRepository.saveAndFlush(booking));
     }
 
@@ -469,6 +503,7 @@ public class BookingService {
             booking.setNoShowReason(reason);
         }
         booking.setStatus(status);
+        if (status == BookingStatus.COMPLETED) extras.expirePending(booking.getId());
         EventType event = switch (status) {
             case CONFIRMED -> EventType.BOOKING_CONFIRMED;
             case CANCELLED -> EventType.BOOKING_CANCELLED;
@@ -497,6 +532,9 @@ public class BookingService {
         Booking booking = findForWrite(id);
         if (booking.getStatus() == BookingStatus.IN_PROGRESS) {
             throw new BusinessException("Finalize o atendimento antes de excluir a reserva.");
+        }
+        if (booking.getStatus() == BookingStatus.INTERRUPTED || extras.hasExtras(id)) {
+            throw new BusinessException("A reserva precisa permanecer disponível para auditoria do atendimento.");
         }
         if (booking.getStatus().canTransitionTo(BookingStatus.CANCELLED)) {
             transition(booking, BookingStatus.CANCELLED, "Agendamento excluído");
@@ -555,7 +593,7 @@ public class BookingService {
         String savedExtras = agenda.findCheckIn(id).map(BookingCheckIn::authorizedExtras).orElse(null);
         if (input.authorizedExtras() != null && !input.authorizedExtras().isBlank()
                 && !Objects.equals(input.authorizedExtras(), savedExtras)) {
-            throw new BusinessException("A autorização de adicionais não está disponível neste fluxo.");
+            throw new BusinessException("Registre autorizações de adicionais no fluxo de propostas.");
         }
         var checkIn = new BookingCheckIn(input.petIdentified(), input.instructionsConfirmed(), input.allergies(),
                 input.behavior(), savedExtras, input.observations());
@@ -566,6 +604,9 @@ public class BookingService {
     public BookingResponse markReady(UUID id) {
         Booking booking = findForAttendance(id);
         requireGrooming(booking);
+        if (booking.getStatus() == BookingStatus.INTERRUPTED) {
+            throw new BusinessException("O atendimento foi interrompido.");
+        }
         if (booking.getReadyAt() != null) {
             return bookingMapper.toResponse(booking);
         }
@@ -586,7 +627,7 @@ public class BookingService {
 
     private void recordChange(Booking booking, String action, Snapshot before, String reason, EventType event) {
         agenda.addHistory(booking, getCurrentUserId(), action, before, reason);
-        if (event != null && booking.getUserId() != null) {
+        if (event != null) {
             agenda.addEvent(booking, event, event == EventType.BOOKING_RESCHEDULED ? before.bookingDate() : null);
         }
     }

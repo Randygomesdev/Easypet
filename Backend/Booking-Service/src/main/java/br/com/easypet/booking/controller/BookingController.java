@@ -172,6 +172,12 @@ public class BookingController {
         return bookingService.reschedule(id, input);
     }
 
+    @PostMapping("/{id}/interrupt")
+    public BookingResponse interrupt(@PathVariable UUID id,
+                                     @Valid @RequestBody br.com.easypet.booking.dto.request.InterruptBookingRequest input) {
+        return bookingService.interrupt(id, input.reason());
+    }
+
     @PatchMapping("/partner/{partnerId}/{bookingId}/status")
     public BookingResponse updateAdminStatus(@PathVariable UUID partnerId, @PathVariable UUID bookingId,
             @RequestParam BookingStatus status, @Valid @RequestBody(required = false) BookingStatusRequest input) {

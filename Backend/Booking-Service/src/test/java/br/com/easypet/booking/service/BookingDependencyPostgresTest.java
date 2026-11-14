@@ -51,6 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +63,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "app.http.connect-timeout=500ms",
         "app.http.read-timeout=2500ms",
         "app.booking-pet-summary-token=pet-summary-test-only",
+        "app.booking-payment-authorization-token=payment-authorization-test-only",
         "app.booking-agenda-lock-timeout=4s",
         "app.booking-tutor-notice-minutes=90",
         "spring.transaction.default-timeout=8s"
@@ -96,6 +98,7 @@ class BookingDependencyPostgresTest {
     private final UUID receptionistId = UUID.randomUUID();
     private final UUID otherPartner = UUID.randomUUID();
     private final UUID otherStaff = UUID.randomUUID();
+    private final UUID otherTutorId = UUID.randomUUID();
     private volatile int authStatus = 200;
     private volatile boolean authStalled;
     private final CountDownLatch authRequestArrived = new CountDownLatch(1);
@@ -129,6 +132,113 @@ class BookingDependencyPostgresTest {
     void setup() {
         date = LocalDateTime.now(clock).toLocalDate().plusDays(3).atTime(10, 0);
         SCENARIO.set(this);
+    }
+
+    @Test
+    void interruptedVisitKeepsAuditExpiresOffersAndReleasesItsSlotExactlyOnce() throws Exception {
+        String id = visitInProgress();
+        String root = "/bookings/" + id;
+        String operator = auth("PROFESSIONAL");
+        String proposalId = proposeExtra(root, operator, "first-offer");
+        create(petId, "before-interruption", date).andExpect(status().isConflict());
+        http.perform(patch(root + "/status").header("Authorization", operator).param("status", "INTERRUPTED"))
+                .andExpect(status().isBadRequest());
+        http.perform(post(root + "/interrupt").header("Authorization", auth("CUSTOMER"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Pedido do tutor\"}"))
+                .andExpect(status().isForbidden());
+        http.perform(post(root + "/interrupt").header("Authorization", operator)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"  \"}"))
+                .andExpect(status().isBadRequest());
+        String control = "{\"reason\":\"Pedido do tutor\"}";
+        String interruptedAt = field(http.perform(post(root + "/interrupt").header("Authorization", operator)
+                        .contentType(MediaType.APPLICATION_JSON).content(control))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("INTERRUPTED")), "interruptedAt");
+        http.perform(post(root + "/interrupt").header("Authorization", operator)
+                        .contentType(MediaType.APPLICATION_JSON).content(control))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.interruptedAt").value(interruptedAt));
+        http.perform(post(root + "/interrupt").header("Authorization", auth("ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON).content(control)).andExpect(status().isConflict());
+        http.perform(post(root + "/extras/" + proposalId + "/decisions/digital").header("Authorization", auth("CUSTOMER"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"version\":1,\"decision\":\"APPROVE\"}"))
+                .andExpect(status().isConflict());
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM booking_outbox WHERE booking_id=? AND event_type='BOOKING_INTERRUPTED'",
+                Integer.class, UUID.fromString(id))).isEqualTo(1);
+        create(petId, "after-interruption", date).andExpect(status().isCreated());
+        String investigation = "/admin/bookings/investigations";
+        http.perform(get(investigation).header("Authorization", auth("PARTNER"))).andExpect(status().isForbidden());
+        http.perform(get(investigation).header("Authorization", auth("ADMIN")).param("partnerId", partnerId.toString())
+                        .param("size", "1")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].bookingId").value(id)).andExpect(jsonPath("$.totalElements").value(1));
+        http.perform(get(investigation + "/" + id).header("Authorization", auth("ADMIN")).param("partnerId", otherPartner.toString()))
+                .andExpect(status().isNotFound());
+        http.perform(get(investigation + "/" + id).header("Authorization", auth("ADMIN")).param("historySize", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.reason").value("Pedido do tutor"))
+                .andExpect(jsonPath("$.history.content[0].actorId").value(professionalId.toString()))
+                .andExpect(jsonPath("$.extras.content[0].extra.status").value("EXPIRED"));
+    }
+
+    @Test
+    void extrasRequireAnAuthoritativeDecisionAndSerializeCompetingAcceptances() throws Exception {
+        String id = visitInProgress();
+        String root = "/bookings/" + id;
+        String professional = auth("PROFESSIONAL");
+        String extraId = proposeExtra(root, professional, "extra-key");
+        assertThat(proposeExtra(root, professional, "extra-key")).isEqualTo(extraId);
+        String decisions = root + "/extras/" + extraId + "/decisions/";
+        String approved = "{\"version\":1,\"decision\":\"APPROVE\"}";
+        String rejected = "{\"version\":1,\"decision\":\"REJECT\"}";
+        String inPerson = "{\"version\":1,\"decision\":\"APPROVE\",\"reason\":\"Tutor conferiu\",\"evidence\":\"Protocolo 41\"}";
+        String payment = "/internal/booking-extra-authorizations/" + extraId;
+        String paymentAuth = "Bearer payment-authorization-test-only";
+        http.perform(get(payment).header("Authorization", auth("ADMIN"))).andExpect(status().isUnauthorized());
+        http.perform(get(payment).header("Authorization", paymentAuth).param("bookingId", id)
+                        .param("partnerId", partnerId.toString()).param("version", "1")).andExpect(status().isNotFound());
+        http.perform(post(decisions + "digital").header("Authorization", professional)
+                        .contentType(MediaType.APPLICATION_JSON).content(approved)).andExpect(status().isForbidden());
+        http.perform(post(decisions + "digital").header("Authorization", auth("OTHER_TUTOR"))
+                        .contentType(MediaType.APPLICATION_JSON).content(approved)).andExpect(status().isNotFound());
+        http.perform(post(decisions + "in-person").header("Authorization", professional)
+                        .contentType(MediaType.APPLICATION_JSON).content(inPerson)).andExpect(status().isForbidden());
+        http.perform(post(decisions + "digital").header("Authorization", auth("CUSTOMER"))
+                        .contentType(MediaType.APPLICATION_JSON).content(approved.replace(":1", ":2"))).andExpect(status().isConflict());
+        try (var threads = Executors.newVirtualThreadPerTaskExecutor()) {
+            var concurrent = threads.submit(() -> http.perform(post(decisions + "digital")
+                    .header("Authorization", auth("CUSTOMER")).contentType(MediaType.APPLICATION_JSON).content(rejected))
+                    .andReturn().getResponse().getStatus());
+            int desk = http.perform(post(decisions + "in-person").header("Authorization", auth("RECEPTION"))
+                            .contentType(MediaType.APPLICATION_JSON).content(inPerson)).andReturn().getResponse().getStatus();
+            assertThat(java.util.List.of(desk, concurrent.get(5, TimeUnit.SECONDS))).containsExactlyInAnyOrder(200, 409);
+        }
+        String approvedExtra = proposeExtra(root, professional, "separate-extra");
+        String approval = root + "/extras/" + approvedExtra + "/decisions/in-person";
+        for (int attempt = 0; attempt < 2; attempt++) {
+            http.perform(post(approval).header("Authorization", auth("RECEPTION"))
+                            .contentType(MediaType.APPLICATION_JSON).content(inPerson)).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.amountCents").value(3000)).andExpect(jsonPath("$.status").value("APPROVED"));
+        }
+        http.perform(get("/internal/booking-extra-authorizations/" + approvedExtra).header("Authorization", paymentAuth)
+                        .param("bookingId", id).param("partnerId", partnerId.toString()).param("version", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.approvedBy").value(receptionistId.toString()))
+                .andExpect(jsonPath("$.tutorId").value(tutorId.toString())).andExpect(jsonPath("$.channel").value("IN_PERSON"));
+    }
+
+    private String visitInProgress() throws Exception {
+        String id = field(create(petId, "for-visit", date).andExpect(status().isCreated()), "id");
+        http.perform(patch("/bookings/" + id + "/status").header("Authorization", auth("ADMIN")).param("status", "CONFIRMED"))
+                .andExpect(status().isOk());
+        http.perform(patch("/bookings/" + id + "/status").header("Authorization", auth("PROFESSIONAL")).param("status", "IN_PROGRESS"))
+                .andExpect(status().isOk());
+        return id;
+    }
+
+    private String proposeExtra(String root, String actor, String key) throws Exception {
+        return field(http.perform(post(root + "/extras").header("Authorization", actor).header("Idempotency-Key", key)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"description\":\"Hidratação\",\"quantity\":2,\"unitPriceCents\":1500}"))
+                .andExpect(status().isCreated()), "id");
+    }
+
+    private String field(ResultActions response, String field) throws Exception {
+        return json.readTree(response.andReturn().getResponse().getContentAsString()).path(field).asText();
     }
 
     @Test
@@ -246,7 +356,7 @@ class BookingDependencyPostgresTest {
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.receptionCustomerId").value(receptionId.toString()))
                 .andExpect(jsonPath("$.userId").isEmpty());
         assertThat(count("bookings")).isEqualTo(2);
-        assertThat(count("booking_outbox")).isEqualTo(1);
+        assertThat(count("booking_outbox")).isEqualTo(2);
     }
 
     @Test
@@ -478,6 +588,17 @@ class BookingDependencyPostgresTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.userId").isEmpty());
         http.perform(get("/bookings/my-bookings").header("Authorization", auth("CUSTOMER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.content.length()").value(3));
+        http.perform(post("/bookings/" + ownBooking + "/interrupt").header("Authorization", professional)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Pedido do tutor de balcão\"}"))
+                .andExpect(status().isOk());
+        var deskEvents = agenda.pendingEvents(100).stream()
+                .filter(event -> event.bookingId().equals(UUID.fromString(ownBooking))).toList();
+        assertThat(deskEvents).extracting(event -> event.eventType())
+                .containsExactly("BOOKING_CREATED", "BOOKING_CONFIRMED", "BOOKING_READY", "BOOKING_INTERRUPTED");
+        assertThat(deskEvents).allSatisfy(event -> {
+            assertThat(event.userId()).isNull();
+            assertThat(event.receptionCustomerId()).isEqualTo(receptionId);
+        });
         authStatus = 401;
         http.perform(get("/bookings/" + ownBooking).header("Authorization", professional)).andExpect(status().isUnauthorized());
     }
@@ -510,6 +631,7 @@ class BookingDependencyPostgresTest {
         return switch (role) {
             case "RECEPTION" -> receptionistId;
             case "PROFESSIONAL" -> professionalId;
+            case "OTHER_TUTOR" -> otherTutorId;
             default -> tutorId;
         };
     }
@@ -532,7 +654,7 @@ class BookingDependencyPostgresTest {
                 exchange.getResponseBody().write(bytes);
                 return;
             }
-            String role = java.util.stream.Stream.of("CUSTOMER", "PARTNER", "RECEPTION", "PROFESSIONAL", "ADMIN")
+            String role = java.util.stream.Stream.of("CUSTOMER", "OTHER_TUTOR", "PARTNER", "RECEPTION", "PROFESSIONAL", "ADMIN")
                     .filter(candidate -> auth(candidate).equals(authorization)).findFirst().orElse(null);
             if (role == null) {
                 exchange.sendResponseHeaders(401, -1);
@@ -555,7 +677,7 @@ class BookingDependencyPostgresTest {
                     default -> java.util.List.of();
                 };
                 byte[] bytes = json.writeValueAsBytes(permissions.isEmpty()
-                        ? Map.of("role", role, "userId", user(role), "permissions", permissions)
+                        ? Map.of("role", role.equals("OTHER_TUTOR") ? "CUSTOMER" : role, "userId", user(role), "permissions", permissions)
                         : Map.of("role", "TEAM_MEMBER", "userId", user(role), "permissions", permissions,
                                  "accessRole", role, "partnerId", partnerId, "teamAccessId", user(role)));
                 exchange.sendResponseHeaders(authStatus, bytes.length);

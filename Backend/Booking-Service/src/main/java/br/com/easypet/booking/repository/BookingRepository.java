@@ -26,7 +26,8 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, org.spr
             SELECT b FROM Booking b
             WHERE b.partnerId = :partnerId
               AND b.status NOT IN (br.com.easypet.booking.domain.enums.BookingStatus.CANCELLED,
-                                   br.com.easypet.booking.domain.enums.BookingStatus.NO_SHOW)
+                                   br.com.easypet.booking.domain.enums.BookingStatus.NO_SHOW,
+                                   br.com.easypet.booking.domain.enums.BookingStatus.INTERRUPTED)
               AND (b.isFittingRequest = false OR b.status <> br.com.easypet.booking.domain.enums.BookingStatus.PENDING)
               AND b.bookingDate < :end
               AND COALESCE(b.scheduledEnd, b.checkOut, :end) > :start
@@ -37,7 +38,8 @@ public interface BookingRepository extends JpaRepository<Booking, UUID>, org.spr
             SELECT b.staffId, count(b) FROM Booking b
             WHERE b.partnerId = :partnerId AND b.staffId IS NOT NULL
               AND b.status NOT IN (br.com.easypet.booking.domain.enums.BookingStatus.CANCELLED,
-                                   br.com.easypet.booking.domain.enums.BookingStatus.NO_SHOW)
+                                   br.com.easypet.booking.domain.enums.BookingStatus.NO_SHOW,
+                                   br.com.easypet.booking.domain.enums.BookingStatus.INTERRUPTED)
               AND (b.isFittingRequest = false OR b.status <> br.com.easypet.booking.domain.enums.BookingStatus.PENDING)
               AND b.bookingDate >= :start AND b.bookingDate < :end
             GROUP BY b.staffId

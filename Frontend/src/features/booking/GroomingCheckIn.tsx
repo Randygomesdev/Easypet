@@ -100,7 +100,6 @@ export function GroomingCheckIn({ booking, onReady }: {
             {checkIn.authorizedExtras && (
               <p className="break-words"><span className="font-semibold">Adicionais registrados anteriormente</span><br />{checkIn.authorizedExtras}</p>
             )}
-            <p className="text-xs text-text-muted">A autorização de adicionais está indisponível neste atendimento.</p>
             {!booking.readyAt && (
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="submit" variant="secondary" size="sm" disabled={working || (saved && !dirty)}>

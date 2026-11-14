@@ -2,6 +2,7 @@ package br.com.easypet.booking.repository;
 
 import br.com.easypet.booking.domain.entity.Booking;
 import br.com.easypet.booking.dto.request.BookingCheckIn;
+import br.com.easypet.booking.dto.BookingInvestigation;
 import br.com.easypet.booking.dto.response.AgendaBlock;
 import br.com.easypet.booking.dto.response.BookingEvent;
 import br.com.easypet.booking.dto.response.BookingHistoryEntry;
@@ -9,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import br.com.easypet.booking.exception.BookingUnavailableException;
@@ -138,19 +142,35 @@ public class BookingAgendaStore {
                 bookingId);
     }
 
+    public Page<BookingInvestigation.History> findInvestigationHistory(UUID bookingId, Pageable pageable) {
+        var entries = jdbc.query("""
+                SELECT actor_id, action, recorded_at, previous_status, status, previous_booking_date,
+                    booking_date, previous_scheduled_end, scheduled_end, reason
+                FROM booking_history WHERE booking_id = ? ORDER BY id DESC LIMIT ? OFFSET ?
+                """, (rs, row) -> new BookingInvestigation.History(rs.getObject("actor_id", UUID.class),
+                rs.getString("action"), rs.getObject("recorded_at", OffsetDateTime.class).toInstant(),
+                rs.getString("previous_status"), rs.getString("status"),
+                rs.getObject("previous_booking_date", LocalDateTime.class), rs.getObject("booking_date", LocalDateTime.class),
+                rs.getObject("previous_scheduled_end", LocalDateTime.class), rs.getObject("scheduled_end", LocalDateTime.class),
+                rs.getString("reason")), bookingId, pageable.getPageSize(), pageable.getOffset());
+        long total = jdbc.queryForObject("SELECT count(*) FROM booking_history WHERE booking_id = ?", Long.class, bookingId);
+        return new PageImpl<>(entries, pageable, total);
+    }
+
     public enum EventType {
-        BOOKING_CREATED, BOOKING_CONFIRMED, BOOKING_RESCHEDULED, BOOKING_CANCELLED, BOOKING_NO_SHOW, BOOKING_READY
+        BOOKING_CREATED, BOOKING_CONFIRMED, BOOKING_RESCHEDULED, BOOKING_CANCELLED, BOOKING_NO_SHOW, BOOKING_READY,
+        BOOKING_INTERRUPTED
     }
 
     public void addEvent(Booking booking, EventType eventType, LocalDateTime previousBookingDate) {
         booking.setEventVersion(booking.getEventVersion() + 1);
         jdbc.update("""
                 INSERT INTO booking_outbox (event_id, booking_id, booking_version, event_type, occurred_at,
-                    partner_id, user_id, booking_date, previous_booking_date, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    partner_id, user_id, booking_date, previous_booking_date, status, reception_customer_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, UUID.randomUUID(), booking.getId(), booking.getEventVersion(), eventType.name(),
                 Instant.now().atOffset(ZoneOffset.UTC), booking.getPartnerId(), booking.getUserId(),
-                booking.getBookingDate(), previousBookingDate, booking.getStatus().name());
+                booking.getBookingDate(), previousBookingDate, booking.getStatus().name(), booking.getReceptionCustomerId());
     }
 
     public List<BookingEvent> pendingEvents(int limit) {
@@ -161,7 +181,7 @@ public class BookingAgendaStore {
                 rs.getObject("booking_id", UUID.class), rs.getLong("booking_version"),
                 rs.getObject("partner_id", UUID.class), rs.getObject("user_id", UUID.class),
                 rs.getObject("booking_date", LocalDateTime.class), rs.getObject("previous_booking_date", LocalDateTime.class),
-                rs.getString("status")), limit);
+                rs.getString("status"), rs.getObject("reception_customer_id", UUID.class)), limit);
     }
 
     public void acknowledge(UUID eventId) {

@@ -24,6 +24,9 @@ import {
   BOOKING_TYPE_LABEL,
 } from '../../services/booking.service'
 import { GroomingCheckIn } from '../../features/booking/GroomingCheckIn'
+import { BookingExtrasPanel } from '../../features/booking/BookingExtrasPanel'
+import { BookingReasonDialog } from '../../features/booking/BookingReasonDialog'
+import { Button } from '../../components/ui/Button'
 import { bookingError, bookingStatusLabel } from '../../features/booking/bookingUi'
 
 /* ── Helpers ────────────────────────────────────────────────────────────── */
@@ -734,12 +737,14 @@ interface RecordPanelProps {
   onFinish:       (booking: BookingResponse) => void
   onReady:        (booking: BookingResponse) => void
   hasClinicalAccess: boolean
+  canRegisterInPerson: boolean
 }
 
-function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish, onReady, hasClinicalAccess }: RecordPanelProps) {
+function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish, onReady, hasClinicalAccess, canRegisterInPerson }: RecordPanelProps) {
   const [panel,   setPanel]   = useState<RecordPanel>(null)
   const [saving,  setSaving]  = useState(false)
   const [error, setError] = useState('')
+  const [interrupting, setInterrupting] = useState(false)
 
   async function handleFinalize() {
     setSaving(true)
@@ -771,6 +776,7 @@ function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish, onRe
       {/* Section cards */}
       <div className="flex-1 overflow-y-auto p-5 space-y-2.5">
         {booking.type === 'GROOMING' && <GroomingCheckIn booking={booking} onReady={onReady} />}
+        <BookingExtrasPanel bookingId={booking.id} mode={canRegisterInPerson ? 'desk' : 'operator'} inProgress />
         {hasClinicalAccess && <>
         <SectionCard icon={Scale}        label="Pesagem"                   color="bg-teal-100 text-teal-600"    onClick={() => setPanel('weight')} />
         <SectionCard icon={Stethoscope}  label="Observações da Consulta"   color="bg-blue-100 text-blue-600"    onClick={() => setPanel('appointment')} />
@@ -782,8 +788,7 @@ function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish, onRe
       </div>
 
       {/* Finalizar */}
-      <div className="px-5 py-4 border-t border-(--color-border) shrink-0">
-        <p className="mb-2 text-sm text-text-muted">A interrupção do atendimento está indisponível após o início.</p>
+      <div className="px-5 py-4 border-t border-(--color-border) shrink-0 space-y-2">
         {error && <p className="mb-2 text-sm text-text-danger" role="alert">{error}</p>}
         <button onClick={handleFinalize} disabled={saving}
                 className="w-full py-3 rounded-xl font-bold text-sm text-white
@@ -792,7 +797,10 @@ function RecordPanel({ booking, pet, partnerName, serviceNameMap, onFinish, onRe
           {saving ? <Loader2 size={16} className="animate-spin"/> : <CheckCircle2 size={16}/>}
           Finalizar Atendimento
         </button>
+        <Button className="w-full" variant="secondary" disabled={saving} onClick={() => setInterrupting(true)}>Interromper atendimento</Button>
       </div>
+      {interrupting && <BookingReasonDialog bookingId={booking.id} status="INTERRUPTED"
+        onClose={() => setInterrupting(false)} onSaved={onFinish} />}
 
       {/* SlidePanels */}
       {pet && hasClinicalAccess && (
@@ -824,6 +832,7 @@ export default function AtendimentoPage() {
   const [partnerName,    setPartnerName]    = useState<string | undefined>(undefined)
   const [serviceNameMap, setServiceNameMap] = useState<Record<string, string>>({})
   const [teamMember, setTeamMember] = useState(false)
+  const [canRegisterInPerson, setCanRegisterInPerson] = useState(false)
   const [petError, setPetError] = useState('')
   const [retry, setRetry] = useState(0)
 
@@ -845,6 +854,7 @@ export default function AtendimentoPage() {
         return
       }
       setTeamMember(access.teamMember)
+      setCanRegisterInPerson(access.canRegisterInPersonExtraDecision === true)
       void bookingService.partnerSummary(access.partnerId).then(p => {
           setPartnerName(p.name)
           setServiceNameMap(Object.fromEntries((p.services ?? []).map(service => [service.id, service.name])))
@@ -956,7 +966,7 @@ export default function AtendimentoPage() {
           ) : queue.map(b => {
             const p           = petMap[b.petId]
             const isSelected  = selected?.id === b.id
-            const isDone      = b.status === 'COMPLETED'
+            const isDone      = b.status === 'COMPLETED' || b.status === 'INTERRUPTED'
             const isInProgress = b.status === 'IN_PROGRESS'
             return (
               <button key={b.id} onClick={() => !isDone && handleSelect(b)}
@@ -981,7 +991,9 @@ export default function AtendimentoPage() {
                       {TYPE_ICON[b.type]}
                     </span>
                   </div>
-                  {isDone
+                  {b.status === 'INTERRUPTED'
+                    ? <span className="text-xs font-medium text-text-danger">Interrompido</span>
+                    : isDone
                     ? <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                     : isInProgress
                       ? <span className="text-[10px] font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full shrink-0">
@@ -1059,6 +1071,7 @@ export default function AtendimentoPage() {
             {/* Registro de atendimento */}
             <RecordPanel key={selected.id} booking={selected} pet={pet ?? null} partnerName={partnerName}
               serviceNameMap={serviceNameMap} onFinish={handleFinish} onReady={handleReady}
+              canRegisterInPerson={canRegisterInPerson}
               hasClinicalAccess={!selected.receptionCustomerId && !teamMember} />
           </div>
         )}

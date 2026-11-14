@@ -23,6 +23,9 @@ public interface BookingMapper {
     @Mapping(target = "scheduledEnd", ignore = true)
     @Mapping(target = "cancellationReason", ignore = true)
     @Mapping(target = "noShowReason", ignore = true)
+    @Mapping(target = "interruptionReason", ignore = true)
+    @Mapping(target = "interruptedAt", ignore = true)
+    @Mapping(target = "interruptedBy", ignore = true)
     @Mapping(target = "readyAt", ignore = true)
     @Mapping(target = "eventVersion", ignore = true)
     Booking toEntity(BookingRequest request);

@@ -61,6 +61,9 @@ async function openPage(role, path, { width = 1440, height = 900, reception = fa
     catalogAvailable: false,
     slotsAvailable: false,
     updatedPrice: null,
+    extras: [],
+    extraRequests: [],
+    interrupts: [],
   }
 
   await page.route('**/api/v1/**', async route => {
@@ -93,7 +96,8 @@ async function openPage(role, path, { width = 1440, height = 900, reception = fa
         : { userId: 's03', role, partnerId: null, accessRole: null, permissions: [] })
     }
     if (path === '/bookings/agenda-access') {
-      return respond({ partnerId, canManage: role !== 'TEAM_MEMBER', canAttend: true, staffId: role === 'TEAM_MEMBER' ? staff.id : null, teamMember: role === 'TEAM_MEMBER' })
+      return respond({ partnerId, canManage: role !== 'TEAM_MEMBER', canAttend: true, staffId: role === 'TEAM_MEMBER' ? staff.id : null,
+        teamMember: role === 'TEAM_MEMBER', canRegisterInPersonExtraDecision: desk || role === 'PARTNER' })
     }
     if (path === `/bookings/partner/${partnerId}/summary`) return respond(partner)
     if (path === bookingPath + '/pet-summary') return respond({ id: petId, name: pet.name, species: 'DOG' })
@@ -134,6 +138,30 @@ async function openPage(role, path, { width = 1440, height = 900, reception = fa
       return respond([{ time: '10:30', available: true, staff: [staff] }, { time: '11:00', available: false }])
     }
     if (path === bookingPath + '/history') return respond([])
+    if (path === bookingPath + '/extras' && method === 'POST') {
+      const key = request.headers()['idempotency-key']
+      state.extraRequests.push({ key, data })
+      if (state.extraRequests.length === 1) {
+        state.extras.push({ id: 'extra-s03', bookingId: current.id, ...data, version: 1, amountCents: data.quantity * data.unitPriceCents, status: 'PENDING' })
+        return route.abort('failed')
+      }
+      return respond(state.extras[0], 201)
+    }
+    if (path === bookingPath + '/extras') {
+      return respond({ content: state.extras, totalElements: state.extras.length, totalPages: 1, number: 0, size: 20 })
+    }
+    if (path === bookingPath + '/extras/extra-s03/decisions/in-person' || path === bookingPath + '/extras/extra-s03/decisions/digital') {
+      assert.equal(data.version, 1)
+      if (path.endsWith('/in-person')) assert.ok(data.reason && data.evidence)
+      state.extras[0] = { ...state.extras[0], status: data.decision === 'APPROVE' ? 'APPROVED' : 'REJECTED',
+        channel: path.endsWith('/in-person') ? 'IN_PERSON' : 'DIGITAL' }
+      return respond(state.extras[0])
+    }
+    if (path === bookingPath + '/interrupt') {
+      state.interrupts.push(data)
+      state.booking = { ...current, status: 'INTERRUPTED', interruptionReason: data.reason }
+      return respond(state.booking)
+    }
     if (path === '/bookings' && method === 'POST') {
       state.submissions.push({ key: request.headers()['idempotency-key'], data })
       if (state.updatedPrice !== null && data.price !== state.updatedPrice) {
@@ -260,6 +288,50 @@ try {
   assert.equal(attendance.state.checkIn.allergies, 'Shampoo específico')
   await attendance.page.close()
 
+  const deskVisit = await openPage('TEAM_MEMBER', '/partner/atendimento', { desk: true, width: 390, height: 840 })
+  const deskRow = deskVisit.page.getByRole('button', { name: /Luna/ })
+  await deskRow.click()
+  await deskVisit.page.getByRole('button', { name: 'Propor adicional', exact: true }).click()
+  const proposal = deskVisit.page.getByRole('dialog', { name: 'Propor adicional' })
+  await proposal.getByLabel('Descrição').fill('Hidratação')
+  await proposal.getByLabel('Quantidade').fill('2')
+  await proposal.getByLabel('Valor unitário (R$)').fill('15,50')
+  await proposal.getByRole('button', { name: 'Enviar proposta' }).click()
+  await expect(proposal.getByRole('alert')).toBeVisible()
+  await deskVisit.page.reload()
+  await deskVisit.page.getByRole('button', { name: 'Propor adicional', exact: true }).click()
+  await expect(proposal.getByLabel('Descrição')).toHaveValue('Hidratação')
+  await proposal.getByRole('button', { name: 'Enviar proposta' }).click()
+  await expect(proposal).toBeHidden()
+  assert.deepEqual(deskVisit.state.extraRequests[0], deskVisit.state.extraRequests[1])
+  await deskVisit.page.getByRole('button', { name: 'Registrar decisão presencial' }).click()
+  const faceToFace = deskVisit.page.getByRole('dialog', { name: 'Registrar decisão presencial' })
+  await expect(faceToFace.getByText(/Total R\$\s*31,00/)).toBeVisible()
+  await faceToFace.getByLabel('Decisão do tutor').selectOption('APPROVE')
+  await faceToFace.getByLabel('Motivo').fill('Tutor conferiu o valor')
+  await faceToFace.getByLabel('Prova declarada').fill('Protocolo sintético 41')
+  await faceToFace.getByRole('button', { name: 'Registrar decisão' }).click()
+  await expect(deskVisit.page.getByText('Autorizado · Registro presencial')).toBeVisible()
+  await deskVisit.page.getByRole('button', { name: 'Interromper atendimento', exact: true }).click()
+  const interrupt = deskVisit.page.getByRole('dialog', { name: 'Interromper atendimento' })
+  await interrupt.getByLabel('Motivo').fill('Pedido do tutor')
+  await interrupt.getByRole('button', { name: 'Interromper atendimento' }).click()
+  await expect(deskRow.getByText('Interrompido')).toBeVisible()
+  assert.deepEqual(deskVisit.state.interrupts, [{ reason: 'Pedido do tutor' }])
+  await deskVisit.page.close()
+
+  const digital = await openPage('CUSTOMER', '/app/agendamentos', { width: 360, height: 740 })
+  digital.state.booking = { ...digital.state.booking, status: 'IN_PROGRESS' }
+  digital.state.extras = [{ id: 'extra-s03', bookingId: digital.state.booking.id, description: 'Hidratação',
+    quantity: 1, unitPriceCents: 1500, amountCents: 1500, status: 'PENDING', version: 1 }]
+  await digital.page.getByRole('button', { name: /Luna/ }).click()
+  await digital.page.getByRole('button', { name: 'Revisar e decidir' }).click()
+  const decision = digital.page.getByRole('dialog', { name: 'Decidir sobre adicional' })
+  await decision.getByLabel('Sua decisão').selectOption('REJECT')
+  await decision.getByRole('button', { name: 'Registrar decisão' }).click()
+  await expect(digital.page.getByText('Recusado', { exact: true })).toBeVisible()
+  await digital.page.close()
+
   const catalog = await openPage('CUSTOMER', '/app/home', { width: 360, height: 740 })
   await catalog.page.getByRole('searchbox', { name: 'Buscar no catálogo' }).fill('Petshop')
   await expect(catalog.page.getByText('Catálogo temporariamente indisponível.')).toBeVisible()
@@ -343,7 +415,7 @@ try {
   await cart.page.close()
 
   assert.deepEqual(errors, [])
-  process.stdout.write('S03: jornada móvel, preço atualizado, agenda, atendimento, retirada e retomada em catálogo, carrinho e balcão validados com API simulada.\n')
+  process.stdout.write('S03: jornada móvel, atendimento, interrupção, decisões de adicionais e regressões de reserva validadas com API simulada.\n')
 } finally {
   await browser?.close()
   await server?.close()

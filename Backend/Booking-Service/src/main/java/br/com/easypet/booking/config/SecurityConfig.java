@@ -31,6 +31,8 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/internal/booking-events", "/internal/booking-events/**").hasAuthority("BOOKING_OUTBOX")
+                .requestMatchers("/internal/booking-extra-authorizations", "/internal/booking-extra-authorizations/**")
+                    .hasAuthority("BOOKING_PAYMENT_AUTHORIZATION")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -11,6 +11,7 @@ import { petService, type PetResponse } from '../../services/pet.service'
 import { creditService } from '../../services/payment.service'
 import { Button } from '../../components/ui/Button'
 import { BookingHistory } from '../../features/booking/BookingHistory'
+import { BookingExtrasPanel } from '../../features/booking/BookingExtrasPanel'
 import { BookingReasonDialog } from '../../features/booking/BookingReasonDialog'
 import { RescheduleBookingDialog } from '../../features/booking/RescheduleBookingDialog'
 import { bookingError, bookingStatusLabel, isEditableBooking, noticeDuration } from '../../features/booking/bookingUi'
@@ -48,6 +49,7 @@ const STATUS_STYLE: Record<string, string> = {
   COMPLETED:   'bg-green-100  text-green-700  border-green-200',
   CANCELLED:   'bg-red-100    text-red-600    border-red-200',
   NO_SHOW:     'bg-pink-100   text-pink-700   border-pink-200',
+  INTERRUPTED: 'bg-red-100    text-red-700    border-red-200',
 }
 const STATUS_DOT: Record<string, string> = {
   PENDING:     'bg-amber-400',
@@ -56,6 +58,7 @@ const STATUS_DOT: Record<string, string> = {
   COMPLETED:   'bg-green-500',
   CANCELLED:   'bg-red-400',
   NO_SHOW:     'bg-pink-500',
+  INTERRUPTED: 'bg-red-500',
 }
 
 type BookingPartner = Pick<PartnerResponse,
@@ -217,8 +220,11 @@ function BookingDetailModal({
             </div>
           )}
 
-          {(booking.cancellationReason || booking.noShowReason) && (
-            <p className="text-sm text-text-body break-words">{booking.cancellationReason || booking.noShowReason}</p>
+          {(booking.cancellationReason || booking.noShowReason || booking.interruptionReason) && (
+            <p className="text-sm text-text-body break-words">{booking.cancellationReason || booking.noShowReason || booking.interruptionReason}</p>
+          )}
+          {(['IN_PROGRESS', 'COMPLETED', 'INTERRUPTED'] as BookingStatus[]).includes(booking.status) && (
+            <BookingExtrasPanel bookingId={booking.id} mode="tutor" inProgress={booking.status === 'IN_PROGRESS'} />
           )}
           <BookingHistory key={booking.updatedAt ?? booking.id} bookingId={booking.id} />
 
@@ -339,6 +345,7 @@ const FILTER_OPTIONS: { value: FilterStatus; label: string }[] = [
   { value: 'COMPLETED',   label: 'Finalizados'  },
   { value: 'CANCELLED',   label: 'Cancelados'   },
   { value: 'NO_SHOW',     label: 'Faltas'       },
+  { value: 'INTERRUPTED', label: 'Interrompidos' },
 ]
 
 /* ── Página principal ────────────────────────────────────────────────────── */

@@ -15,4 +15,5 @@ public record BookingEvent(
         UUID userId,
         LocalDateTime bookingDate,
         LocalDateTime previousBookingDate,
-        String status) {}
+        String status,
+        UUID receptionCustomerId) {}

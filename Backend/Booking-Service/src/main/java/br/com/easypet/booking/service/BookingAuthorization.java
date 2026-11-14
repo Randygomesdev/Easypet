@@ -98,6 +98,22 @@ class BookingAuthorization {
         requireStaffMatch(booking, assignedStaff());
     }
 
+    void requireAttendanceAt(UUID partnerId) {
+        if (!canManage() && !session().hasPermission(ASSIGNED_ATTEND)) throw denied();
+        requirePartnerScope(partnerId);
+    }
+
+    void requireInPersonExtraDecision(Booking booking) {
+        if (!canRegisterInPersonExtraDecision()) throw denied();
+        requirePartnerScope(booking.getPartnerId());
+    }
+
+    private boolean canRegisterInPersonExtraDecision() {
+        var person = session();
+        return "PARTNER".equals(person.role()) || (team()
+                && person.hasPermission(WRITE) && person.hasPermission("DESK_CUSTOMERS_MANAGE"));
+    }
+
     void requireManagementAt(UUID partnerId) {
         requireManagement();
         requirePartnerScope(partnerId);
@@ -113,7 +129,8 @@ class BookingAuthorization {
         if (!all && !session().hasPermission(ASSIGNED_READ)) throw denied();
         requirePartnerScope(partnerId);
         UUID staff = all ? null : assignedStaff();
-        return new BookingAccessResponse(partnerId, canManage(), canManage() || session().hasPermission(ASSIGNED_ATTEND), staff, team());
+        return new BookingAccessResponse(partnerId, canManage(), canManage() || session().hasPermission(ASSIGNED_ATTEND),
+                staff, team(), canRegisterInPersonExtraDecision());
     }
 
     UUID currentPartner() {

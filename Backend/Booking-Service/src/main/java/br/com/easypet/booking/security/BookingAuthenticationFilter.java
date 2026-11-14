@@ -28,6 +28,9 @@ public class BookingAuthenticationFilter extends OncePerRequestFilter {
     @Value("${app.booking-outbox-token:}")
     private String outboxToken;
 
+    @Value("${app.booking-payment-authorization-token:}")
+    private String paymentAuthorizationToken;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = path(request);
@@ -41,9 +44,12 @@ public class BookingAuthenticationFilter extends OncePerRequestFilter {
         String authorization = request.getHeader("Authorization");
         String path = path(request);
         if (path.equals("/internal/booking-events") || path.startsWith("/internal/booking-events/")) {
-            if (!outboxToken.isBlank() && authorization != null && MessageDigest.isEqual(
-                    ("Bearer " + outboxToken).getBytes(StandardCharsets.UTF_8), authorization.getBytes(StandardCharsets.UTF_8))) {
+            if (matchesToken(outboxToken, authorization)) {
                 authenticate("notification-service", "BOOKING_OUTBOX");
+            }
+        } else if (path.equals("/internal/booking-extra-authorizations") || path.startsWith("/internal/booking-extra-authorizations/")) {
+            if (matchesToken(paymentAuthorizationToken, authorization)) {
+                authenticate("payment-service", "BOOKING_PAYMENT_AUTHORIZATION");
             }
         } else if (authorization != null && authorization.startsWith("Bearer ") && !authorization.substring(7).isBlank()) {
             try {
@@ -57,6 +63,11 @@ public class BookingAuthenticationFilter extends OncePerRequestFilter {
             }
         }
         chain.doFilter(request, response);
+    }
+
+    private static boolean matchesToken(String configured, String received) {
+        return !configured.isBlank() && received != null && MessageDigest.isEqual(
+                ("Bearer " + configured).getBytes(StandardCharsets.UTF_8), received.getBytes(StandardCharsets.UTF_8));
     }
 
     private static void authenticate(Object principal, String authority) {

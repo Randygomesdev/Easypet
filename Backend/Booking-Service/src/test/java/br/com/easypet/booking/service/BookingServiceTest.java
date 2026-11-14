@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import br.com.easypet.booking.dto.response.PartnerBusinessHourIntegrationResponse;
 import br.com.easypet.booking.repository.BookingAgendaStore;
+import br.com.easypet.booking.repository.BookingExtraStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +62,9 @@ class BookingServiceTest {
     @Mock
     private BookingAgendaStore agenda;
 
+    @Mock
+    private BookingExtraStore extras;
+
     private BookingService bookingService;
     private final Clock bookingClock = Clock.system(ZoneId.of("America/Sao_Paulo"));
 
@@ -78,7 +82,7 @@ class BookingServiceTest {
 
         var schedule = new BookingSchedule(bookingRepository, agenda, partnerServiceClient, bookingClock);
         bookingService = new BookingService(bookingRepository, bookingMapper, null, petServiceClient,
-                schedule, agenda, new ObjectMapper().findAndRegisterModules(), bookingClock, new BookingAuthorization(partnerServiceClient));
+                schedule, agenda, new ObjectMapper().findAndRegisterModules(), bookingClock, new BookingAuthorization(partnerServiceClient), extras);
         authenticateAs("CUSTOMER");
     }
 
@@ -249,7 +253,7 @@ class BookingServiceTest {
         BookingResponse expectedResponse = new BookingResponse(
                 UUID.randomUUID(), petId, partnerId, userId, bookingDate, BookingType.GROOMING,
                 BookingStatus.PENDING, "Banho cheiroso", BigDecimal.valueOf(80.00),
-                null, null, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, staffId, null, null, null, null, null, null
+                null, null, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, staffId, null, null, null, null, null, null, null, null
         );
 
         when(bookingMapper.toEntity(request)).thenReturn(booking);
@@ -315,7 +319,7 @@ class BookingServiceTest {
         BookingResponse expectedResponse = new BookingResponse(
                 UUID.randomUUID(), petId, partnerId, userId, checkIn, BookingType.BOARDING,
                 BookingStatus.PENDING, "Hospedagem 3 noites", BigDecimal.valueOf(150.00),
-                checkIn, checkOut, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, null, null, null, null, null, null, null
+                checkIn, checkOut, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, null, null, null, null, null, null, null, null, null
         );
         when(bookingMapper.toResponse(any(Booking.class))).thenReturn(expectedResponse);
 
@@ -437,7 +441,7 @@ class BookingServiceTest {
         BookingResponse expectedResponse = new BookingResponse(
                 UUID.randomUUID(), petId, partnerId, userId, bookingDate, BookingType.GROOMING,
                 BookingStatus.PENDING, "Banho cheiroso", BigDecimal.valueOf(80.00),
-                null, null, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, staffId, null, null, null, null, null, null
+                null, null, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, staffId, null, null, null, null, null, null, null, null
         );
 
         when(bookingMapper.toEntity(request)).thenReturn(booking);
@@ -493,7 +497,7 @@ class BookingServiceTest {
         BookingResponse expectedResponse = new BookingResponse(
                 UUID.randomUUID(), petId, partnerId, userId, bookingDate, BookingType.GROOMING,
                 BookingStatus.PENDING, "Banho cheiroso", BigDecimal.valueOf(80.00),
-                null, null, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, staffId, null, null, null, null, null, null
+                null, null, serviceId, LocalDateTime.now(bookingClock), LocalDateTime.now(bookingClock), br.com.easypet.booking.domain.enums.PaymentMethod.CARD, null, staffId, null, null, null, null, null, null, null, null
         );
 
         when(bookingMapper.toEntity(request)).thenReturn(booking);

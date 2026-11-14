@@ -1,7 +1,7 @@
 import { api } from '../lib/api'
 import { petService, type PetResponse } from './pet.service'
 
-export type BookingStatus  = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+export type BookingStatus  = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | 'INTERRUPTED'
 export type BookingType    = 'CONSULTATION' | 'VACCINATION' | 'GROOMING' | 'BOARDING' | 'OTHER'
 
 export interface BookingResponse {
@@ -26,6 +26,8 @@ export interface BookingResponse {
   scheduledEnd?:     string | null
   cancellationReason?: string | null
   noShowReason?:     string | null
+  interruptionReason?: string | null
+  interruptedAt?: string | null
   readyAt?:          string | null
   receptionCustomerId?: string | null
 }
@@ -65,6 +67,27 @@ export const BOOKING_STATUS_LABEL: Record<BookingStatus, string> = {
   CANCELLED:   'Cancelado',
   COMPLETED:   'Finalizado',
   NO_SHOW:     'Falta',
+  INTERRUPTED: 'Interrompido',
+}
+
+export interface BookingExtraProposal {
+  description: string
+  quantity: number
+  unitPriceCents: number
+}
+
+export type BookingExtraDecision = 'APPROVE' | 'REJECT'
+
+export interface BookingExtra extends BookingExtraProposal {
+  id: string
+  bookingId: string
+  partnerId: string
+  version: number
+  amountCents: number
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED'
+  createdAt: string
+  decisionAt: string | null
+  channel: 'DIGITAL' | 'IN_PERSON' | null
 }
 
 export interface RescheduleRequest {
@@ -115,6 +138,7 @@ export interface BookingAccess {
   canAttend: boolean
   staffId: string | null
   teamMember: boolean
+  canRegisterInPersonExtraDecision?: boolean
 }
 
 export interface BookingPolicy {
@@ -244,6 +268,22 @@ export const bookingService = {
 
   history: (id: string): Promise<BookingHistoryEntry[]> =>
     api.get(`/bookings/${id}/history`).then(r => r.data),
+
+  interrupt: (id: string, reason: string): Promise<BookingResponse> =>
+    api.post(`/bookings/${id}/interrupt`, { reason }).then(r => r.data),
+
+  extras: (id: string, page: number): Promise<PageResponse<BookingExtra>> =>
+    api.get(`/bookings/${id}/extras`, { params: { page, size: 20 } }).then(r => r.data),
+
+  proposeExtra: (id: string, proposal: BookingExtraProposal, key: string): Promise<BookingExtra> =>
+    api.post(`/bookings/${id}/extras`, proposal, { headers: { 'Idempotency-Key': key } }).then(r => r.data),
+
+  decideExtraDigital: (extra: BookingExtra, decision: BookingExtraDecision): Promise<BookingExtra> =>
+    api.post(`/bookings/${extra.bookingId}/extras/${extra.id}/decisions/digital`, { version: extra.version, decision }).then(r => r.data),
+
+  decideExtraInPerson: (extra: BookingExtra, decision: BookingExtraDecision, reason: string, evidence: string): Promise<BookingExtra> =>
+    api.post(`/bookings/${extra.bookingId}/extras/${extra.id}/decisions/in-person`,
+      { version: extra.version, decision, reason, evidence }).then(r => r.data),
 
   getCheckIn: (id: string): Promise<BookingCheckIn | null> =>
     api.get(`/bookings/${id}/check-in`).then(r => r.status === 204 ? null : r.data),

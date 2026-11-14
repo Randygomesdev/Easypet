@@ -7,7 +7,7 @@ import { bookingError } from './bookingUi'
 
 export function BookingReasonDialog({ bookingId, status, partnerId, onClose, onSaved }: {
   bookingId: string
-  status: 'CANCELLED' | 'NO_SHOW'
+  status: 'CANCELLED' | 'NO_SHOW' | 'INTERRUPTED'
   partnerId?: string
   onClose: () => void
   onSaved: (booking: BookingResponse) => void
@@ -15,7 +15,8 @@ export function BookingReasonDialog({ bookingId, status, partnerId, onClose, onS
   const [reason, setReason] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const title = status === 'CANCELLED' ? 'Cancelar agendamento' : 'Registrar falta'
+  const titles = { CANCELLED: 'Cancelar agendamento', NO_SHOW: 'Registrar falta', INTERRUPTED: 'Interromper atendimento' }
+  const title = titles[status]
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -26,7 +27,7 @@ export function BookingReasonDialog({ bookingId, status, partnerId, onClose, onS
     setSaving(true)
     setError('')
     try {
-      onSaved(await (partnerId
+      onSaved(await (status === 'INTERRUPTED' ? bookingService.interrupt(bookingId, reason.trim()) : partnerId
         ? bookingService.updateAdminStatus(partnerId, bookingId, status, reason.trim())
         : bookingService.updateStatus(bookingId, status, reason.trim())))
     } catch (err) {
@@ -39,6 +40,7 @@ export function BookingReasonDialog({ bookingId, status, partnerId, onClose, onS
   return (
     <Dialog open title={title} onOpenChange={open => { if (!open && !saving) onClose() }}>
       <form className="space-y-4" onSubmit={submit}>
+        {status === 'INTERRUPTED' && <p className="text-sm text-text-body">O atendimento será encerrado como interrompido. O caixa mantém o saldo atual.</p>}
         <TextField label="Motivo" required maxLength={500} value={reason}
           onChange={event => setReason(event.target.value)} disabled={saving} />
         {error && <p role="alert" className="text-sm text-text-danger">{error}</p>}

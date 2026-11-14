@@ -4,6 +4,7 @@ import br.com.easypet.booking.domain.enums.BookingStatus;
 import br.com.easypet.booking.domain.enums.BookingType;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,5 +31,7 @@ public record BookingResponse(
     String cancellationReason,
     String noShowReason,
     LocalDateTime readyAt,
-    UUID receptionCustomerId
+    UUID receptionCustomerId,
+    String interruptionReason,
+    Instant interruptedAt
 ) {}

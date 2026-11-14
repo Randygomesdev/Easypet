@@ -51,6 +51,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
         org.springframework.web.bind.ServletRequestBindingException.class,
+        org.springframework.web.method.annotation.HandlerMethodValidationException.class,
         org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
         org.springframework.http.converter.HttpMessageNotReadableException.class,
         jakarta.validation.ConstraintViolationException.class

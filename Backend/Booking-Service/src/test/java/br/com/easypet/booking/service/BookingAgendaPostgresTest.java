@@ -280,7 +280,11 @@ class BookingAgendaPostgresTest {
         assertThat(booking.createBooking(request, "reception").id()).isEqualTo(created.id());
         booking.updateStatus(created.id(), BookingStatus.CONFIRMED);
         assertThat(booking.history(created.id())).hasSize(2);
-        assertThat(events()).isEmpty();
+        assertThat(events()).extracting(BookingEvent::eventType).containsExactly("BOOKING_CREATED", "BOOKING_CONFIRMED");
+        assertThat(events()).allSatisfy(event -> {
+            assertThat(event.userId()).isNull();
+            assertThat(event.receptionCustomerId()).isEqualTo(customerId);
+        });
 
         authenticate(tutorId, "CUSTOMER");
         assertThrows(ResourceNotFoundException.class, () -> booking.getBookingById(created.id()));

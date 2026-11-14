@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -49,6 +50,15 @@ public class Booking {
 
     @Column(name = "no_show_reason")
     private String noShowReason;
+
+    @Column(name = "interruption_reason")
+    private String interruptionReason;
+
+    @Column(name = "interrupted_at")
+    private Instant interruptedAt;
+
+    @Column(name = "interrupted_by")
+    private UUID interruptedBy;
 
     @Column(name = "ready_at")
     private LocalDateTime readyAt;
