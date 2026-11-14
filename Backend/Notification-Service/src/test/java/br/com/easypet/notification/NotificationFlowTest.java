@@ -27,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -34,9 +35,9 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:s06;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
-        "spring.datasource.username=sa",
-        "spring.datasource.password=",
+        "spring.datasource.url=${S06_TEST_DB_URL:jdbc:h2:mem:s06;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}",
+        "spring.datasource.username=${S06_TEST_DB_USERNAME:sa}",
+        "spring.datasource.password=${S06_TEST_DB_PASSWORD:}",
         "notification.poll-delay=3600000"
 })
 class NotificationFlowTest {
@@ -47,10 +48,14 @@ class NotificationFlowTest {
     @Autowired NotificationStore store;
     @Autowired DeliveryProcessor processor;
     @Autowired NotificationAdmin admin;
+    @Autowired NotificationPreferences preferences;
+    @Autowired OperationsInbox inbox;
     @Autowired JdbcTemplate jdbc;
     @Autowired ObjectMapper json;
     @MockitoBean Clock clock;
     @MockitoSpyBean LocalEmailTransport transport;
+    @MockitoBean ReceptionRecipientClient reception;
+    @MockitoBean BookingAccessClient bookingAccess;
 
     private UUID bookingId;
     private UUID partnerId;
@@ -62,6 +67,180 @@ class NotificationFlowTest {
         bookingId = UUID.randomUUID();
         partnerId = UUID.randomUUID();
         userId = UUID.randomUUID();
+    }
+
+    @Test
+    void preferenceChangedAfterClaimSuppressesDeliveryAndCannotBeRetried() {
+        consumer.consume(event(BOOKING_READY, 2, "IN_PROGRESS", 2));
+        var ready = delivery(Delivery.Type.READY);
+        assertThat(preferences.bookingEmail(userId)).isTrue();
+        var claim = processor.start(candidate(ready)).orElseThrow();
+        preferences.change(userId, false);
+        processor.deliver(claim);
+        var suppressed = delivery(Delivery.Type.READY);
+        assertThat(suppressed.status()).isEqualTo(SUPPRESSED);
+        assertThat(suppressed.lastError()).isEqualTo("BOOKING_EMAIL_DISABLED");
+        assertThat(captures(ready)).isEmpty();
+        assertThatThrownBy(() -> admin.retry(ready.id(), UUID.randomUUID(), UUID.randomUUID()))
+                .isInstanceOf(ResponseStatusException.class);
+        preferences.change(userId, true);
+        assertThat(preferences.bookingEmail(userId)).isTrue();
+        assertThat(processor.start(candidate(ready))).isEmpty();
+    }
+
+    @Test
+    void interruptionAfterReadyClaimInvalidatesReadyAndCannotBeUndoneByReplay() {
+        consumer.consume(event(BOOKING_CONFIRMED, 1, "CONFIRMED", 12));
+        var readyEvent = event(BOOKING_READY, 2, "IN_PROGRESS", 12);
+        consumer.consume(readyEvent);
+        var ready = delivery(Delivery.Type.READY);
+        var claim = processor.start(candidate(ready)).orElseThrow();
+        consumer.consume(event(BOOKING_INTERRUPTED, 3, "INTERRUPTED", 12));
+        consumer.consume(readyEvent);
+        processor.deliver(claim);
+        assertThat(delivery(Delivery.Type.READY).status()).isEqualTo(SUPERSEDED);
+        assertThat(delivery(Delivery.Type.REMINDER).status()).isEqualTo(SUPERSEDED);
+        assertThat(captures(ready)).isEmpty();
+    }
+
+    @Test
+    void receptionRequiresConsentBeforeOccurrenceAndUsesOnlyResolverAddress() {
+        var customer = UUID.randomUUID();
+        when(reception.enabled()).thenReturn(true);
+        when(reception.resolve(partnerId, customer)).thenReturn(new ReceptionRecipientClient.Recipient(
+                "balcao@example.test", UUID.randomUUID(), NOW.plusSeconds(1)));
+        consumer.consume(receptionEvent(BOOKING_CONFIRMED, 2, "CONFIRMED", customer));
+        var confirmation = delivery(Delivery.Type.CONFIRMATION);
+        dispatch(confirmation);
+        assertThat(delivery(Delivery.Type.CONFIRMATION).status()).isEqualTo(SUPPRESSED);
+        assertThat(captures(confirmation)).isEmpty();
+
+        when(clock.instant()).thenReturn(NOW.plusSeconds(1));
+        consumer.consume(receptionEvent(BOOKING_READY, 3, "IN_PROGRESS", customer));
+        var ready = delivery(Delivery.Type.READY);
+        dispatch(ready);
+        assertThat(delivery(Delivery.Type.READY).status()).isEqualTo(SENT);
+        verify(transport).send(argThat(message -> "balcao@example.test".equals(message.authorizedReceptionAddress())));
+        assertThat(captures(ready)).containsExactly("notifications@example.test");
+    }
+
+    @Test
+    void receptionReauthorizesRetryAndRejectsChangedOrRevokedConsent() {
+        var customer = UUID.randomUUID();
+        var original = UUID.randomUUID();
+        when(reception.enabled()).thenReturn(true);
+        when(reception.resolve(partnerId, customer)).thenReturn(new ReceptionRecipientClient.Recipient(
+                "balcao@example.test", original, NOW.minusSeconds(30)));
+        doReturn(new EmailTransport.Result(TRANSIENT_FAILURE, "SMTP_TEMPORARY")).when(transport).send(any());
+        consumer.consume(receptionEvent(BOOKING_READY, 2, "IN_PROGRESS", customer));
+        var ready = delivery(Delivery.Type.READY);
+        dispatch(ready);
+        assertThat(store.receptionDelivery(ready.id()).authorizationId()).isEqualTo(original);
+        when(clock.instant()).thenReturn(NOW.plusSeconds(60));
+        when(reception.resolve(partnerId, customer)).thenReturn(new ReceptionRecipientClient.Recipient(
+                "other@example.test", UUID.randomUUID(), NOW.minusSeconds(30)));
+        dispatch(ready);
+        assertThat(delivery(Delivery.Type.READY).lastError()).isEqualTo("RECEPTION_AUTHORIZATION_CHANGED");
+        verify(transport, times(1)).send(any());
+        assertThat(captures(ready)).isEmpty();
+
+        when(reception.resolve(partnerId, customer)).thenReturn(null);
+        consumer.consume(receptionEvent(BOOKING_CANCELLED, 3, "CANCELLED", customer));
+        dispatch(delivery(Delivery.Type.CANCELLED));
+        assertThat(delivery(Delivery.Type.CANCELLED).status()).isEqualTo(SUPPRESSED);
+        verify(transport, times(1)).send(any());
+    }
+
+    @Test
+    void operationalRecoveryIsOrderedDeduplicatedAndPreservesAdminAttribution() {
+        UUID incident = UUID.randomUUID();
+        var open = signal(incident, 1, OperationsItem.SignalState.OPEN);
+        var recovered = signal(incident, 2, OperationsItem.SignalState.RECOVERED);
+        inbox.ingest(recovered);
+        inbox.ingest(open);
+        inbox.ingest(recovered);
+        var system = incident(incident);
+        assertThat(system.status()).isEqualTo(OperationsItem.Status.RESOLVED);
+        assertThat(system.resolutionOrigin()).isEqualTo(OperationsItem.ResolutionOrigin.SYSTEM);
+        assertThat(system.resolvedBy()).isNull();
+        assertThat(system.signalSequence()).isEqualTo(2L);
+        assertThatThrownBy(() -> inbox.ingest(signal(incident, 3, OperationsItem.SignalState.OPEN)))
+                .isInstanceOf(ResponseStatusException.class);
+
+        UUID second = UUID.randomUUID();
+        inbox.ingest(signal(second, 1, OperationsItem.SignalState.OPEN));
+        inbox.ingest(signal(second, 1, OperationsItem.SignalState.OPEN));
+        UUID id = incident(second).id();
+        inbox.act(id, userId, OperationsItem.Action.ACKNOWLEDGE, null);
+        inbox.act(id, userId, OperationsItem.Action.RESOLVE, null);
+        inbox.ingest(signal(second, 2, OperationsItem.SignalState.RECOVERED));
+        var handled = incident(second);
+        assertThat(handled.resolutionOrigin()).isEqualTo(OperationsItem.ResolutionOrigin.ADMIN);
+        assertThat(handled.resolvedBy()).isEqualTo(userId);
+        assertThat(handled.readBy()).isEqualTo(userId);
+        assertThat(handled.signalState()).isEqualTo(OperationsItem.SignalState.RECOVERED);
+    }
+
+    @Test
+    void supportRequiresBookingReadAndKeepsResolutionPrivateAndAudited() {
+        UUID key = UUID.randomUUID();
+        UUID adminActor = UUID.randomUUID();
+        var request = new OperationsItem.TicketRequest("Dúvida", "Preciso de ajuda.", bookingId);
+        var ticket = inbox.createTicket(userId, key, request, "Bearer tutor-test");
+        assertThat(inbox.createTicket(userId, key, request, "Bearer tutor-test").id()).isEqualTo(ticket.id());
+        assertThatThrownBy(() -> inbox.createTicket(userId, key,
+                new OperationsItem.TicketRequest("Alterado", request.message(), bookingId), "Bearer tutor-test"))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+        verify(bookingAccess, times(1)).requireRead(bookingId, "Bearer tutor-test");
+        assertThatThrownBy(() -> inbox.getTicket(ticket.id(), UUID.randomUUID()))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> inbox.act(ticket.id(), adminActor, OperationsItem.Action.RESOLVE, " "))
+                .isInstanceOf(ResponseStatusException.class);
+        inbox.act(ticket.id(), adminActor, OperationsItem.Action.RESOLVE, "Consulte sua agenda.");
+        inbox.act(ticket.id(), UUID.randomUUID(), OperationsItem.Action.RESOLVE, "Consulte sua agenda.");
+        assertThatThrownBy(() -> inbox.act(ticket.id(), adminActor, OperationsItem.Action.RESOLVE, "Outra mensagem"))
+                .isInstanceOfSatisfying(ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+        assertThat(inbox.getTicket(ticket.id(), userId).resolvedBy()).isEqualTo(adminActor);
+        assertThat(inbox.getTicket(ticket.id(), userId).resolutionMessage()).isEqualTo("Consulte sua agenda.");
+        assertThat(inbox.listTickets(userId, 0, 20).content()).hasSize(1);
+
+        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND)).when(bookingAccess)
+                .requireRead(bookingId, "Bearer unrelated");
+        assertThatThrownBy(() -> inbox.createTicket(UUID.randomUUID(), key, request, "Bearer unrelated"))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
+    void concurrentAlertsShareOneIncidentAndPreserveNewestSignal() throws Exception {
+        UUID id = UUID.randomUUID();
+        try (var threads = Executors.newFixedThreadPool(2)) {
+            var first = threads.submit(() -> inbox.ingest(signal(id, 1, OperationsItem.SignalState.OPEN)));
+            var second = threads.submit(() -> inbox.ingest(signal(id, 2, OperationsItem.SignalState.RECOVERED)));
+            first.get(10, TimeUnit.SECONDS);
+            second.get(10, TimeUnit.SECONDS);
+        }
+        assertThat(incident(id).signalState()).isEqualTo(OperationsItem.SignalState.RECOVERED);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM operations_inbox WHERE event_key = ?", Long.class, id))
+                .isEqualTo(1);
+    }
+
+    private OperationsItem incident(UUID incident) {
+        return inbox.list(null, OperationsItem.Kind.ALERT, null, 0, 100).content().stream()
+                .filter(item -> incident.equals(item.incidentId())).findFirst().orElseThrow();
+    }
+
+    private OperationsItem.AlertRequest signal(UUID id, long sequence, OperationsItem.SignalState state) {
+        return new OperationsItem.AlertRequest(id, sequence, state, OperationsItem.Source.BACKUP,
+                OperationsItem.Service.BACKUP, "BACKUP_FAILED", OperationsItem.Severity.ERROR, null);
+    }
+
+    private BookingEvent receptionEvent(BookingEvent.Type type, long revision, String status, UUID customer) {
+        Instant now = clock.instant();
+        return new BookingEvent(UUID.randomUUID(), type, 1, now, bookingId, revision, partnerId, null,
+                LocalDateTime.ofInstant(NOW.plus(Duration.ofHours(48)), BOOKING_ZONE), null, status, customer);
     }
 
     @Test

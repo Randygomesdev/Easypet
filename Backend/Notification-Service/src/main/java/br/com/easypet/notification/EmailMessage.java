@@ -3,8 +3,16 @@ package br.com.easypet.notification;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-record EmailMessage(UUID deliveryId, UUID userId, String subject, String body) {
+record EmailMessage(UUID deliveryId, UUID userId, String subject, String body, String authorizedReceptionAddress) {
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+
+    EmailMessage(UUID deliveryId, UUID userId, String subject, String body) {
+        this(deliveryId, userId, subject, body, null);
+    }
+
+    EmailMessage forAuthorizedReception(String address) {
+        return new EmailMessage(deliveryId, null, subject, body, address);
+    }
 
     static EmailMessage forDelivery(Delivery delivery, UUID userId) {
         String schedule = delivery.bookingDate().format(DATE);

@@ -16,16 +16,24 @@ record BookingEvent(
         UUID userId,
         LocalDateTime bookingDate,
         LocalDateTime previousBookingDate,
-        String status
+        String status,
+        UUID receptionCustomerId
 ) {
     enum Type {
-        BOOKING_CREATED, BOOKING_CONFIRMED, BOOKING_RESCHEDULED, BOOKING_CANCELLED, BOOKING_NO_SHOW, BOOKING_READY
+        BOOKING_CREATED, BOOKING_CONFIRMED, BOOKING_RESCHEDULED, BOOKING_CANCELLED, BOOKING_NO_SHOW, BOOKING_READY,
+        BOOKING_INTERRUPTED
+    }
+
+    BookingEvent(UUID eventId, Type eventType, int version, Instant occurredAt, UUID bookingId, long bookingVersion,
+            UUID partnerId, UUID userId, LocalDateTime bookingDate, LocalDateTime previousBookingDate, String status) {
+        this(eventId, eventType, version, occurredAt, bookingId, bookingVersion, partnerId, userId,
+                bookingDate, previousBookingDate, status, null);
     }
 
     void validate() {
         if (version != 1 || bookingVersion < 1 || eventId == null || eventType == null
                 || bookingId == null || partnerId == null || occurredAt == null || bookingDate == null
-                || !validStatus()) {
+                || (userId != null && receptionCustomerId != null) || !validStatus()) {
             throw new IllegalArgumentException("Evento de reserva inválido");
         }
     }
@@ -39,6 +47,7 @@ record BookingEvent(
             case BOOKING_CANCELLED -> Objects.equals(status, "CANCELLED");
             case BOOKING_NO_SHOW -> Objects.equals(status, "NO_SHOW");
             case BOOKING_READY -> Objects.equals(status, "IN_PROGRESS");
+            case BOOKING_INTERRUPTED -> Objects.equals(status, "INTERRUPTED");
         };
     }
 }

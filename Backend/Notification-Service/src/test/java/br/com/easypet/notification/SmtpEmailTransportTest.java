@@ -53,6 +53,14 @@ class SmtpEmailTransportTest {
     }
 
     @Test
+    void smtpUsesOnlyTheAuthorizedReceptionMailboxWithoutAuthLookup() throws Exception {
+        clearInvocations(auth);
+        assertThat(transport.send(input.forAuthorizedReception("balcao@example.test")).outcome()).isEqualTo(SENT);
+        assertThat(message.getAllRecipients()[0].toString()).isEqualTo("balcao@example.test");
+        verifyNoInteractions(auth);
+    }
+
+    @Test
     void invalidSenderOrPublicDomainFailsAtStartup() {
         org.assertj.core.api.Assertions.assertThatIllegalArgumentException().isThrownBy(() ->
                 new SmtpEmailTransport(mail, auth, "sender@example.com", "example.com", "test-token"));

@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
 @Service
 class DeliveryProcessor {
@@ -19,13 +20,18 @@ class DeliveryProcessor {
     private final NotificationStore store;
     private final EmailTransport transport;
     private final Clock clock;
+    private final NotificationPreferences preferences;
+    private final ReceptionRecipientClient reception;
 
     record Claim(NotificationStore.Candidate candidate, int attemptNumber) {}
 
-    DeliveryProcessor(NotificationStore store, EmailTransport transport, Clock clock) {
+    DeliveryProcessor(NotificationStore store, EmailTransport transport, Clock clock,
+            NotificationPreferences preferences, ReceptionRecipientClient reception) {
         this.store = store;
         this.transport = transport;
         this.clock = clock;
+        this.preferences = preferences;
+        this.reception = reception;
     }
 
     @Transactional
@@ -65,7 +71,7 @@ class DeliveryProcessor {
             return;
         }
 
-        var result = transport.send(EmailMessage.forDelivery(delivery, booking.userId()));
+        var result = send(delivery, booking);
         now = clock.instant();
         Status status = switch (result.outcome()) {
             case SENT -> Status.SENT;
@@ -73,6 +79,7 @@ class DeliveryProcessor {
                     ? Status.RETRY_SCHEDULED : Status.FAILED;
             case PERMANENT_FAILURE -> Status.FAILED;
             case UNKNOWN -> Status.UNKNOWN;
+            case SUPPRESSED -> Status.SUPPRESSED;
             case STARTED, SUPERSEDED -> throw new IllegalStateException("Resultado inválido do transporte");
         };
         Instant due = delivery.dueAt();
@@ -83,6 +90,38 @@ class DeliveryProcessor {
             }
         }
         store.finish(delivery, status, result.outcome(), now, due, result.error());
+    }
+
+    private EmailTransport.Result send(Delivery delivery, NotificationStore.Booking booking) {
+        var message = EmailMessage.forDelivery(delivery, booking.userId());
+        if (booking.userId() != null) {
+            return preferences.lockBookingEmail(booking.userId())
+                    ? transport.send(message) : suppressed("BOOKING_EMAIL_DISABLED");
+        }
+        if (booking.receptionCustomerId() == null || !reception.enabled()) {
+            return suppressed("RECEPTION_AUTHORIZATION_UNAVAILABLE");
+        }
+        ReceptionRecipientClient.Recipient recipient;
+        try {
+            recipient = reception.resolve(booking.partnerId(), booking.receptionCustomerId());
+        } catch (RestClientException exception) {
+            return new EmailTransport.Result(Outcome.TRANSIENT_FAILURE, "RECIPIENT_LOOKUP_UNAVAILABLE");
+        }
+        var context = store.receptionDelivery(delivery.id());
+        if (recipient == null || context.occurredAt() == null || context.occurredAt().isBefore(recipient.grantedAt())) {
+            return suppressed("RECEPTION_AUTHORIZATION_UNAVAILABLE");
+        }
+        if (context.authorizationId() != null && !context.authorizationId().equals(recipient.authorizationId())) {
+            return suppressed("RECEPTION_AUTHORIZATION_CHANGED");
+        }
+        if (context.authorizationId() == null) {
+            store.bindReceptionAuthorization(delivery.id(), recipient.authorizationId());
+        }
+        return transport.send(message.forAuthorizedReception(recipient.email()));
+    }
+
+    private static EmailTransport.Result suppressed(String code) {
+        return new EmailTransport.Result(Outcome.SUPPRESSED, code);
     }
 
     @Transactional

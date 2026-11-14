@@ -26,6 +26,18 @@ class AuthClient {
     record Recipient(String email) {}
 
     UUID requireAdmin(String authorization) {
+        return requireRole(authorization, "ADMIN");
+    }
+
+    UUID requireRole(String authorization, String role) {
+        Session session = requireSession(authorization);
+        if (!role.equals(session.role())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sua sessão não tem acesso a esta operação.");
+        }
+        return session.userId();
+    }
+
+    Session requireSession(String authorization) {
         if (authorization == null || !authorization.regionMatches(true, 0, "Bearer ", 0, 7)
                 || authorization.substring(7).isBlank()) {
             throw invalidSession();
@@ -48,10 +60,7 @@ class AuthClient {
         if (session == null || session.userId() == null || session.role() == null) {
             throw unavailable();
         }
-        if (!"ADMIN".equals(session.role())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso restrito a administradores.");
-        }
-        return session.userId();
+        return session;
     }
 
     String recipientEmail(UUID userId) {

@@ -21,8 +21,8 @@ export function EmptyNotificationResults({ bookingId }: { bookingId: string }) {
       action={<Button variant="secondary" onClick={reload}>Tentar novamente</Button>} />
   }
   if (state.data) {
-    return <EmptyState icon={Mail} title="Envio indisponível para reserva de balcão"
-      description="O envio de avisos de balcão depende de um destinatário autorizado para essa origem." />
+    return <EmptyState icon={Mail} title="Nenhuma entrega para esta reserva de balcão"
+      description="Avisos de balcão exigem consentimento válido e um destinatário autorizado." />
   }
   return <EmptyState icon={Mail} title="Nenhuma entrega para esta reserva" />
 }

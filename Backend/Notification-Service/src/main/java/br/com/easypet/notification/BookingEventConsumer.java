@@ -38,7 +38,7 @@ class BookingEventConsumer {
 
         store.advanceBooking(event);
         store.supersedePrevious(event, now);
-        if (event.userId() == null) {
+        if (event.userId() == null && event.receptionCustomerId() == null) {
             return;
         }
         switch (event.eventType()) {
@@ -46,7 +46,7 @@ class BookingEventConsumer {
             case BOOKING_RESCHEDULED -> store.enqueue(event, Type.RESCHEDULED, now, now, null);
             case BOOKING_CANCELLED -> store.enqueue(event, Type.CANCELLED, now, now, null);
             case BOOKING_READY -> store.enqueue(event, Type.READY, now, now, null);
-            case BOOKING_CREATED, BOOKING_NO_SHOW -> { }
+            case BOOKING_CREATED, BOOKING_NO_SHOW, BOOKING_INTERRUPTED -> { }
         }
 
         boolean needsReminder = event.eventType() == BookingEvent.Type.BOOKING_CONFIRMED

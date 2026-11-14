@@ -55,7 +55,8 @@ class SmtpEmailTransport implements EmailTransport {
     public Result send(EmailMessage email) {
         String recipient;
         try {
-            recipient = auth.recipientEmail(email.userId());
+            recipient = email.authorizedReceptionAddress() == null
+                    ? auth.recipientEmail(email.userId()) : email.authorizedReceptionAddress();
         } catch (RestClientException exception) {
             return new Result(TRANSIENT_FAILURE, "RECIPIENT_LOOKUP_UNAVAILABLE");
         }

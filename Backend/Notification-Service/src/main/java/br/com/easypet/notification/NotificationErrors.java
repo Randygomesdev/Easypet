@@ -3,6 +3,7 @@ package br.com.easypet.notification;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,7 +20,8 @@ class NotificationErrors {
                 .body(new ErrorResponse(error.getStatusCode().value(), error.getReason()));
     }
 
-    @ExceptionHandler({ServletRequestBindingException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({ServletRequestBindingException.class, MethodArgumentTypeMismatchException.class,
+            HttpMessageNotReadableException.class})
     ResponseEntity<ErrorResponse> badRequest() {
         return ResponseEntity.badRequest().cacheControl(CacheControl.noStore())
                 .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Parâmetros inválidos."));

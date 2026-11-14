@@ -25,8 +25,22 @@ class NotificationStore {
         this.jdbc = jdbc;
     }
 
-    record Booking(UUID id, long version, UUID partnerId, UUID userId) {}
+    record Booking(UUID id, long version, UUID partnerId, UUID userId, UUID receptionCustomerId) {}
     record Candidate(UUID id, UUID bookingId) {}
+    record ReceptionDelivery(Instant occurredAt, UUID authorizationId) {}
+
+    ReceptionDelivery receptionDelivery(UUID deliveryId) {
+        return jdbc.queryForObject("""
+                SELECT e.occurred_at, d.reception_authorization_id
+                FROM notification_delivery d JOIN notification_event e ON e.id = d.event_id WHERE d.id = ?
+                """, (rs, row) -> new ReceptionDelivery(instant(rs, "occurred_at"),
+                uuid(rs, "reception_authorization_id")), deliveryId);
+    }
+
+    void bindReceptionAuthorization(UUID deliveryId, UUID authorizationId) {
+        jdbc.update("UPDATE notification_delivery SET reception_authorization_id = ? WHERE id = ?",
+                authorizationId, deliveryId);
+    }
     record QueueCounts(long due, Instant oldestDueAt, long retryScheduled, long sending, long failed,
             long unknown, long unroutable) {}
 
@@ -56,27 +70,31 @@ class NotificationStore {
 
     void ensureBooking(BookingEvent event) {
         jdbc.update("""
-                INSERT INTO notification_booking (id, booking_version, partner_id, user_id) VALUES (?, 0, ?, ?)
+                INSERT INTO notification_booking (id, booking_version, partner_id, user_id, reception_customer_id)
+                VALUES (?, 0, ?, ?, ?)
                 ON CONFLICT DO NOTHING
-                """, event.bookingId(), event.partnerId(), event.userId());
+                """, event.bookingId(), event.partnerId(), event.userId(), event.receptionCustomerId());
     }
 
     Booking lockBooking(UUID bookingId) {
         return jdbc.queryForObject("SELECT * FROM notification_booking WHERE id = ? FOR UPDATE",
                 (rs, row) -> new Booking(uuid(rs, "id"), rs.getLong("booking_version"),
-                        uuid(rs, "partner_id"), uuid(rs, "user_id")), bookingId);
+                        uuid(rs, "partner_id"), uuid(rs, "user_id"), uuid(rs, "reception_customer_id")), bookingId);
     }
 
     boolean recordEvent(BookingEvent event, Instant now) {
         return jdbc.update("""
-                INSERT INTO notification_event (id, booking_id, booking_version, consumed_at) VALUES (?, ?, ?, ?)
+                INSERT INTO notification_event (id, booking_id, booking_version, consumed_at, occurred_at)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT DO NOTHING
-                """, event.eventId(), event.bookingId(), event.bookingVersion(), timestamp(now)) == 1;
+                """, event.eventId(), event.bookingId(), event.bookingVersion(), timestamp(now),
+                timestamp(event.occurredAt())) == 1;
     }
 
     void advanceBooking(BookingEvent event) {
-        jdbc.update("UPDATE notification_booking SET booking_version = ?, user_id = ? WHERE id = ?",
-                event.bookingVersion(), event.userId(), event.bookingId());
+        jdbc.update("""
+                UPDATE notification_booking SET booking_version = ?, user_id = ?, reception_customer_id = ? WHERE id = ?
+                """, event.bookingVersion(), event.userId(), event.receptionCustomerId(), event.bookingId());
     }
 
     void enqueue(BookingEvent event, Type type, Instant now, Instant due, Instant expires) {
@@ -198,11 +216,11 @@ class NotificationStore {
                 rs.getString("last_error"));
     }
 
-    private static UUID uuid(ResultSet rs, String column) throws SQLException {
+    static UUID uuid(ResultSet rs, String column) throws SQLException {
         return rs.getObject(column, UUID.class);
     }
 
-    private static Instant instant(ResultSet rs, String column) throws SQLException {
+    static Instant instant(ResultSet rs, String column) throws SQLException {
         OffsetDateTime value = rs.getObject(column, OffsetDateTime.class);
         return value == null ? null : value.toInstant();
     }

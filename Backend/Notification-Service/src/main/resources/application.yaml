@@ -21,6 +21,7 @@ spring:
       mail.smtp.starttls.enable: true
       mail.smtp.starttls.required: ${NOTIFICATION_MAIL_STARTTLS_REQUIRED:true}
       mail.smtp.ssl.checkserveridentity: true
+      mail.smtp.ssl.protocols: TLSv1.2 TLSv1.3
       mail.smtp.connectiontimeout: 3000
       mail.smtp.timeout: 5000
       mail.smtp.writetimeout: 5000
@@ -41,6 +42,9 @@ management:
       show-details: never
 
 notification:
+  operations-token: ${NOTIFICATION_OPERATIONS_TOKEN:}
+  reception-token: ${RECEPTION_NOTIFICATION_TOKEN:}
+  partner-url: ${PARTNER_SERVICE_URL:http://localhost:8083/api/v1}
   booking-url: ${BOOKING_SERVICE_URL:http://localhost:8084/api/v1}
   outbox-token: ${BOOKING_OUTBOX_TOKEN:}
   auth-url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1}

@@ -17,6 +17,7 @@ export const statusPresentation = {
   FAILED: { label: 'Falha no envio', tone: 'danger' },
   SUPERSEDED: { label: 'Invalidada', tone: 'neutral' },
   UNKNOWN: { label: 'Resultado incerto', tone: 'warning' },
+  SUPPRESSED: { label: 'Envio bloqueado', tone: 'neutral' },
 } as const satisfies Record<NotificationStatus, {
   label: string
   tone: 'neutral' | 'success' | 'info' | 'warning' | 'danger'
@@ -29,6 +30,7 @@ export const attemptLabel: Record<NotificationAttempt['outcome'], string> = {
   PERMANENT_FAILURE: 'Envio recusado',
   UNKNOWN: 'Resultado incerto',
   SUPERSEDED: 'Entrega invalidada',
+  SUPPRESSED: 'Envio bloqueado antes do transporte',
 }
 
 const errors: Record<string, string> = {
@@ -41,6 +43,9 @@ const errors: Record<string, string> = {
   SMTP_REJECTED: 'Mensagem recusada pelo transporte',
   SMTP_TEMPORARY: 'Falha temporária no transporte',
   SMTP_UNCERTAIN: 'O transporte não confirmou o resultado',
+  BOOKING_EMAIL_DISABLED: 'O tutor desativou avisos de reserva por e-mail.',
+  RECEPTION_AUTHORIZATION_UNAVAILABLE: 'O consentimento de balcão é ausente, revogado ou posterior ao aviso.',
+  RECEPTION_AUTHORIZATION_CHANGED: 'O consentimento atual difere do consentimento da primeira tentativa.',
 }
 
 export function errorLabel(code: string) {

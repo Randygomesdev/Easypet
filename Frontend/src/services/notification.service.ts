@@ -2,7 +2,7 @@ import { api } from '../lib/api'
 
 export type NotificationType = 'CONFIRMATION' | 'RESCHEDULED' | 'CANCELLED' | 'REMINDER' | 'READY'
 export type NotificationStatus =
-  | 'PENDING' | 'SENDING' | 'RETRY_SCHEDULED' | 'SENT' | 'FAILED' | 'SUPERSEDED' | 'UNKNOWN'
+  | 'PENDING' | 'SENDING' | 'RETRY_SCHEDULED' | 'SENT' | 'FAILED' | 'SUPERSEDED' | 'UNKNOWN' | 'SUPPRESSED'
 
 export interface NotificationDelivery {
   id: string
@@ -20,7 +20,7 @@ export interface NotificationAttempt {
   number: number
   startedAt: string
   finishedAt: string | null
-  outcome: 'STARTED' | 'SENT' | 'TRANSIENT_FAILURE' | 'PERMANENT_FAILURE' | 'UNKNOWN' | 'SUPERSEDED'
+  outcome: 'STARTED' | 'SENT' | 'TRANSIENT_FAILURE' | 'PERMANENT_FAILURE' | 'UNKNOWN' | 'SUPERSEDED' | 'SUPPRESSED'
   error: string | null
 }
 
@@ -34,7 +34,15 @@ export interface NotificationPage {
 
 const path = '/admin/notifications'
 
+export interface NotificationPreference { bookingEmail: boolean }
+
 export const notificationService = {
+  preferences: (signal?: AbortSignal) =>
+    api.get<NotificationPreference>('/notifications/preferences', { signal }).then(response => response.data),
+
+  savePreferences: (input: NotificationPreference) =>
+    api.put<NotificationPreference>('/notifications/preferences', input).then(response => response.data),
+
   list: (bookingId: string, page: number, signal: AbortSignal): Promise<NotificationPage> =>
     api.get(path, { params: { bookingId, page }, signal }).then(response => response.data),
 
