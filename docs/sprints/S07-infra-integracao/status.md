@@ -2,6 +2,53 @@
 
 Em 13/11/2026, a S07 concluiu o aceite integrado da R01 e da onda B em stack descartável, incluindo a restauração dos seis bancos PostgreSQL. A H1 valida os arquivos de publicação com as mudanças posteriores.
 
+## Memória da stack de homologação compartilhada
+
+Avaliação local concluída em 13/11/2026, com base em `344e2d6`. A referência usou o Compose de homologação com teto somado de 5.408 MiB para os 16 serviços de publicação. O candidato inicial de 3 GiB foi reprovado; o perfil ajustado de 3.504 MiB passou no aceite funcional, com redução de consumo amostrado de 7,89%. Os ensaios foram sequenciais, com subida em volumes novos, H1 e Google OAuth com fixtures locais, backup, simulação de migration incompatível, restauração dos seis bancos e limpeza por projeto. Capacidade sustentada e convivência com o Setoriza continuam sem aprovação; a margem do Partner ficou estreita.
+
+O contrato da comparação inclui limites efetivos, `memory.current`, `memory.peak`, `memory.events`, CPU e tempos por serviço, eventos OOM e reinícios, snapshots antes e depois, além da contagem de cenários e referências restauradas. O cálculo distingue o teto configurado, o pico simultâneo observado e as fixtures descartáveis. O perfil candidato deve preservar os serviços, as jornadas e a restauração. A convivência sustentada depende da carga real do Setoriza, especialmente WAHA, PostgreSQL e MinIO. A medição Docker local servirá para avaliar o EasyPet, e a disponibilidade instantânea da VPS é apenas uma observação do host.
+
+A primeira tentativa `easypet-e2e-da0ce82cf4` aprovou 28 cenários em 4,8 min e produziu o backup de seis bancos. A instrumentação invalidou a série em execução por acessar `Health` em fixtures sem healthcheck. A combinação de overlays de restauração declarava as mesmas fixtures sem imagem e parou antes do primeiro banco. Ambos os projetos ficaram com zero containers, volumes, redes e imagens. A referência foi repetida com afinidade de quatro CPUs para os 16 serviços de publicação e bancos restaurados, usando os overlays OAuth somente na stack principal. Os arquivos brutos da tentativa estão em `%TEMP%/easypet-memory-baseline-344e2d6` e no log homônimo. SHA-256 do log `893406c9d8b836fdc61fa8ef28521dcd97033ccaff5f2f95d1ba37338fdb64ec` e das métricas `4b1abae55c51d865c3bb0e63ee87bf482a47813674f32aad3d02c3337f67b856`.
+
+A referência corrigida, `easypet-e2e-d642142284`, aprovou 28 cenários, restaurou os seis bancos em `easypet-restore-449e5a94531dbc2a` e saiu com código `0`. O maior total amostrado dos 16 serviços foi **2.742,96 MiB**, com 27 amostras completas nas fases de stack pronta e Playwright. Os maiores picos individuais foram Auth 457,64 MiB e Partner 385,54 MiB. A coleta registrou uma falha de inventário durante a remoção, após os seis bancos terem fornecido a leitura final. A limpeza posterior confirmou zero recursos dos projetos descartáveis.
+
+O primeiro candidato `easypet-e2e-0263f7c674`, com teto de 3.072 MiB, foi reprovado antes do Playwright. O Docker registrou OOM no Auth e no Partner, reinícios nos dois e `unhealthy` no Partner. A subida saiu com código `1`, sem iniciar backup. As opções de Java foram aceitas no Auth e no Partner. Os seis PostgreSQL aplicaram os parâmetros previstos, com `fsync` e autovacuum ligados. A limpeza ficou com zero recursos. Os arquivos brutos estão em `%TEMP%/easypet-memory-compact-344e2d6` e no log homônimo. SHA-256 do log `96a5349686fb9b5b9d60df637bafc60509b4bc3d31de6ca57d3e8b97ff5ece02` e das métricas `994c5647864b90af4da1e02bbb1e91952f0dafc8e46345d4e03912e9c0577b86`.
+
+O [overlay ajustado](../../../scripts/production/setoriza-homolog/compose.compact.yml) soma 3.504 MiB e desabilita swap nos 16 serviços. Os tetos JVM foram revistos com base nos OOM da primeira subida e nas folgas dos picos da referência. O Java usa heap inicial e máximo explícitos, Serial GC, dois processadores visíveis, pilhas de 512 KiB e limite de memória direta. Tomcat usa 2–32 workers, e Hikari usa 1–6 conexões por serviço. Cada PostgreSQL usa 128 MiB de limite, `shared_buffers=32MB`, `max_connections=24`, `work_mem=2MB` e `maintenance_work_mem=16MB`. A nova rodada usa os mesmos cenários, afinidade e restauração. [PostgreSQL 15](https://www.postgresql.org/docs/15/runtime-config-resource.html), [coletores Java 21](https://docs.oracle.com/en/java/javase/21/gctuning/available-collectors.html), [limites e swap no Docker](https://docs.docker.com/engine/containers/resource_constraints/).
+
+Para repetir no Docker local com Node.js 24, Playwright/Chromium e OpenSSL disponíveis, execute da raiz do checkout. Use um diretório novo por rodada. `E2E_OPENSSL` permite informar o caminho do executável quando necessário.
+
+```powershell
+$run = Join-Path $env:TEMP ('easypet-memory-' + (Get-Date -Format yyyyMMdd-HHmmss))
+node scripts/production/setoriza-homolog/measure-local.mjs $run baseline *> "$run.log"
+```
+
+Use `compact` no lugar de `baseline` para testar o overlay. O diretório recebe `resources.json` e os snapshots antes/depois. O coletor usa cgroup v2 e eventos Docker por projeto. As leituras são feitas em lotes a cada dez segundos e nas mudanças de fase. Cada soma tem uma janela de captura registrada. A CPU vem de `cpu.stat`; o tempo de subida inclui build e espera de saúde, e o pico individual de `memory.peak` tem a duração do cgroup observado.
+
+### Resultado local do perfil ajustado
+
+O perfil de **3.504 MiB** passou no projeto `easypet-e2e-f8ac4259f1`, com saída `0`, cobertura completa da medição, zero OOM, zero reinícios inesperados e swap desabilitado e zerado. A suíte aprovou **28 cenários**, com o teste exclusivo de Google desligado pulado por condição. A restauração em `easypet-restore-7de556eb59b8c736` recuperou **seis bancos, 55 tabelas e 14 consultas de referência** após a simulação de migration incompatível. Os dois projetos ficaram com zero containers, volumes, redes e imagens, e o diretório temporário do backup foi removido.
+
+| Medida | Referência | Compacto |
+| --- | ---: | ---: |
+| Limites somados de publicação | 5.408 MiB | 3.504 MiB |
+| Maior soma amostrada de `memory.current`, 16 serviços | 2.742,96 MiB | 2.526,59 MiB |
+| Memória anônima / arquivo nessa amostra | 2.269,22 / 387,55 MiB | 2.104,82 / 343,84 MiB |
+| Maior soma amostrada das três fixtures de rede | 66,64 MiB | 65,76 MiB |
+| Maior `memory.peak` individual entre os seis bancos restaurados em sequência | 81,04 MiB | 78,22 MiB |
+| Subida com build e saúde | 399,22 s | 366,43 s |
+| Playwright | 313,38 s | 299,64 s |
+| Backup, simulação e restauração | 192,81 s | 203,29 s |
+| CPU somada entre amostras durante o Playwright | 222,80 s | 180,52 s |
+
+Os limites caíram **1.904 MiB (35,2%)** e a maior soma amostrada caiu **216,37 MiB (7,9%)**. As janelas das duas maiores somas duraram 3,36 s e 2,07 s. Cada rodada teve uma falha de inventário durante a remoção dos containers. O Partner chegou a 402,11 MiB no teto de 416 MiB, com folga observada de 13,89 MiB. O Auth chegou a 403,93 MiB no teto de 448 MiB. Nenhum serviço de publicação registrou `memory.events.max` nas leituras da rodada aprovada. Notification foi parada e iniciada intencionalmente pelo cenário de SMTP.
+
+Os sete processos Java registraram as flags de heap, Serial GC, pilha e memória direta na inicialização. O PostgreSQL confirmou 32 MiB de buffers, 2 MiB por operação, 16 MiB para manutenção e 24 conexões máximas nos seis bancos, com autovacuum e `fsync` ligados. Cada banco tinha duas conexões JDBC ociosas antes do Playwright. Na leitura durante as jornadas, Auth tinha três ociosas e Booking tinha uma ativa e quatro ociosas. Auth e Partner tinham dez conexões cada na leitura pontual da referência.
+
+Os snapshots conservaram HEAD `344e2d65dd9658924a063ae284ed319abf5af7a7` e hashes idênticos dentro de cada rodada. A referência contém 647 entradas, o compacto 648. Entre as rodadas mudaram o overlay novo e três arquivos de instrumentação/seleção do perfil. Os serviços de aplicação e as asserções Playwright têm hashes iguais. [Referência antes](memory-baseline-before.json), [referência depois](memory-baseline-after.json), [compacto antes](memory-compact-before.json), [compacto depois](memory-compact-after.json), [sumário por serviço e fase com hashes dos dados brutos](memory-comparison.json).
+
+O resultado aprova a redução local de memória no aceite funcional. A convivência sustentada na VPS segue sem validação. O mínimo de RAM disponível na janela observada pela R01 foi 4.818 MiB, cerca de 1.314 MiB acima do teto compacto. Essa diferença varia com a carga do Setoriza. O ensaio local usou Docker Desktop e quatro CPUs por afinidade. Build no host compartilhado, CPU steal, I/O e margem em horário de pico exigem avaliação própria. [Medição da VPS](../R01-review/memory-vps-baseline.json), [guia de homologação](../../production/setoriza-homolog.md).
+
 ## Login Google — 13/11/2026
 
 - O Compose real usa `GOOGLE_AUTH_ENABLED` (padrão `false`) para o Auth, o ingresso e o build do frontend. O Nginx e o Gateway liberam somente autorização, callback e troca pelos métodos do [contrato S07](contracts.md#google-oauth). Os valores de credenciais e a lista de contas passam somente ao Auth. O ingresso não aceita cabeçalhos externos de encaminhamento para definir o callback.
