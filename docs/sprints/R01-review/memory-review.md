@@ -2,6 +2,16 @@
 
 Pedido de 13/11/2026: verificar redução de memória do EasyPet antes de ampliar a VPS, preservando o Setoriza. Base da avaliação: `344e2d6`. S07 executa os ensaios EasyPet exclusivamente no Docker local; R01 revisa os resultados e lê as métricas da VPS. Nenhum teste de carga EasyPet foi executado na VPS.
 
+## Atualização de escopo — demonstrações controladas
+
+Após o parecer abaixo, o usuário esclareceu que o deploy é exclusivamente para testes internos e demonstrações controladas, sem fluxo real. **Recomendação atual: tentar a VPS existente antes de ampliar RAM**, com demonstração supervisionada e poucos acessos. A exigência anterior de carga sustentada deixa de ser gate desta publicação interna; permanece relevante antes de operação real. O aceite no endereço publicado continua pendente, assim como DNS/TLS e preparação do host.
+
+Foi preparado `compose.demo.yml`, aplicado após o compacto: eleva Auth de 448 para 480 MiB, Partner de 416 para 480 MiB e Booking de 368 para 400 MiB. Soma 3.632 MiB. A comparação estrutural dos Composes confirmou que somente esses três limites e seus limites de memória+swap mudaram; heaps, serviços, pools, redes e portas são iguais. Swap segue desabilitado. Os 28 testes e o pico de 2.526,59 MiB são evidências do compacto anterior; não foram reexecutados nem atribuídos ao overlay novo. A mudança relaxa tetos, sem alterar lógica funcional. A próxima validação de execução será a subida e o smoke supervisionado.
+
+O preflight específico de demonstração exige 4.656 MiB disponíveis antes da subida (3.632 de tetos + 1.024 de margem operacional), com imagens construídas fora da VPS. A margem é uma escolha operacional para uso supervisionado, não uma reserva garantida pelo kernel. A menor disponibilidade anteriormente medida, 4.818,41 MiB, atenderia esse critério, mas deve ser lida novamente antes de subir. O perfil padrão preserva a referência de 6.144 MiB.
+
+Hipótese inicial: uma demonstração por vez, até três usuários simultâneos, dados fictícios e acesso por convite. Não há limite de sessões implementado nem capacidade concorrente certificada. Aceite de 15–30 minutos com login, reserva e atendimento, comparando o Setoriza antes/durante/depois; interromper apenas o EasyPet diante de OOM/reinício inesperado, memória disponível inferior a 1 GiB por 30 segundos ou piora repetida do Setoriza. Builds e ensaios de restauração fora da VPS. [Roteiro atualizado e reversão](../../production/setoriza-homolog.md).
+
 ## Referência da VPS
 
 O coletor [inspect-memory.py](../../../scripts/production/setoriza-homolog/inspect-memory.py) lê somente `/proc`, cgroup v2 e metadados selecionados do Docker. Não lê ambientes, conteúdo de logs, bancos ou sessões de usuários. [Sumário de 30 amostras](memory-vps-baseline.json), entre 20:11:28 e 20:16:26 de 13/11/2026, horário de São Paulo:
@@ -45,7 +55,7 @@ O segundo candidato (`easypet-e2e-f8ac4259f1`) concluiu com saída zero: **28 ce
 
 A redução observada foi **216,37 MiB (7,89%)**; a redução dos tetos foi 35,21%. São medidas diferentes. A pequena diferença de duração não comprova ganho de latência ou capacidade. Os arquivos detalhados e hashes dos brutos estão na [evidência S07](../S07-infra-integracao/memory-comparison.json).
 
-## Parecer e próximos passos
+## Parecer anterior à confirmação do uso apenas para demonstrações
 
 **Aceite funcional local aprovado; capacidade para convivência na VPS ainda não aprovada.** Partner atingiu 402,11 MiB em teto de 416 MiB: apenas 13,89 MiB de folga (3,34%). Auth atingiu 403,93/448 MiB e Booking 331,58/368 MiB, também com margem limitada. A referência de Partner tinha pico de 385,54 MiB, portanto esse serviço não demonstrou economia nesta execução. Não reduzir mais esses tetos nem interpretar ausência de OOM em cinco minutos como segurança para carga sustentada.
 

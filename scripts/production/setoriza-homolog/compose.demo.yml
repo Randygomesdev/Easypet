@@ -1,0 +1,13 @@
+# Internal tests and controlled demos only. Load after compose.compact.yml.
+# Keep the measured compact profile unchanged; add headroom without changing heaps.
+# Total with base + compact + this overlay: 3632 MiB, with container swap disabled.
+services:
+  auth-service:
+    mem_limit: 480m
+    memswap_limit: 480m
+  partner-service:
+    mem_limit: 480m
+    memswap_limit: 480m
+  booking-service:
+    mem_limit: 400m
+    memswap_limit: 400m

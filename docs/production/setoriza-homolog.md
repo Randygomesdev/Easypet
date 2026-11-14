@@ -20,7 +20,11 @@ Preparação em 13/11/2026, após inspeção SSH autorizada. Destino confirmado 
 
 As quatro amostras curtas posteriores do `vmstat` mostraram 11–32% de CPU steal. Isso indica tempo de vCPU indisponível ao guest durante a amostra, não uma medição de capacidade sustentada. Reavaliar com carga representativa antes de aprovar a convivência.
 
-**Capacidade ainda não aprovada:** o Compose padrão contém 16 serviços com limites somados de 5.408 MiB, e a disponibilidade observada está abaixo do preflight planejado de 6.144 MiB. A avaliação posterior mediu 4.818–4.906 MiB disponíveis na VPS e comparou dois perfis localmente: o máximo amostrado do EasyPet caiu de 2.742,96 para 2.526,59 MiB (7,89%), com 28 testes e restauração dos seis bancos aprovados. O teto compacto de 3.504 MiB é experimental: Partner ficou com apenas 13,89 MiB de margem. Não há liberação para instalar esse perfil na VPS nem conclusão de que ampliar RAM seja inevitável. Antes da decisão, medir carga sustentada e picos representativos do Setoriza, aumentar a margem dos serviços críticos e validar um orçamento próprio. A coleta de CPU apresentou 27,09% de steal, que não se resolve ampliando somente RAM. [Parecer e evidências](../sprints/R01-review/memory-review.md). O armazenamento passou no critério de 20 GiB livres.
+**Escopo confirmado pelo usuário:** apenas testes internos e demonstrações controladas, sem operação real. A recomendação passa a ser tentar a VPS atual antes de ampliar RAM, com uma sessão de demonstração por vez e, como hipótese inicial, até três usuários simultâneos. Isso é um limite operacional proposto, não capacidade medida nem limitação implementada na aplicação. A avaliação encontrou 4.818–4.906 MiB disponíveis no host e máximo amostrado local de 2.526,59 MiB para o EasyPet compacto, com 28 cenários e restauração aprovados. [Medição e revisão do parecer](../sprints/R01-review/memory-review.md).
+
+O novo overlay `compose.demo.yml` aumenta apenas os tetos de Auth/Partner para 480 MiB e Booking para 400 MiB, mantendo heaps e demais ajustes do perfil testado. O total fica em **3.632 MiB**. Para a demonstração, o preflight exige **4.656 MiB disponíveis antes da subida**: soma dos tetos mais 1.024 MiB de margem operacional. Esse orçamento é uma decisão para uso supervisionado, não garantia contra crescimento do Setoriza. Pela menor disponibilidade anterior sobrariam 1.186 MiB após descontar todos os tetos. Revalidar a disponibilidade no momento da instalação. O perfil padrão continua exigindo 6.144 MiB; não usar o orçamento de demonstração com o Compose padrão.
+
+O gate deste escopo é a subida saudável e uma demonstração acompanhada de 15–30 minutos com login, reserva e atendimento, verificando Setoriza antes/durante/depois. Interromper somente o EasyPet se houver OOM/reinício inesperado, menos de 1 GiB disponível por 30 segundos, ou piora repetida de erros/tempo de resposta do Setoriza em relação à medição anterior. Esses critérios são operacionais; não há desligamento automático configurado. Teste de capacidade sustentada fica para antes de operação real. A coleta encontrou 27,09% de CPU steal: observar responsividade mesmo com RAM disponível. Builds e ensaios de restauração ficam fora da VPS durante a demonstração.
 
 ## Configuração preparada
 
@@ -31,6 +35,7 @@ Arquivos em [`scripts/production/setoriza-homolog`](../../scripts/production/set
 - `nginx-access.conf`: permite entrada pública, conforme decisão explícita do usuário nesta preparação. A aplicação exige contas provisionadas e allowlist Google, mantendo cadastro público e APIs internas bloqueados.
 - `compose.host.yml`: rede padrão exclusiva `172.30.80.0/24`, gateway `172.30.80.1`. Não sobrepõe as rotas observadas `172.17.0.0/16`, `172.18.0.0/16` e `172.19.0.0/16`. Revalidar na instalação; não conectar serviços Setoriza à rede EasyPet.
 - `compose.compact.yml`: perfil opcional com teto somado de 3.504 MiB e swap desabilitado nos 16 serviços. Aplique como terceiro arquivo Compose, após o base e o de rede, quando o perfil for aprovado para o ambiente. Mantenha os mesmos arquivos nas operações que recriam a stack. Para voltar ao perfil padrão, recrie os serviços com os arquivos base e de rede, preservando os volumes. [Aceite e medição local](../sprints/S07-infra-integracao/status.md#memória-da-stack-de-homologação-compartilhada).
+- `compose.demo.yml`: quarto arquivo, após o compacto; eleva três tetos e soma 3.632 MiB. Configuração validada por renderização, ainda sem execução na VPS. Os 28 testes se referem ao compacto anterior, não a uma nova rodada com este overlay. Na VPS atual, a reversão operacional é parar somente o EasyPet, preservando seus volumes; não trocar automaticamente para o perfil padrão maior.
 - `renewal-hook.sh`: testa e recarrega Nginx somente após renovação do certificado EasyPet.
 
 Foi preparado `.env.easypet-vps.local` na estação do operador, ignorado pelo Git. Contém segredos independentes, credencial Google e lista privada de convidados; não foi transferido para a VPS. `GOOGLE_AUTH_ENABLED=false` até configurar contas e realizar a ativação controlada. O IP de proxy previsto é `172.30.80.1`, correspondente ao gateway da rede Docker dedicada; confirmar o caminho real até o frontend antes de aceitar a identificação do cliente.
@@ -39,7 +44,7 @@ O log HTTP externo registra apenas horário, IDs, método, status e duração. N
 
 ## Sequência de publicação, ainda não executada
 
-1. Resolver capacidade. O usuário definiu acesso público ao site, com login apenas para convidados; o preflight passou a aceitar explicitamente `public-invited`. Provisione apenas contas aprovadas, inclusive para login por senha, e valide as recusas de acesso. Google retorna pelo navegador do usuário, sem necessidade de liberar faixas de IP do provedor. Esta decisão não abre cadastro público, checkout ou créditos.
+1. Usar o orçamento e o aceite supervisionado de demonstração acima. O usuário definiu acesso público ao site, com login apenas para convidados; o preflight aceita `public-invited`. Provisione apenas contas aprovadas, inclusive para login por senha, e valide as recusas de acesso. Esta decisão não abre cadastro público, checkout ou créditos.
 2. Instalar Node.js 24 no host para os scripts operacionais, por um canal oficial. Preparar checkout próprio em `/srv/easypet`, diretório de configuração protegido `/etc/easypet` e backups em `/srv/easypet-backups`. Transferir a configuração privada para `/etc/easypet/homolog.env`, proprietário root e modo 600. Nunca usar `.env` do Setoriza nem imprimir `docker compose config` completo com segredos.
 3. No DNS de `innker.com.br`, criar **A `easypet` → `13.140.225.50`**. Inicialmente usar DNS direto, sem proxy CDN, para preservar o contrato de IP de origem. Não criar AAAA nesta etapa: o candidato não habilita entrada IPv6. Confirmar a resolução antes de solicitar certificado.
 4. Criar `/var/www/easypet-acme/.well-known/acme-challenge`. Instalar somente o candidato bootstrap em `/etc/nginx/sites-available/easypet.innker.com.br` e criar seu link em `sites-enabled`. Guardar configuração anterior se esse destino passar a existir; nunca sobrescrever o vhost Setoriza. Executar `nginx -t` e só então `systemctl reload nginx`. Conferir que o Setoriza continua respondendo.
@@ -57,28 +62,30 @@ O log HTTP externo registra apenas horário, IDs, método, status e duração. N
    cd /srv/easypet
    node scripts/production/preflight.mjs --port 18080 \
      --origin https://easypet.innker.com.br --data-path /srv/easypet \
-     --min-free-ram-mib 6144 --min-free-disk-mib 20480 \
+     --min-free-ram-mib 4656 --min-free-disk-mib 20480 \
      --edge-ip 172.30.80.1 --access-policy public-invited \
      --tls-certificate /etc/letsencrypt/live/easypet.innker.com.br/fullchain.pem
    ```
 
    `public-invited` registra a decisão de exposição; não é uma verificação automática da autorização. Os limites de RAM/disco, verificação de TLS e smoke de contas convidadas continuam obrigatórios. VPN/rede privada continuam disponíveis para outros ambientes.
-7. Gerar e verificar manifesto de checkout limpo. Validar o Compose abaixo sem expor seus valores. Construir um serviço por vez ou em máquina de build; a margem de memória do build precisa de medição própria. Manter `GOOGLE_AUTH_ENABLED=false` para a primeira subida:
+7. Gerar e verificar manifesto de checkout limpo. Construir as oito imagens EasyPet fora da VPS, com os argumentos da configuração aprovada e tags do projeto `easypet-homolog`, e transferi-las ao host. Confirmar que estão disponíveis antes da subida. Manter `GOOGLE_AUTH_ENABLED=false` para a primeira subida. Definir o comando com todos os overlays nesta sessão Bash:
 
    ```bash
-   docker compose -p easypet-homolog --env-file /etc/easypet/homolog.env \
-     -f compose.homolog.yml -f scripts/production/setoriza-homolog/compose.host.yml config --quiet
-   docker compose --parallel 1 -p easypet-homolog --env-file /etc/easypet/homolog.env \
-     -f compose.homolog.yml -f scripts/production/setoriza-homolog/compose.host.yml up -d --build --wait
+   easypet_compose() {
+     docker compose --parallel 1 -p easypet-homolog --env-file /etc/easypet/homolog.env \
+       -f compose.homolog.yml -f scripts/production/setoriza-homolog/compose.host.yml \
+       -f scripts/production/setoriza-homolog/compose.compact.yml \
+       -f scripts/production/setoriza-homolog/compose.demo.yml "$@"
+   }
+   easypet_compose config --quiet
+   easypet_compose up -d --no-build --wait
    curl --fail --silent http://127.0.0.1:18080/healthz
    node scripts/production/diagnose.mjs --project easypet-homolog --env-file /etc/easypet/homolog.env
    ```
 
-   Manter os dois arquivos Compose em operações que criem/recriem a stack. Os scripts de diagnóstico/backup consultam containers existentes pelo mesmo projeto; não recriam essa rede. Confirmar a rede e o IP do proxy observado pelo frontend antes do aceite do limitador.
-
-   Para um eventual piloto compacto aprovado, construa as oito imagens EasyPet fora da VPS com os argumentos de build da configuração aprovada e entregue-as com as tags do projeto `easypet-homolog`. Confirme as imagens disponíveis no host antes de subir com `--no-build --wait`, usando os três arquivos Compose. A comparação local mede os containers em execução. O build Maven/Gradle/Vite demanda capacidade própria e fica fora do orçamento compacto. O preflight acima continua com 6.144 MiB até a validação de um orçamento próprio para o piloto compartilhado.
+   Manter os quatro arquivos nas operações que criem/recriem a stack. Os scripts de diagnóstico/backup consultam containers existentes pelo mesmo projeto. Confirmar a rede e o IP do proxy observado pelo frontend antes do aceite do limitador. Para interromper a demonstração por pressão de recursos, executar `easypet_compose stop`; isso preserva os volumes. Não executar builds Maven/Gradle/Vite no host compartilhado.
 8. Instalar `/etc/nginx/snippets/easypet-access.conf` com a política aprovada. Substituir o bootstrap pelo candidato HTTPS no mesmo vhost EasyPet; nunca habilitar ambos simultaneamente. Testar `nginx -t`, recarregar e conferir Setoriza/EasyPet, página pública, APIs protegidas, cabeçalhos, cookies e logs.
-9. Provisionar convidados com papéis definidos, preservando as restrições do provisionador ADMIN. Confirmar Google Workspace para o endereço corporativo. Habilitar Google no arquivo protegido, reconstruir o frontend e recriar os serviços com os mesmos dois arquivos Compose. Realizar login Google real, cancelamento, recusa de conta não convidada, papéis e jornadas do piloto. Só desativar a chave antiga depois de confirmar uso da nova.
+9. Provisionar convidados com papéis definidos, preservando as restrições do provisionador ADMIN. Confirmar Google Workspace para o endereço corporativo. Habilitar Google no arquivo protegido, reconstruir o frontend fora da VPS e recriar os serviços com os mesmos quatro arquivos Compose. Realizar login Google real, cancelamento, recusa de conta não convidada, papéis e jornadas da demonstração. Só desativar a chave antiga depois de confirmar uso da nova.
 
 Em caso de problema na primeira instalação, retirar somente o link do vhost EasyPet, testar Nginx e recarregar. Não parar o Nginx compartilhado, não alterar o Setoriza e não apagar volumes EasyPet para reverter uma falha. O rollback de dados segue o [roteiro operacional](operacao.md).
 
