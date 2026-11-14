@@ -43,6 +43,31 @@ export interface CashierMovement {
 export interface CashierChargeDetails {
   charge: CashierCharge
   movements: CashierMovement[]
+  approvedExtras: CashierApprovedExtra[]
+}
+
+export interface CashierApprovedExtra {
+  id: string
+  approvalId: string
+  version: number
+  description: string
+  quantity: number
+  unitPriceCents: number
+  amountCents: number
+  acceptedAt: string
+  acceptedBy: string
+  tutorIdentityType: 'AUTH_USER' | 'RECEPTION_CUSTOMER'
+  channel: 'DIGITAL' | 'IN_PERSON'
+  appliedAt: string
+  appliedBy: string
+}
+
+export interface CashierBookingExtra {
+  id: string
+  version: number
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED'
+  description: string
+  amountCents: number
 }
 
 export interface CashierDay {
@@ -66,6 +91,7 @@ export type CashierCommand =
   | { type: 'charge'; data: NewCashierCharge }
   | { type: 'receipt'; chargeId: string; method: CashierMethod; amountCents: number }
   | { type: 'reverse'; receiptId: string; chargeId: string; reason: string }
+  | { type: 'applyExtra'; chargeId: string; approvalId: string; version: number }
   | { type: 'close'; date: string }
 
 const base = '/payments/cashier'
@@ -84,6 +110,8 @@ export const cashierService = {
     api.get(base + '/charges', { timeout, params: { openOnly, page } }).then(r => r.data),
   charge: (id: string): Promise<CashierChargeDetails> =>
     api.get(base + '/charges/' + id, { timeout }).then(r => r.data),
+  bookingExtras: (bookingId: string, page: number): Promise<PageResponse<CashierBookingExtra>> =>
+    api.get(`/bookings/${bookingId}/extras`, { timeout, params: { page, size: 20 } }).then(r => r.data),
   day: (date: string | undefined, page: number): Promise<CashierDay> =>
     api.get(base + '/days', { timeout, params: { date, page } }).then(r => r.data),
   execute(intent: CashierCommand, key: string) {
@@ -96,6 +124,10 @@ export const cashierService = {
         })
       case 'reverse':
         return command(`/receipts/${intent.receiptId}/reverse`, key, { reason: intent.reason })
+      case 'applyExtra':
+        return command(`/charges/${intent.chargeId}/approved-extras`, key, {
+          approvalId: intent.approvalId, version: intent.version,
+        })
       case 'close':
         return command(`/days/${intent.date}/close`, key)
     }

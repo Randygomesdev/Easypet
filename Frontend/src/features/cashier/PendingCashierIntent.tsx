@@ -13,6 +13,8 @@ function describe(command: CashierCommand) {
       return `Recebimento de ${money(command.amountCents)} em ${METHOD_LABELS[command.method]}`
     case 'reverse':
       return `Reversão de recebimento · ${command.reason}`
+    case 'applyExtra':
+      return 'Aplicação de adicional autorizado'
     case 'close':
       return `Fechamento de ${dayLabel(command.date)}`
   }

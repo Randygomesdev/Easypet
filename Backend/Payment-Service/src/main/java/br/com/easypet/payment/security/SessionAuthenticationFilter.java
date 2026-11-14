@@ -28,7 +28,8 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI().substring(request.getContextPath().length());
-        return !path.equals("/payments") && !path.startsWith("/payments/");
+        return !path.equals("/payments") && !path.startsWith("/payments/")
+                && !path.equals("/admin/cashier") && !path.startsWith("/admin/cashier/");
     }
 
     @Override

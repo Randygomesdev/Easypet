@@ -6,6 +6,7 @@ import { SelectField, TextField } from '../../components/ui/Field'
 import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
 import { cashierService } from '../../services/cashier.service'
 import type { CashierCharge, CashierMethod, CashierMovement } from '../../services/cashier.service'
+import { ApplyExtraDialog } from './ApplyExtraDialog'
 import { CashierCommandDialog } from './CashierCommandDialog'
 import { CashierMovements } from './CashierLedger'
 import { CASHIER_METHODS, cashierError, centsFromInput, METHOD_LABELS, MONEY_PATTERN, money, timestamp } from './format'
@@ -25,6 +26,7 @@ type Entry = { type: 'receipt'; charge: CashierCharge } | { type: 'reverse'; rec
 
 export function ChargeDetailsDialog({ chargeId, todayOpen, canClose, command, revision, onClose }: Props) {
   const [entry, setEntry] = useState<Entry>()
+  const [addExtra, setAddExtra] = useState(false)
   const load = useCallback(() => cashierService.charge(chargeId), [chargeId])
   const { result, retry } = useCashierQuery(load, revision)
 
@@ -33,14 +35,23 @@ export function ChargeDetailsDialog({ chargeId, todayOpen, canClose, command, re
   }
 
   const details = result && 'data' in result ? result.data : undefined
+  if (details && addExtra) {
+    return <ApplyExtraDialog details={details} command={command} onClose={onClose} />
+  }
+  const extras = details?.approvedExtras ?? []
+  const legacyExtras = (details?.charge.extrasCents ?? 0) - extras.reduce((total, extra) => total + extra.amountCents, 0)
   const reversed = new Set(details?.movements.map(movement => movement.reversesReceiptId))
   const reversible = details?.movements.filter(movement => movement.type === 'RECEIPT' && !reversed.has(movement.id))
 
   return (
     <Dialog open title={details?.charge.description ?? 'Detalhes da cobrança'}
       onOpenChange={open => { if (!open) onClose() }}
-      actions={details && todayOpen && details.charge.balanceCents > 0 && (
-        <Button onClick={() => setEntry({ type: 'receipt', charge: details.charge })}>Registrar recebimento</Button>
+      actions={details && todayOpen && (
+        <>
+          {legacyExtras === 0 && <Button variant="secondary" onClick={() => setAddExtra(true)}>Vincular adicional</Button>}
+          {details.charge.balanceCents > 0 &&
+            <Button onClick={() => setEntry({ type: 'receipt', charge: details.charge })}>Registrar recebimento</Button>}
+        </>
       )}>
       {!result && <LoadingState label="Carregando cobrança…" />}
       {result && 'error' in result && (
@@ -60,6 +71,23 @@ export function ChargeDetailsDialog({ chargeId, todayOpen, canClose, command, re
               <dd><Badge tone={details.charge.balanceCents ? 'warning' : 'success'}>{money(details.charge.balanceCents)}</Badge></dd>
             </div>
           </dl>
+          {legacyExtras > 0 && (
+            <p className="text-xs text-text-body">Adicionais manuais históricos de {money(legacyExtras)}.</p>
+          )}
+          {extras.length > 0 && (
+            <div className="space-y-2 border-t border-border pt-3">
+              <h3 className="text-sm font-bold text-text-heading">Adicionais aprovados aplicados</h3>
+              <ul className="divide-y divide-border">
+                {extras.map(extra => (
+                  <li key={extra.id} className="space-y-1 py-2 wrap-anywhere text-xs text-text-body">
+                    <p className="text-sm font-semibold text-text-heading">{extra.description} · {money(extra.amountCents)}</p>
+                    <p>{extra.channel === 'IN_PERSON' ? 'Aceite presencial registrado' : 'Aceite digital'} em {timestamp(extra.acceptedAt)}</p>
+                    <p>Aplicado em {timestamp(extra.appliedAt)} por {extra.appliedBy}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <details className="space-y-1 border-t border-border pt-3 wrap-anywhere text-xs text-text-body">
             <summary className="cursor-pointer text-sm font-bold text-text-heading">Dados da cobrança</summary>
             <p>Cobrança {details.charge.id}</p>

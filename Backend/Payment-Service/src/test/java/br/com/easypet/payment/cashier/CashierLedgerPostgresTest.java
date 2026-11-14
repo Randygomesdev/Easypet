@@ -28,6 +28,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,11 +75,15 @@ class CashierLedgerPostgresTest {
     private static final UUID CANCELLED_BOOKING = UUID.randomUUID();
     private static final UUID PREPAID_BOOKING = UUID.randomUUID();
     private static final UUID UNAVAILABLE_BOOKING = UUID.randomUUID();
+    private static final UUID INTERRUPTED_BOOKING = UUID.randomUUID();
+    private static final String EXTRA_TOKEN = "s05-test-extra-token";
+    private static final Map<UUID, String> EXTRA_SNAPSHOTS = new ConcurrentHashMap<>();
     private static HttpServer dependencies;
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @Autowired JdbcClient jdbc;
+    @Autowired CashierRepository cashRepository;
     @LocalServerPort int port;
 
     @DynamicPropertySource
@@ -116,11 +121,28 @@ class CashierLedgerPostgresTest {
             UUID partner = session != null && session.contains(TEAM_PARTNER.toString()) ? TEAM_PARTNER
                     : TOKEN_C.equals(token) ? PARTNER_C : OTHER_BOOKING.equals(id) ? PARTNER_B : PARTNER_A;
             if (OTHER_BOOKING.equals(id)) partner = PARTNER_B;
-            String status = CANCELLED_BOOKING.equals(id) ? "CANCELLED" : "COMPLETED";
+            String status = CANCELLED_BOOKING.equals(id) ? "CANCELLED"
+                    : INTERRUPTED_BOOKING.equals(id) ? "INTERRUPTED" : "COMPLETED";
             String method = PREPAID_BOOKING.equals(id) ? "PACKAGE_CREDIT" : "CARD";
             respond(request, UNAVAILABLE_BOOKING.equals(id) ? 503 : 200, """
                     {"id":"%s","partnerId":"%s","status":"%s","paymentMethod":"%s"}
                     """.formatted(id, partner, status, method));
+        });
+        dependencies.createContext("/internal/booking-extra-authorizations/", request -> {
+            if (!("Bearer " + EXTRA_TOKEN).equals(request.getRequestHeaders().getFirst(AUTHORIZATION))) {
+                respond(request, 401, "{}");
+                return;
+            }
+            String path = request.getRequestURI().getPath();
+            UUID id = UUID.fromString(path.substring(path.lastIndexOf('/') + 1));
+            String snapshot = EXTRA_SNAPSHOTS.get(id);
+            String query = request.getRequestURI().getQuery();
+            if (snapshot == null) respond(request, 404, "{}");
+            else if (snapshot.isEmpty()) respond(request, 503, "{}");
+            else if (query == null || !query.matches("partnerId=[a-f0-9-]{36}&bookingId=[a-f0-9-]{36}&version=\\d+"))
+                respond(request, 400, "{}");
+            else if (query.endsWith("&version=2")) respond(request, 409, "{}");
+            else respond(request, 200, snapshot);
         });
         dependencies.start();
         String dependencyUrl = "http://127.0.0.1:" + dependencies.getAddress().getPort();
@@ -130,6 +152,7 @@ class CashierLedgerPostgresTest {
         properties.add("services.partner-service.url", () -> dependencyUrl);
         properties.add("services.booking-service.url", () -> dependencyUrl);
         properties.add("services.auth-service.url", () -> dependencyUrl);
+        properties.add("app.booking-payment-authorization-token", () -> EXTRA_TOKEN);
     }
 
     @AfterAll
@@ -258,7 +281,7 @@ class CashierLedgerPostgresTest {
         mvc.perform(post(BASE + "/charges").header(AUTHORIZATION, TOKEN_A)
                 .contentType(APPLICATION_JSON).content(chargeBody(UUID.randomUUID())))
                 .andExpect(status().isBadRequest());
-        command(TOKEN_A, "/charges", UUID.randomUUID(), chargeBody(UUID.randomUUID()).replace("9000", "90.25"))
+        command(TOKEN_A, "/charges", UUID.randomUUID(), chargeBody(UUID.randomUUID()).replace("10500", "90.25"))
                 .andExpect(status().isBadRequest());
         command(TOKEN_A, "/charges", UUID.randomUUID(),
                 chargeBody(UUID.randomUUID()).replace("\"discountCents\":500", "\"discountCents\":99999"))
@@ -267,6 +290,102 @@ class CashierLedgerPostgresTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(get(BASE + "/days").header(AUTHORIZATION, TOKEN_A).param("date", "13/11/2026"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void approvedExtraIsExplicitAuditedAndAppliedOnceAndAdminProjectionIsScoped() throws Exception {
+        UUID booking = INTERRUPTED_BOOKING;
+        UUID approval = UUID.randomUUID();
+        UUID approvedBy = UUID.randomUUID();
+        UUID tutorId = UUID.randomUUID();
+        String snapshot = extraSnapshot(approval, PARTNER_A, booking, approvedBy, tutorId, 1500);
+        EXTRA_SNAPSHOTS.put(approval, snapshot);
+        String adminToken = token(UUID.randomUUID(), "ADMIN");
+        String adminPath = "/admin/cashier/bookings/" + booking;
+        mvc.perform(get(adminPath).param("partnerId", PARTNER_A.toString()).header(AUTHORIZATION, adminToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.charge").isEmpty());
+        mvc.perform(get(adminPath).param("partnerId", PARTNER_A.toString()).header(AUTHORIZATION, TOKEN_A))
+                .andExpect(status().isForbidden());
+        command(TOKEN_A, "/charges", UUID.randomUUID(), chargeBody(booking).replace("\"extrasCents\":0", "\"extrasCents\":1500"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("CASHIER_EXTRA_APPROVAL_REQUIRED"));
+        String charge = id(command(TOKEN_A, "/charges", UUID.randomUUID(), chargeBody(booking)));
+        String chargePath = "/charges/" + charge;
+        String apply = chargePath + "/approved-extras";
+        String command = "{\"approvalId\":\"%s\",\"version\":1}".formatted(approval);
+        command(TOKEN_A, apply, UUID.randomUUID(), command.replace("\"version\":1", "\"version\":1,\"amountCents\":9999"))
+                .andExpect(status().isBadRequest());
+        command(TOKEN_A, apply, UUID.randomUUID(), command.replace("\"version\":1", "\"version\":1.5"))
+                .andExpect(status().isBadRequest());
+        command(TOKEN_A, apply, UUID.randomUUID(), command.replace("\"version\":1", "\"version\":2"))
+                .andExpect(status().isConflict());
+        command(TOKEN_B, apply, UUID.randomUUID(), command).andExpect(status().isNotFound());
+        command(TOKEN_A, apply, UUID.randomUUID(), command.replace(approval.toString(), UUID.randomUUID().toString()))
+                .andExpect(status().isNotFound());
+        EXTRA_SNAPSHOTS.put(approval, "");
+        command(TOKEN_A, apply, UUID.randomUUID(), command).andExpect(status().isServiceUnavailable());
+        EXTRA_SNAPSHOTS.put(approval, snapshot.replace("\"amountCents\":1500", "\"amountCents\":9999"));
+        command(TOKEN_A, apply, UUID.randomUUID(), command).andExpect(status().isServiceUnavailable());
+        EXTRA_SNAPSHOTS.put(approval, snapshot.replace("\"amountCents\":1500", "\"amountCents\":1500.5"));
+        command(TOKEN_A, apply, UUID.randomUUID(), command).andExpect(status().isServiceUnavailable());
+        EXTRA_SNAPSHOTS.put(approval, snapshot.replace(booking.toString(), UUID.randomUUID().toString()));
+        command(TOKEN_A, apply, UUID.randomUUID(), command).andExpect(status().isServiceUnavailable());
+        read(TOKEN_A, chargePath).andExpect(jsonPath("$.charge.extrasCents").value(0))
+                .andExpect(jsonPath("$.approvedExtras").isEmpty());
+        EXTRA_SNAPSHOTS.put(approval, snapshot);
+        UUID key = UUID.randomUUID();
+        var concurrentResult = concurrent(
+                () -> id(command(TOKEN_A, apply, key, command)),
+                () -> id(command(TOKEN_A, apply, key, command)));
+        assertThat(concurrentResult.getFirst()).isEqualTo(concurrentResult.getLast());
+        command(TOKEN_A, apply, UUID.randomUUID(), command).andExpect(status().isConflict());
+        read(TOKEN_A, chargePath).andExpect(jsonPath("$.charge.totalCents").value(11500))
+                .andExpect(jsonPath("$.charge.receivedCents").value(0))
+                .andExpect(jsonPath("$.charge.balanceCents").value(11500))
+                .andExpect(jsonPath("$.approvedExtras[0].quantity").value(1))
+                .andExpect(jsonPath("$.approvedExtras[0].unitPriceCents").value(1500))
+                .andExpect(jsonPath("$.approvedExtras[0].channel").value("IN_PERSON"))
+                .andExpect(jsonPath("$.approvedExtras[0].acceptedBy").value(approvedBy.toString()))
+                .andExpect(jsonPath("$.approvedExtras[0].tutorIdentityType").value("RECEPTION_CUSTOMER"))
+                .andExpect(jsonPath("$.approvedExtras[0].appliedBy").value(USER_A.toString()));
+        id(command(TOKEN_A, chargePath + "/receipts", UUID.randomUUID(), receipt("PIX", 100)));
+        mvc.perform(get(adminPath).param("partnerId", PARTNER_A.toString()).header(AUTHORIZATION, adminToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.charge.id").value(charge))
+                .andExpect(jsonPath("$.charge.description").doesNotExist())
+                .andExpect(jsonPath("$.charge.legacyExtrasCents").value(0))
+                .andExpect(jsonPath("$.approvedExtras[0].id").value(concurrentResult.getFirst()))
+                .andExpect(jsonPath("$.approvedExtras[0].tutorId").doesNotExist())
+                .andExpect(jsonPath("$.movements.content[0].amountCents").value(100));
+        mvc.perform(get(adminPath).param("partnerId", PARTNER_B.toString()).header(AUTHORIZATION, adminToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.charge").isEmpty());
+        SESSIONS.remove(adminToken);
+        mvc.perform(get(adminPath).param("partnerId", PARTNER_A.toString()).header(AUTHORIZATION, adminToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    private static String extraSnapshot(UUID approval, UUID partner, UUID booking, UUID actor, UUID tutor, int amount) {
+        return """
+                {"authorizationId":"%s","partnerId":"%s","bookingId":"%s","version":1,"description":"Hidratação",
+                 "quantity":1,"unitPriceCents":1500,"amountCents":%d,"currency":"BRL","approvedAt":"2026-11-14T12:00:00Z",
+                 "approvedBy":"%s","tutorId":"%s","tutorIdentityType":"RECEPTION_CUSTOMER","channel":"IN_PERSON"}
+                """.formatted(approval, partner, booking, amount, actor, tutor);
+    }
+
+    @Test
+    void keepsLegacyManualExtraWithoutApplyingItAgain() throws Exception {
+        UUID booking = UUID.randomUUID();
+        UUID approval = UUID.randomUUID();
+        cashRepository.lockRegister(PARTNER_A);
+        UUID charge = cashRepository.insertCharge(PARTNER_A, USER_A, OffsetDateTime.now(), booking,
+                "Cobrança histórica", 9000, 1500, 500);
+        EXTRA_SNAPSHOTS.put(approval, extraSnapshot(approval, PARTNER_A, booking, USER_A, UUID.randomUUID(), 1500));
+        String chargePath = "/charges/" + charge;
+        command(TOKEN_A, chargePath + "/approved-extras", UUID.randomUUID(),
+                "{\"approvalId\":\"%s\",\"version\":1}".formatted(approval)).andExpect(status().isConflict());
+        mvc.perform(get("/admin/cashier/bookings/" + booking).param("partnerId", PARTNER_A.toString())
+                        .header(AUTHORIZATION, token(UUID.randomUUID(), "ADMIN")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.charge.legacyExtrasCents").value(1500))
+                .andExpect(jsonPath("$.charge.totalCents").value(10000))
+                .andExpect(jsonPath("$.approvedExtras").isEmpty());
     }
 
     @Test
@@ -351,6 +470,13 @@ class CashierLedgerPostgresTest {
 
         command(TOKEN_C, path, UUID.randomUUID(), receipt("PIX", 1)).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("CASHIER_DAY_CLOSED"));
+        UUID bookingId = UUID.fromString(json.readTree(read(TOKEN_C, "/charges/" + charge).andReturn().getResponse()
+                .getContentAsString()).at("/charge/bookingId").asText());
+        UUID approval = UUID.randomUUID();
+        EXTRA_SNAPSHOTS.put(approval, extraSnapshot(approval, PARTNER_C, bookingId, USER_C, UUID.randomUUID(), 1500));
+        command(TOKEN_C, "/charges/" + charge + "/approved-extras", UUID.randomUUID(),
+                "{\"approvalId\":\"%s\",\"version\":1}".formatted(approval))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("CASHIER_DAY_CLOSED"));
         assertThat(responseStatus(command(TOKEN_C, path, lastReceiptKey, receipt("PIX", 3000))))
                 .isEqualTo(race.getFirst());
         read(TOKEN_C, "/days").andExpect(jsonPath("$.closedBy").value(USER_C.toString()))
@@ -392,7 +518,7 @@ class CashierLedgerPostgresTest {
 
     private static String chargeBody(UUID booking) {
         return """
-                {"bookingId":"%s","description":"Banho e tosa","baseCents":9000,"extrasCents":1500,"discountCents":500}
+                {"bookingId":"%s","description":"Banho e tosa","baseCents":10500,"extrasCents":0,"discountCents":500}
                 """.formatted(booking);
     }
 

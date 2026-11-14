@@ -17,6 +17,7 @@ const BILLABLE_STATUSES: { id: BookingStatus; label: string }[] = [
   { id: 'COMPLETED', label: 'Finalizadas' },
   { id: 'IN_PROGRESS', label: 'Em andamento' },
   { id: 'CONFIRMED', label: 'Confirmadas' },
+  { id: 'INTERRUPTED', label: 'Interrompidas' },
 ]
 
 type Candidate = { id: string; description: string; option: string; price: string }
@@ -105,18 +106,17 @@ function ChargeForm({ booking, onClose, command }: Pick<Props, 'onClose' | 'comm
   function submit(form: FormData) {
     const description = String(form.get('description') ?? '').trim()
     const baseCents = centsFromInput(String(form.get('base') ?? ''))
-    const extrasCents = centsFromInput(String(form.get('extras') || '0'))
     const discountCents = centsFromInput(String(form.get('discount') || '0'))
-    if (!description || baseCents === null || extrasCents === null || discountCents === null) {
+    if (!description || baseCents === null || discountCents === null) {
       setValidation('Preencha a descrição e informe valores com até duas casas decimais.')
       return
     }
-    if (discountCents > baseCents + extrasCents) {
+    if (discountCents > baseCents) {
       setValidation('O desconto excede o valor da cobrança.')
       return
     }
     setValidation('')
-    const data = { bookingId: booking.id, description, baseCents, extrasCents, discountCents }
+    const data = { bookingId: booking.id, description, baseCents, extrasCents: 0, discountCents }
     void command.submit({ type: 'charge', data })
   }
   return (
@@ -125,8 +125,7 @@ function ChargeForm({ booking, onClose, command }: Pick<Props, 'onClose' | 'comm
       <TextField name="description" label="Descrição" defaultValue={booking.description} maxLength={160} required />
       <TextField name="base" label="Valor do serviço (R$)" defaultValue={booking.price}
         inputMode="decimal" pattern={MONEY_PATTERN} required />
-      <TextField name="extras" label="Adicionais (R$)" inputMode="decimal" pattern={MONEY_PATTERN} placeholder="0,00"
-        hint="Valor lançado manualmente. O caixa não registra autorização do tutor." />
+      <p className="text-xs text-text-body">Adicionais aprovados pelo tutor podem ser vinculados após criar a cobrança.</p>
       <TextField name="discount" label="Desconto (R$)" inputMode="decimal" pattern={MONEY_PATTERN} placeholder="0,00" />
     </CashierCommandDialog>
   )

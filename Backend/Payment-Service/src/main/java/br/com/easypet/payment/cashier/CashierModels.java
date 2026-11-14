@@ -1,6 +1,7 @@
 package br.com.easypet.payment.cashier;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
@@ -45,6 +46,17 @@ final class CashierModels {
             @NotNull @Digits(integer = 11, fraction = 0) @Positive @Max(MAX_CENTS) BigDecimal amountCents
     ) {}
 
+    record ApplyExtra(@NotNull UUID approvalId,
+                      @NotNull @Positive @Max(Integer.MAX_VALUE) @Digits(integer = 10, fraction = 0) BigDecimal version) {
+        int approvalVersion() {
+            return version.intValueExact();
+        }
+        @JsonAnySetter
+        void rejectUnknownField(String field, Object value) {
+            throw new IllegalArgumentException("Envie somente o identificador e a versão do aceite.");
+        }
+    }
+
     record NewReversal(@NotBlank @Size(max = 300) String reason) {}
 
     record Id(UUID id) {}
@@ -68,7 +80,41 @@ final class CashierModels {
             long amountCents, String reason, UUID reversesReceiptId, OffsetDateTime createdAt, UUID createdBy
     ) {}
 
-    record ChargeDetails(Charge charge, List<Movement> movements) {}
+    record ApprovedExtra(
+            UUID id, UUID approvalId, int version, String description, int quantity, long unitPriceCents,
+            long amountCents, OffsetDateTime acceptedAt,
+            UUID acceptedBy, String tutorIdentityType, String channel, OffsetDateTime appliedAt, UUID appliedBy
+    ) {}
+
+    record ChargeDetails(Charge charge, List<Movement> movements, List<ApprovedExtra> approvedExtras) {}
+
+    record AdminCharge(
+            UUID id, long baseCents, long extrasCents, long legacyExtrasCents, long discountCents,
+            long totalCents, long receivedCents, long balanceCents, OffsetDateTime createdAt, UUID createdBy
+    ) {
+        static AdminCharge from(Charge charge, List<ApprovedExtra> extras) {
+            long approved = extras.stream().mapToLong(ApprovedExtra::amountCents).sum();
+            return new AdminCharge(charge.id(), charge.baseCents(), charge.extrasCents(), charge.extrasCents() - approved,
+                    charge.discountCents(), charge.totalCents(), charge.receivedCents(), charge.balanceCents(),
+                    charge.createdAt(), charge.createdBy());
+        }
+    }
+
+    record AdminMovement(
+            UUID id, LocalDate date, MovementType type, Method method, long amountCents, String reason,
+            UUID reversesReceiptId, OffsetDateTime createdAt, UUID createdBy
+    ) {
+        static AdminMovement from(Movement movement) {
+            return new AdminMovement(movement.id(), movement.date(), movement.type(), movement.method(),
+                    movement.amountCents(), movement.reason(), movement.reversesReceiptId(),
+                    movement.createdAt(), movement.createdBy());
+        }
+    }
+
+    record AdminBookingCashier(
+            UUID bookingId, UUID partnerId, AdminCharge charge, List<ApprovedExtra> approvedExtras,
+            Page<AdminMovement> movements
+    ) {}
 
     record Totals(long receivedCents, long adjustmentCents, long netCents, Map<Method, Long> byMethod) {}
 

@@ -2,6 +2,7 @@ app:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
   checkout-enabled: ${APP_CHECKOUT_ENABLED:false}
   package-credits-enabled: ${APP_PACKAGE_CREDITS_ENABLED:false}
+  booking-payment-authorization-token: ${BOOKING_PAYMENT_AUTHORIZATION_TOKEN:}
 
 server:
   port: 8085

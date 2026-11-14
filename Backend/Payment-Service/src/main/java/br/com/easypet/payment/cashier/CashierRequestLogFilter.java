@@ -57,6 +57,7 @@ class CashierRequestLogFilter extends OncePerRequestFilter {
         String suffix = path(request).substring(BASE.length());
         if ("POST".equals(request.getMethod())) {
             if (suffix.equals("/charges")) return "charge";
+            if (suffix.startsWith("/charges/") && suffix.endsWith("/approved-extras")) return "apply_extra";
             if (suffix.startsWith("/charges/") && suffix.endsWith("/receipts")) return "receive";
             if (suffix.startsWith("/receipts/") && suffix.endsWith("/reverse")) return "reverse";
             if (suffix.startsWith("/days/") && suffix.endsWith("/close")) return "close";

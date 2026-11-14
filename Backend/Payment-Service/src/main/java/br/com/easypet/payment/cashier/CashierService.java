@@ -20,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,17 +32,21 @@ class CashierService {
     private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Sao_Paulo");
     private final CashierRepository repository;
     private final CashierAccess access;
+    private final BookingExtraClient bookingExtras;
     private final TransactionTemplate transaction;
     private final Clock clock;
 
     @Autowired
-    CashierService(CashierRepository repository, CashierAccess access, PlatformTransactionManager manager) {
-        this(repository, access, manager, Clock.systemUTC());
+    CashierService(CashierRepository repository, CashierAccess access, BookingExtraClient bookingExtras,
+                   PlatformTransactionManager manager) {
+        this(repository, access, bookingExtras, manager, Clock.systemUTC());
     }
 
-    CashierService(CashierRepository repository, CashierAccess access, PlatformTransactionManager manager, Clock clock) {
+    CashierService(CashierRepository repository, CashierAccess access, BookingExtraClient bookingExtras,
+                   PlatformTransactionManager manager, Clock clock) {
         this.repository = repository;
         this.access = access;
+        this.bookingExtras = bookingExtras;
         this.clock = clock;
         this.transaction = new TransactionTemplate(manager);
         this.transaction.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
@@ -61,7 +66,17 @@ class CashierService {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public ChargeDetails chargeDetails(CashierAccess.Scope scope, UUID chargeId) {
         return new ChargeDetails(charge(scope.partnerId(), chargeId),
-                repository.chargeMovements(scope.partnerId(), chargeId));
+                repository.chargeMovements(scope.partnerId(), chargeId), repository.approvedExtras(scope.partnerId(), chargeId));
+    }
+
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public AdminBookingCashier adminBooking(UUID partnerId, UUID bookingId, int page, int size) {
+        return repository.chargeByBooking(partnerId, bookingId).map(charge -> {
+            var extras = repository.approvedExtras(partnerId, charge.id());
+            return new AdminBookingCashier(bookingId, partnerId, AdminCharge.from(charge, extras), extras,
+                    repository.adminChargeMovements(partnerId, charge.id(), page, size));
+        }).orElseGet(() -> new AdminBookingCashier(bookingId, partnerId, null, List.of(),
+                Page.of(List.of(), page, size, 0)));
     }
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
@@ -91,6 +106,10 @@ class CashierService {
         if (previous.isPresent()) {
             return new Id(previous.get());
         }
+        if (extras != 0) {
+            throw new CashierException(HttpStatus.CONFLICT, "Vincule o adicional aprovado depois de criar a cobrança.",
+                    "CASHIER_EXTRA_APPROVAL_REQUIRED");
+        }
         access.verifyBooking(scope.partnerId(), request.bookingId(), authorization);
         return write(scope, key, fingerprint, time -> {
             ensureOpen(scope.partnerId(), time.businessDate());
@@ -99,6 +118,37 @@ class CashierService {
             }
             return repository.insertCharge(scope.partnerId(), scope.actorId(), time.instant(),
                     request.bookingId(), description, base, extras, discount);
+        });
+    }
+
+    public Id applyExtra(CashierAccess.Scope scope, UUID key, UUID chargeId, ApplyExtra request) {
+        UUID partnerId = scope.partnerId();
+        var fingerprint = fingerprint("apply-extra", chargeId, request.approvalId(), request.approvalVersion());
+        var previous = replay(scope, key, fingerprint);
+        if (previous.isPresent()) {
+            return new Id(previous.get());
+        }
+        Charge charge = charge(partnerId, chargeId);
+        var snapshot = bookingExtras.approved(partnerId, charge.bookingId(), request);
+        return write(scope, key, fingerprint, time -> {
+            ensureOpen(partnerId, time.businessDate());
+            if (repository.hasLegacyExtras(partnerId, chargeId)) {
+                throw conflict("A cobrança já contém adicionais manuais históricos.");
+            }
+            if (repository.hasAppliedExtra(partnerId, snapshot.authorizationId())) {
+                throw conflict("Este adicional aprovado já foi aplicado.");
+            }
+            Charge current = charge(partnerId, chargeId);
+            if (current.extrasCents() + snapshot.amountCents() > MAX_CENTS) {
+                throw conflict("A soma de adicionais excede o limite desta cobrança.");
+            }
+            UUID id = UUID.randomUUID();
+            repository.insertApprovedExtra(partnerId, chargeId, new ApprovedExtra(id, snapshot.authorizationId(),
+                    snapshot.version(), snapshot.description(), snapshot.quantity(), snapshot.unitPriceCents(),
+                    snapshot.amountCents(), snapshot.approvedAt(),
+                    snapshot.approvedBy(), snapshot.tutorIdentityType(), snapshot.channel(), time.instant(),
+                    scope.actorId()), snapshot.tutorId());
+            return id;
         });
     }
 

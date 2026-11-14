@@ -15,15 +15,16 @@ export function loadIntent(storageKey: string): CashierIntent | null {
   if (!saved) return null
   const intent = JSON.parse(saved) as CashierIntent | null
   if (!intent || typeof intent.key !== 'string' ||
-      !['charge', 'receipt', 'reverse', 'close'].includes(intent.command?.type)) {
+      !['charge', 'receipt', 'reverse', 'close', 'applyExtra'].includes(intent.command?.type)) {
     throw new Error('Intenção de caixa inválida.')
   }
   return intent
 }
 
 export function rejectedByCashier(error: unknown) {
-  return isAxiosError<{ timestamp?: string }>(error) && Boolean(error.response?.data?.timestamp) &&
-    (error.response?.status === 400 || error.response?.status === 409)
+  if (!isAxiosError<{ timestamp?: string; code?: string }>(error) || !error.response?.data?.timestamp) return false
+  return error.response.status === 400 || error.response.status === 409 ||
+    (error.response.status === 404 && error.response.data.code === 'CASHIER_EXTRA_APPROVAL_NOT_FOUND')
 }
 
 export function cashierDayClosed(error: unknown) {

@@ -32,6 +32,7 @@ const SAVED_LABELS = {
   charge: 'Cobrança criada.',
   receipt: 'Recebimento registrado.',
   reverse: 'Reversão registrada.',
+  applyExtra: 'Adicional aprovado aplicado à cobrança.',
   close: 'Caixa fechado.',
 }
 

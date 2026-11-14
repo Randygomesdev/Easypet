@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @Component
 class CashierAccess {
-    private static final Set<String> BILLABLE_STATUSES = Set.of("CONFIRMED", "IN_PROGRESS", "COMPLETED");
+    private static final Set<String> BILLABLE_STATUSES = Set.of("CONFIRMED", "IN_PROGRESS", "COMPLETED", "INTERRUPTED");
     private final RestTemplate http;
     private final String partnerUrl;
     private final String bookingUrl;

@@ -16,13 +16,18 @@ import static br.com.easypet.payment.cashier.CashierModels.*;
 @Repository
 class CashierRepository {
     private static final String CHARGE_SELECT = """
-            SELECT c.*, c.base_cents + c.extras_cents - c.discount_cents AS total,
+            SELECT c.*, c.extras_cents + COALESCE(a.approved, 0) AS combined_extras,
+                   c.base_cents + c.extras_cents + COALESCE(a.approved, 0) - c.discount_cents AS total,
                    COALESCE(m.received, 0) AS received
             FROM cashier_charges c
             LEFT JOIN LATERAL (
                 SELECT SUM(amount_cents) AS received FROM cashier_movements
                 WHERE partner_id = c.partner_id AND charge_id = c.id
             ) m ON true
+            LEFT JOIN LATERAL (
+                SELECT SUM(amount_cents) AS approved FROM cashier_approved_extras
+                WHERE partner_id = c.partner_id AND charge_id = c.id
+            ) a ON true
             WHERE c.partner_id = :partner
             """;
     private static final String MOVEMENT_SELECT = """
@@ -32,7 +37,7 @@ class CashierRepository {
             """;
     private static final RowMapper<Charge> CHARGE_MAPPER = (row, index) -> new Charge(
             row.getObject("id", UUID.class), row.getObject("booking_id", UUID.class), row.getString("description"),
-            row.getLong("base_cents"), row.getLong("extras_cents"), row.getLong("discount_cents"),
+            row.getLong("base_cents"), row.getLong("combined_extras"), row.getLong("discount_cents"),
             row.getLong("total"), row.getLong("received"), row.getLong("total") - row.getLong("received"),
             row.getObject("created_at", OffsetDateTime.class), row.getObject("created_by", UUID.class));
     private static final RowMapper<Movement> MOVEMENT_MAPPER = (row, index) -> new Movement(
@@ -74,7 +79,7 @@ class CashierRepository {
 
     Page<Charge> charges(UUID partnerId, boolean openOnly, int page, int size) {
         String filter = CHARGE_SELECT + (openOnly
-                ? " AND c.base_cents + c.extras_cents - c.discount_cents > COALESCE(m.received, 0)"
+                ? " AND c.base_cents + c.extras_cents + COALESCE(a.approved, 0) - c.discount_cents > COALESCE(m.received, 0)"
                 : "");
         long count = jdbc.sql("SELECT COUNT(*) FROM (" + filter + ") charges")
                 .param("partner", partnerId).query(Long.class).single();
@@ -87,6 +92,55 @@ class CashierRepository {
     Optional<Charge> charge(UUID partnerId, UUID chargeId) {
         return jdbc.sql(CHARGE_SELECT + " AND c.id = :charge")
                 .param("partner", partnerId).param("charge", chargeId).query(CHARGE_MAPPER).optional();
+    }
+
+    Optional<Charge> chargeByBooking(UUID partnerId, UUID bookingId) {
+        return jdbc.sql(CHARGE_SELECT + " AND c.booking_id = :booking")
+                .param("partner", partnerId).param("booking", bookingId).query(CHARGE_MAPPER).optional();
+    }
+
+    boolean hasLegacyExtras(UUID partnerId, UUID chargeId) {
+        return jdbc.sql("SELECT extras_cents > 0 FROM cashier_charges WHERE partner_id = :partner AND id = :charge")
+                .param("partner", partnerId).param("charge", chargeId).query(Boolean.class).single();
+    }
+
+    boolean hasAppliedExtra(UUID partnerId, UUID approvalId) {
+        return jdbc.sql("""
+                SELECT EXISTS (SELECT 1 FROM cashier_approved_extras
+                               WHERE partner_id = :partner AND approval_id = :approval)
+                """).param("partner", partnerId).param("approval", approvalId).query(Boolean.class).single();
+    }
+
+    List<ApprovedExtra> approvedExtras(UUID partnerId, UUID chargeId) {
+        return jdbc.sql("""
+                SELECT * FROM cashier_approved_extras WHERE partner_id = :partner AND charge_id = :charge
+                ORDER BY applied_at, id
+                """).param("partner", partnerId).param("charge", chargeId)
+                .query((row, index) -> new ApprovedExtra(
+                        row.getObject("id", UUID.class), row.getObject("approval_id", UUID.class),
+                        row.getInt("approval_version"), row.getString("description"), row.getInt("quantity"),
+                        row.getLong("unit_price_cents"), row.getLong("amount_cents"),
+                        row.getObject("accepted_at", OffsetDateTime.class), row.getObject("accepted_by", UUID.class),
+                        row.getString("tutor_identity_type"),
+                        row.getString("channel"), row.getObject("applied_at", OffsetDateTime.class),
+                        row.getObject("applied_by", UUID.class))).list();
+    }
+
+    void insertApprovedExtra(UUID partnerId, UUID chargeId, ApprovedExtra extra, UUID tutorId) {
+        jdbc.sql("""
+                INSERT INTO cashier_approved_extras (id, partner_id, charge_id, approval_id, approval_version,
+                    description, quantity, unit_price_cents, amount_cents, accepted_at, accepted_by, tutor_id, tutor_identity_type,
+                    channel, applied_at, applied_by)
+                VALUES (:id, :partner, :charge, :approval, :version, :description, :quantity, :unitPrice, :amount, :acceptedAt,
+                    :acceptedBy, :tutor, :tutorType, :channel, :appliedAt, :appliedBy)
+                """).param("id", extra.id()).param("partner", partnerId).param("charge", chargeId)
+                .param("approval", extra.approvalId()).param("version", extra.version())
+                .param("description", extra.description()).param("quantity", extra.quantity())
+                .param("unitPrice", extra.unitPriceCents()).param("amount", extra.amountCents())
+                .param("acceptedAt", extra.acceptedAt()).param("acceptedBy", extra.acceptedBy())
+                .param("tutor", tutorId).param("tutorType", extra.tutorIdentityType())
+                .param("channel", extra.channel()).param("appliedAt", extra.appliedAt())
+                .param("appliedBy", extra.appliedBy()).update();
     }
 
     boolean hasCharge(UUID partnerId, UUID bookingId) {
@@ -136,6 +190,17 @@ class CashierRepository {
     List<Movement> chargeMovements(UUID partnerId, UUID chargeId) {
         return jdbc.sql(MOVEMENT_SELECT + " AND m.charge_id = :charge ORDER BY m.created_at DESC, m.id DESC")
                 .param("partner", partnerId).param("charge", chargeId).query(MOVEMENT_MAPPER).list();
+    }
+
+    Page<AdminMovement> adminChargeMovements(UUID partnerId, UUID chargeId, int page, int size) {
+        long count = jdbc.sql("SELECT COUNT(*) FROM cashier_movements WHERE partner_id = :partner AND charge_id = :charge")
+                .param("partner", partnerId).param("charge", chargeId).query(Long.class).single();
+        List<AdminMovement> content = jdbc.sql(MOVEMENT_SELECT + """
+                 AND m.charge_id = :charge ORDER BY m.created_at DESC, m.id DESC LIMIT :size OFFSET :offset
+                """).param("partner", partnerId).param("charge", chargeId).param("size", size)
+                .param("offset", (long) page * size)
+                .query((row, index) -> AdminMovement.from(MOVEMENT_MAPPER.mapRow(row, index))).list();
+        return Page.of(content, page, size, count);
     }
 
     Page<Movement> dayMovements(UUID partnerId, LocalDate date, int page, int size) {

@@ -41,6 +41,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/admin/cashier", "/admin/cashier/**").hasRole("ADMIN")
                 .requestMatchers("/payments/cashier/days", "/payments/cashier/days/**", "/payments/cashier/receipts/**")
                     .access(cashierPermission("CASH_CLOSE"))
                 .requestMatchers("/payments/cashier", "/payments/cashier/**")

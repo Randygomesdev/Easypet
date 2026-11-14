@@ -86,6 +86,14 @@ class CashierController {
         return cashier.receive(access.resolve(actor, authorization), key, chargeId, request);
     }
 
+    @PostMapping("/charges/{chargeId}/approved-extras")
+    Id applyExtra(
+            Authentication actor, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @RequestHeader(IDEMPOTENCY_KEY) UUID key, @PathVariable UUID chargeId, @Valid @RequestBody ApplyExtra request
+    ) {
+        return cashier.applyExtra(access.resolve(actor, authorization), key, chargeId, request);
+    }
+
     @PostMapping("/receipts/{receiptId}/reverse")
     Id reverse(
             Authentication actor, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
@@ -114,7 +122,7 @@ class CashierController {
     }
 }
 
-@RestControllerAdvice(assignableTypes = CashierController.class)
+@RestControllerAdvice(assignableTypes = {CashierController.class, AdminCashierController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 class CashierErrors {
     @ExceptionHandler(CashierException.class)
