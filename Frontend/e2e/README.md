@@ -36,4 +36,6 @@ O runner constrói `Frontend/Dockerfile` e usa as rotas e o SMTP do Compose de p
 
 O relatório fica em `Frontend/playwright-report`. Em caso de falha, o trace e a captura de tela ficam em `Frontend/test-results`. Para executar só um cenário, passe um filtro, por exemplo `npm run test:e2e -- --grep "parceiro B"`.
 
+Para H2, ligue `E2E_WAVE_B`, `E2E_H1`, `E2E_GOOGLE_OAUTH` e `E2E_H2` com `1` e informe `E2E_SNAPSHOT_PREFIX` absoluto. Execute sem filtros. `E2E_CHROMIUM_CHANNEL=chrome` seleciona Chrome local quando o Chromium empacotado estiver indisponível. A H2 exercita o wrapper agendável em uma raiz descartável e compara as referências H2 depois da restauração dos seis bancos. Coordene o [slot local](../../docs/sprints/S07-infra-integracao/h2-resource-gate.md) antes de executar.
+
 Para o aceite Google OAuth, execute a suíte H1 com `E2E_GOOGLE_OAUTH=1`. Use OpenSSL no PATH ou informe seu caminho por `E2E_OPENSSL`. O runner cria um certificado descartável, um proxy HTTPS em loopback e um provedor local que assina o ID token e verifica PKCE. A configuração Google do Compose real é exercitada com credenciais fictícias. Os testes OAuth desabilitam trace e screenshot para evitar persistir cookies ou códigos. Rode também o cenário de flag desligada, com `E2E_GOOGLE_OAUTH=0` e o filtro `--grep 'Google desligado'`.

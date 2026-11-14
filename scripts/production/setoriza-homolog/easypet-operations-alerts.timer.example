@@ -1,0 +1,10 @@
+[Unit]
+Description=Collect EasyPet operational signals and retry pending alerts
+
+[Timer]
+# Add OnCalendar using the approved collection interval before installing this file.
+Persistent=true
+Unit=easypet-operations-alerts.service
+
+[Install]
+WantedBy=timers.target

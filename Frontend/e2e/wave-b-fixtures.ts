@@ -118,11 +118,12 @@ export function sql(database: string, query: string) {
 }
 
 export async function prepareConsultation(request: APIRequestContext, owner: Record<string, string>, options: {
-  name: string; cnpj: string; serviceName: string; staffName: string
+  name: string; cnpj: string; serviceName: string; staffName: string; categories?: string[]
 }) {
   const weekdays = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
   const partner = await json(request, 'POST', '/partners', 201, owner, {
     name: options.name, legalName: options.name, cnpj: options.cnpj, latitude: -27.5, longitude: -48.5,
+    categories: options.categories,
     businessHours: weekdays.map(dayOfWeek => ({
       dayOfWeek, businessStartHour: '08:00', businessEndHour: '18:00', closed: false,
     })),

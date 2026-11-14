@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
@@ -6,8 +6,7 @@ import { spawnSync } from 'node:child_process'
 export async function recoverFixtures(root, env, project, compose) {
   const temp = await mkdtemp(join(tmpdir(), 'easypet-wave-b-recovery-'))
   const database = (name, query) => compose(['exec', '-T', `${name}-db`, 'psql', '-XAtq',
-    '-v', 'ON_ERROR_STOP=1', '-U', name, '-d', `${name}_db`, '-c', query],
-  { stdio: ['ignore', 'pipe', 'inherit'] }).stdout.trim()
+    '-v', 'ON_ERROR_STOP=1', '-U', name, '-d', `${name}_db`, '-c', query]).stdout.trim()
   const uuid = (value, label) => {
     if (!/^[a-f\d-]{36}$/i.test(value)) throw new Error(`Fixture de recuperação ausente: ${label}.`)
     return `'${value}'::uuid`
@@ -73,6 +72,23 @@ export async function recoverFixtures(root, env, project, compose) {
         "SELECT id, role, session_version, google_subject FROM users WHERE email = 'admin@gmail.com' AND google_subject = 'fixture-admin'",
       )
     }
+    if (env.E2E_H2 === '1') {
+      queries.auth.push(`SELECT id, actor_id, target_id, action FROM identity_audit_events
+        WHERE action = 'CUSTOMER_DEACTIVATED' ORDER BY id`)
+      queries.booking.push(`SELECT b.id, b.status, b.interruption_reason, e.id, e.status, e.amount_cents
+        FROM bookings b JOIN booking_extras e ON e.booking_id = b.id
+        WHERE e.description IN ('Adicional sintético H2', 'Aceite presencial sintético H2')
+          AND b.status = 'INTERRUPTED' ORDER BY e.id`)
+      queries.payment.push(`SELECT c.id, c.booking_id, e.approval_id, e.amount_cents, e.accepted_by
+        FROM cashier_approved_extras e JOIN cashier_charges c ON c.id = e.charge_id AND c.partner_id = e.partner_id
+        WHERE c.description = 'Caixa adicional H2'`)
+      queries.partner.push(`SELECT a.id, a.customer_id, a.revision, a.granted_by, a.revoked_by
+        FROM reception_notification_authorizations a JOIN reception_customers c ON c.id = a.customer_id
+        WHERE c.email = 'balcao-consentimento-h2@example.test' AND a.revoked_at IS NOT NULL`)
+      queries.notification.push(`SELECT id, kind, status, signal_state, resolution_origin
+        FROM operations_inbox WHERE subject = 'Chamado privado H2' OR code = 'BACKUP_FAILED' ORDER BY id`,
+      'SELECT user_id, booking_email FROM notification_preference WHERE NOT booking_email ORDER BY user_id')
+    }
     const evidence = {}
     for (const [name, checks] of Object.entries(queries)) {
       evidence[name] = checks.map(query => {
@@ -81,12 +97,23 @@ export async function recoverFixtures(root, env, project, compose) {
         return { query, expected }
       })
     }
+    console.log(`Referências do ensaio: ${Object.values(evidence).reduce((total, checks) => total + checks.length, 0)} consultas em ${Object.keys(evidence).length} bancos.`)
     const envFile = join(temp, 'compose.env')
     const evidenceFile = join(temp, 'evidence.json')
-    const backup = join(temp, 'backup')
+    let backup = join(temp, 'backup')
     await writeFile(envFile, '', { mode: 0o600 })
     await writeFile(evidenceFile, JSON.stringify(evidence), { mode: 0o600 })
-    command(['backup', '--project', project, '--env-file', envFile, '--directory', backup])
+    if (env.E2E_H2 === '1') {
+      await mkdir(backup)
+      const child = spawnSync(process.execPath, ['scripts/production/backup-scheduled.mjs', '--project', project,
+        '--env-file', envFile, '--directory', backup, '--retain-days', '1'], { cwd: root, env, stdio: 'inherit' })
+      if (child.error || child.status !== 0) throw new Error('Backup periódico H2 falhou.', { cause: child.error })
+      const sets = (await readdir(backup, { withFileTypes: true })).filter(entry => entry.isDirectory())
+      if (sets.length !== 1) throw new Error('Backup periódico H2 deve publicar um conjunto.')
+      backup = join(backup, sets[0].name)
+    } else {
+      command(['backup', '--project', project, '--env-file', envFile, '--directory', backup])
+    }
     if (process.env.E2E_H1 === '1') {
       // The source belongs to this disposable run. The backup retains the previous schema.
       if (!/^easypet-e2e-[a-f0-9]{10}$/.test(project)) throw new Error('Projeto de incidente inválido.')

@@ -15,6 +15,7 @@ const secret = () => randomBytes(32).toString('hex')
 const password = secret()
 const waveB = process.env.E2E_WAVE_B === '1'
 const h1 = process.env.E2E_H1 === '1'
+const h2 = process.env.E2E_H2 === '1'
 const oauth = process.env.E2E_GOOGLE_OAUTH === '1'
 const measured = process.env.E2E_MEASURE_RESOURCES === '1'
 const demo = process.env.E2E_RESOURCE_PROFILE === 'demo'
@@ -56,6 +57,9 @@ const env = {
   RECEPTION_CLAIM_TOKEN: secret(),
   BOOKING_PET_SUMMARY_TOKEN: secret(),
   BOOKING_OUTBOX_TOKEN: secret(),
+  BOOKING_PAYMENT_AUTHORIZATION_TOKEN: secret(),
+  RECEPTION_NOTIFICATION_TOKEN: secret(),
+  NOTIFICATION_OPERATIONS_TOKEN: secret(),
   HOMOLOG_INGRESS_TOKEN: secret(),
   HOMOLOG_TRUSTED_EDGE: 'unix:',
   HOMOLOG_SUPPORT_URL: '',
@@ -137,6 +141,9 @@ let snapshot
 const phase = name => { if (measured) console.log(`Medição EasyPet: ${name}`) }
 try {
   if (h1 && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_H1=1.')
+  if (h2 && (!h1 || !oauth || !process.env.E2E_SNAPSHOT_PREFIX || process.argv.length !== 2)) {
+    throw new Error('O aceite H2 exige H1, OAuth e prefixo de snapshot, sem filtros Playwright.')
+  }
   if (oauth && !waveB) throw new Error('Use E2E_WAVE_B=1 com E2E_GOOGLE_OAUTH=1.')
   if (waveB) {
     env.HOMOLOG_PORT = String(await availableLoopbackPort())
@@ -183,6 +190,8 @@ try {
       ('parceiro-equipe@example.test', 'Parceiro Equipe E2E', 'PARTNER'),
       ('parceiro-notificacao@example.test', 'Parceiro Notificação E2E', 'PARTNER'),
       ('parceiro-retry@example.test', 'Parceiro Retry E2E', 'PARTNER'),
+      ('parceiro-h2@example.test', 'Parceiro H2 E2E', 'PARTNER'),
+      ('tutor-h2@example.test', 'Tutor H2 E2E', 'CUSTOMER'),
       ('recuperacao@example.test', 'Recuperação E2E', 'CUSTOMER'),
       ('inativacao@example.test', 'Inativação E2E', 'CUSTOMER'),
       ('admin-conta-h1@example.test', 'Conta Admin H1', 'CUSTOMER'),
@@ -223,6 +232,7 @@ try {
       E2E_SMTP_URL: smtpUrl,
       E2E_NOTIFICATION_SMTP: waveB ? '1' : '',
       E2E_H1: h1 ? '1' : '',
+      E2E_H2: h2 ? '1' : '',
       E2E_MASTER_STATUS_DIR: monitorDir,
     },
     stdio: 'inherit',

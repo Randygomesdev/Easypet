@@ -8,6 +8,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     ...devices['Desktop Chrome'],
+    channel: process.env.E2E_CHROMIUM_CHANNEL === 'chrome' ? 'chrome' : undefined,
     baseURL: process.env.E2E_BASE_URL,
     ignoreHTTPSErrors: process.env.E2E_GOOGLE_OAUTH === '1',
     actionTimeout: 15_000,

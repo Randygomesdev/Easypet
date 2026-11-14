@@ -1,0 +1,10 @@
+[Unit]
+Description=Schedule the EasyPet PostgreSQL backup
+
+[Timer]
+# Add OnCalendar using the approved backup objective before installing this file.
+Persistent=true
+Unit=easypet-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -36,6 +36,8 @@ O backup contém arquivos PostgreSQL em formato custom e um manifesto SHA-256. P
 
 O artefato H1 usa seis bancos, incluindo Notification. Antes do backup de H1, confirme os seis bancos no diagnóstico e mantenha todos em execução. Backups de versões antigas com cinco bancos continuam legíveis pelo ensaio.
 
+O [guia H2 de agendamento e alertas](backup-schedule.md) descreve a configuração candidata de retenção, o ingresso interno da central ADMIN e o inventário de recuperação.
+
 O ensaio também aceita `--evidence <arquivo.json>` com consultas de leitura e resultados esperados, separados por banco. A suíte da onda B produz esse arquivo a partir dos dados fictícios do aceite e compara o conteúdo após restaurar em volumes novos. Exemplo de estrutura:
 
 ```json

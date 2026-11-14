@@ -26,7 +26,7 @@ function databaseCommand(name, command, ...args) {
   return ['exec', '-T', `${name}-db`, command, '-U', name, '-d', `${name}_db`, ...args]
 }
 
-async function backup(compose, directory) {
+export async function backup(compose, directory, { requiredNames, producer } = {}) {
   const destination = resolve(directory)
   await lstat(destination).then(
     () => { throw new Error('O destino do backup já existe.') },
@@ -34,6 +34,9 @@ async function backup(compose, directory) {
   )
   const services = compose(['ps', '--all', '--services']).split(/\r?\n/)
   const names = services.includes('notification-db') ? [...databases, notificationDatabase] : databases
+  if (requiredNames && requiredNames.some(name => !names.includes(name))) {
+    throw new Error('A origem não contém todos os bancos exigidos pelo backup agendado.')
+  }
   const stage = await mkdtemp(join(dirname(destination), `.${basename(destination)}-`))
   const dumps = []
   try {
@@ -43,9 +46,12 @@ async function backup(compose, directory) {
       withFile(path, 'wx', fd => compose(databaseCommand(name, 'pg_dump', '-Fc', '--no-password'), {
         stdio: ['ignore', fd, 'pipe'], operation: `Backup de ${name}`,
       }))
+      if (requiredNames) withFile(path, 'r', fd => compose(['exec', '-T', `${name}-db`, 'pg_restore', '--list'], {
+        stdio: [fd, 'ignore', 'pipe'], operation: `Verificação do formato de ${name}`,
+      }))
       dumps.push({ file, sha256: await digest(path) })
     }
-    const manifest = { version: 1, createdAt: new Date().toISOString(), dumps }
+    const manifest = { version: 1, createdAt: new Date().toISOString(), producer, dumps }
     await writeFile(join(stage, manifestName), JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx', mode: 0o600 })
     await rename(stage, destination)
     console.log(`Backup publicado em ${destination} (${dumps.length} bancos).`)
@@ -58,8 +64,7 @@ async function backup(compose, directory) {
   }
 }
 
-async function restoreDrill(directory, evidencePath) {
-  const evidence = evidencePath ? JSON.parse(await readFile(evidencePath, 'utf8')) : {}
+export async function verifyBackup(directory) {
   const manifest = JSON.parse(await readFile(join(directory, manifestName), 'utf8'))
   if (manifest.version !== 1 || !Array.isArray(manifest.dumps)) {
     throw new Error('Manifesto incompatível com o conjunto de bancos.')
@@ -75,7 +80,12 @@ async function restoreDrill(directory, evidencePath) {
       throw new Error(`Falha de integridade em ${file}.`)
     }
   }
+  return names
+}
 
+async function restoreDrill(directory, evidencePath) {
+  const evidence = evidencePath ? JSON.parse(await readFile(evidencePath, 'utf8')) : {}
+  const names = await verifyBackup(directory)
   const config = disposableConfig('restore')
   const measured = process.env.E2E_MEASURE_RESOURCES === '1'
   if (measured) {
@@ -126,7 +136,7 @@ async function restoreDrill(directory, evidencePath) {
   }
 }
 
-try {
+async function main() {
   const [command, ...args] = process.argv.slice(2)
   if (command === 'backup') {
     const { project, 'env-file': envFile, directory } = readOptions(args, ['project', 'env-file', 'directory'])
@@ -137,7 +147,9 @@ try {
   } else {
     throw new Error('Use backup --project <projeto> --env-file <arquivo> --directory <destino> ou restore-drill --directory <backup>.')
   }
-} catch (error) {
+}
+
+if (import.meta.main) await main().catch(error => {
   console.error(error.message)
   process.exitCode = 1
-}
+})

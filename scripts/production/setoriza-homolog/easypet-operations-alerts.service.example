@@ -1,0 +1,15 @@
+[Unit]
+Description=Publish EasyPet operational incidents to the internal admin inbox
+After=docker.service easypet-monitor.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/easypet/backup-schedule.env
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+ExecStart=/usr/bin/node /srv/easypet/scripts/production/operations-alerts.mjs --project easypet-homolog --env-file /etc/easypet/homolog.env --master-file /var/lib/easypet/monitor/status.json --backup-directory ${EASYPET_BACKUP_DIRECTORY} --state-directory /var/lib/easypet/operations --max-backup-age-seconds ${EASYPET_BACKUP_MAX_AGE_SECONDS}
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/easypet/operations
+PrivateTmp=true

@@ -29,5 +29,5 @@ export async function snapshotWaveB(root, output) {
   const snapshot = { head: git(['rev-parse', 'HEAD']).trim(), capturedAt: new Date().toISOString(), files: entries }
   await writeFile(output, JSON.stringify(snapshot, null, 2) + '\n')
   console.log(`Snapshot da onda B: ${Object.keys(entries).length} arquivos (${output}).`)
-  return entries
+  return { head: snapshot.head, files: entries }
 }

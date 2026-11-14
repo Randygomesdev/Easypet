@@ -1,0 +1,16 @@
+[Unit]
+Description=EasyPet verified PostgreSQL backup
+After=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/easypet/backup-schedule.env
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+ExecStart=/usr/bin/node /srv/easypet/scripts/production/backup-scheduled.mjs --project easypet-homolog --env-file /etc/easypet/homolog.env --directory ${EASYPET_BACKUP_DIRECTORY} --retain-days ${EASYPET_BACKUP_RETENTION_DAYS}
+TimeoutStartSec=70min
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/easypet-backups
+PrivateTmp=true

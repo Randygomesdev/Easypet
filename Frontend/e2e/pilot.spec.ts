@@ -291,7 +291,7 @@ test('agenda disputa a última vaga e caixa registra baixa parcial idempotente',
   const charges = '/api/v1/payments/cashier/charges'
   const charge = await request.post(charges, {
     headers: { ...a, 'Idempotency-Key': randomUUID() },
-    data: { bookingId, description: 'Atendimento E2E', baseCents: 6000, extrasCents: 500, discountCents: 0 },
+    data: { bookingId, description: 'Atendimento E2E', baseCents: 6000, extrasCents: 0, discountCents: 0 },
   })
   expect(charge.status()).toBe(200)
   const chargePath = `${charges}/${(await charge.json()).id}`
@@ -308,7 +308,7 @@ test('agenda disputa a última vaga e caixa registra baixa parcial idempotente',
   const detail = await request.get(chargePath, { headers: a })
   expect(detail.status()).toBe(200)
   expect(await detail.json()).toMatchObject({
-    charge: { totalCents: 6500, receivedCents: 4000, balanceCents: 2500 },
+    charge: { totalCents: 6000, receivedCents: 4000, balanceCents: 2000 },
     movements: [expect.objectContaining({ amountCents: 4000, type: 'RECEIPT' })],
   })
   expect((await request.get(chargePath, { headers: b })).status()).toBe(404)

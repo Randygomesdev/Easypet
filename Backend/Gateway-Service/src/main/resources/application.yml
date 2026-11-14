@@ -124,6 +124,12 @@ spring:
             - Path=/api/v1/admin/customers/{id}/active
             - Method=PATCH
 
+        - id: admin-identity-audit
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/admin/identity-audit,false
+            - Method=GET
+
         - id: reception-customers
           uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
           predicates:
@@ -135,6 +141,12 @@ spring:
           predicates:
             - Path=/api/v1/partners/me/customers/{id}
             - Method=GET,HEAD
+
+        - id: reception-notification-email
+          uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/partners/me/customers/{id}/notification-email,false
+            - Method=GET,PUT
 
         - id: reception-desk
           uri: ${PARTNER_SERVICE_URL:http://localhost:8083}
@@ -176,10 +188,52 @@ spring:
           predicates:
             - Path=/api/v1/bookings/**
 
+        - id: admin-booking-investigations
+          uri: ${BOOKING_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/admin/bookings/investigations,/api/v1/admin/bookings/investigations/{id},false
+            - Method=GET
+
         - id: payment-service
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/v1/payments/**
+
+        - id: admin-cashier-bookings
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/admin/cashier/bookings/{id},false
+            - Method=GET
+
+        - id: notification-preferences
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/notifications/preferences,false
+            - Method=GET,PUT
+
+        - id: support-ticket-collection
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/support/tickets,false
+            - Method=GET,POST
+
+        - id: support-ticket-detail
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/support/tickets/{id},false
+            - Method=GET
+
+        - id: admin-operations-inbox-read
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/admin/operations/inbox,/api/v1/admin/operations/inbox/unread,false
+            - Method=GET
+
+        - id: admin-operations-inbox-update
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/admin/operations/inbox/{id}/read,/api/v1/admin/operations/inbox/{id}/acknowledge,/api/v1/admin/operations/inbox/{id}/resolve,false
+            - Method=POST
 
         - id: admin-notifications-read
           uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8087}
