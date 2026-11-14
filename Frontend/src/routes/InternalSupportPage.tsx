@@ -2,6 +2,8 @@ import { ExternalLink, LifeBuoy } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/FeedbackState'
+import { BookingNotificationPreferences } from '../features/notifications/BookingNotificationPreferences'
+import SupportTickets from '../features/support/SupportTickets'
 import { useAuth } from '../contexts/AuthContext'
 
 function supportUrl(value: string | undefined) {
@@ -18,7 +20,7 @@ const linkClass = `inline-flex min-h-11 items-center gap-2 rounded px-2 text-sm 
   focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400`
 
 export default function InternalSupportPage() {
-  const { sessionStatus } = useAuth()
+  const { session, sessionStatus } = useAuth()
 
   return (
     <main className="mx-auto max-w-xl space-y-4 p-4 lg:p-8">
@@ -26,6 +28,9 @@ export default function InternalSupportPage() {
         {sessionStatus === 'ready' ? 'Voltar ao painel' : 'Ir para o login'}
       </Link>
       <h1 className="text-2xl font-bold text-text-heading lg:text-3xl">Suporte interno</h1>
+      {sessionStatus === 'ready' && session?.role === 'ADMIN' && <Link className={linkClass} to="/admin/alertas">Abrir central de alertas e chamados</Link>}
+      {sessionStatus === 'ready' && session?.role === 'CUSTOMER' && <BookingNotificationPreferences key={session.userId} />}
+      {sessionStatus === 'ready' && session && session.role !== 'ADMIN' && <SupportTickets key={session.userId} />}
       <Card>
         {configuredUrl ? <>
           <CardHeader title="Canal da homologação" />

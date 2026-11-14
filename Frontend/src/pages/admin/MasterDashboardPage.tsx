@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Building2, Users, Server, Bell, ArrowUpRight, RefreshCw } from 'lucide-react'
+import { Building2, Users, Server, Bell, ArrowUpRight, RefreshCw, History, Search, LifeBuoy } from 'lucide-react'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { useCustomerQuery } from '../../features/customers/useCustomerQuery'
@@ -11,6 +11,9 @@ const sections = [
   { title: 'Estabelecimentos', text: 'Consulte cadastros, serviços e equipe. Gerencie a situação e seu histórico.', path: '/admin/parceiros', icon: Building2 },
   { title: 'Tutores', text: 'Consulte contas da plataforma e cadastros de balcão. Gerencie o acesso dos tutores.', path: '/admin/clientes', icon: Users },
   { title: 'Sistema', text: 'Acompanhe a saúde dos serviços, o consumo de memória e a atualização da coleta.', path: '/admin/sistema', icon: Server },
+  { title: 'Alertas e chamados', text: 'Acompanhe alertas operacionais e responda aos chamados internos.', path: '/admin/alertas', icon: LifeBuoy },
+  { title: 'Ocorrências', text: 'Consulte histórico, caixa e tentativas de entrega por reserva.', path: '/admin/ocorrencias', icon: Search },
+  { title: 'Auditoria', text: 'Consulte alterações em contas e acessos da equipe.', path: '/admin/auditoria', icon: History },
   ...(waveBEnabled ? [{ title: 'Notificações', text: 'Investigue falhas de entrega e acompanhe as tentativas de envio.', path: '/admin/notificacoes', icon: Bell }] : []),
 ]
 

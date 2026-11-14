@@ -1,4 +1,5 @@
 import { RefreshCw } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { useMasterStatus } from '../../features/master/useMasterStatus'
@@ -23,7 +24,10 @@ export default function MasterSystemPage() {
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div><h1 className="text-2xl font-bold text-text-heading lg:text-3xl">Sistema</h1>
         <p className="mt-2 text-sm text-text-muted">Saúde e memória dos serviços do EasyPet. Atualização a cada minuto enquanto esta tela está aberta.</p></div>
-      <Button variant="secondary" onClick={refresh} disabled={loading}><RefreshCw size={16} aria-hidden="true" />Atualizar status</Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Link to="/admin/alertas" className="inline-flex min-h-11 items-center rounded px-2 text-sm font-semibold text-text-heading underline focus-visible:outline-2 focus-visible:outline-primary-400">Abrir central de alertas</Link>
+        <Button variant="secondary" onClick={refresh} disabled={loading}><RefreshCw size={16} aria-hidden="true" />Atualizar status</Button>
+      </div>
     </div>
     {loading && <p role="status" className="text-sm text-text-muted">Consultando monitoramento…</p>}
     {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-800">{error}</p>}

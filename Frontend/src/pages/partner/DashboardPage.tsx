@@ -34,6 +34,7 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
   COMPLETED:   '#059669',
   CANCELLED:   '#db2777',
   NO_SHOW:     '#9d174d',
+  INTERRUPTED: '#be123c',
 }
 
 const STATUS_STYLE: Record<BookingStatus, string> = {
@@ -43,6 +44,7 @@ const STATUS_STYLE: Record<BookingStatus, string> = {
   PENDING:     'bg-amber-100   text-amber-700',
   CANCELLED:   'bg-pink-100    text-pink-600',
   NO_SHOW:     'bg-pink-100    text-pink-600',
+  INTERRUPTED: 'bg-pink-100    text-pink-700',
 }
 
 /* ─────────────────────────────────────────────
@@ -185,7 +187,7 @@ function DashboardMetrics({ partnerId, rating, serviceCount, staffCount, activeS
     }))
 
   const upcomingToday = todayBookings
-    .filter(b => b.status !== 'CANCELLED')
+    .filter(b => b.status !== 'CANCELLED' && b.status !== 'INTERRUPTED')
     .slice(0, 5)
 
   // Formata os dados diários com rótulo curto do dia da semana

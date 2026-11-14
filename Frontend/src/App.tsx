@@ -43,6 +43,9 @@ import ParceiroDetailPage from './pages/admin/ParceiroDetailPage'
 import ClientesPage        from './pages/admin/ClientesPage'
 import NotificationsPage from './features/notifications/NotificationsPage'
 import ClaimCustomerPage from './features/claims/ClaimCustomerPage'
+import AdminInboxPage from './features/support/AdminInboxPage'
+import IdentityAuditPage from './pages/admin/IdentityAuditPage'
+import ReservationInvestigationPage from './pages/admin/ReservationInvestigationPage'
 
 const recoveryEnabled = !env.internalPilot || import.meta.env.VITE_AUTH_RECOVERY_ENABLED === 'true'
 
@@ -109,6 +112,9 @@ const router = createBrowserRouter([
       { index: true,           element: <Navigate to="visao-geral" replace /> },
       { path: 'visao-geral', element: <MasterDashboardPage /> },
       { path: 'sistema', element: <MasterSystemPage /> },
+      { path: 'alertas', element: <AdminInboxPage /> },
+      { path: 'auditoria', element: <IdentityAuditPage /> },
+      { path: 'ocorrencias', element: <ReservationInvestigationPage /> },
       { path: 'parceiros',     element: <ParceirosPage /> },
       { path: 'parceiros/:id', element: <ParceiroDetailPage /> },
       { path: 'parceiros/:partnerId/colaboradores/novo',      element: <AdminColaboradorWrapper /> },

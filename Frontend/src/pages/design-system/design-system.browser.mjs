@@ -216,10 +216,51 @@ try {
   await customer.getByRole('button', { name: 'Vincular cadastro', exact: true }).click()
   await expect(customer.getByRole('status')).toHaveText('Cadastro vinculado com sucesso.')
 
+  let bookingEmail = true
+  let preferenceReads = 0
+  await customer.route('**/api/v1/support/tickets?*', route => route.fulfill({
+    json: { content: [], page: 0, size: 20, totalElements: 0, totalPages: 0 },
+  }))
+  await customer.route('**/api/v1/notifications/preferences', route => {
+    const request = route.request()
+    assert.equal(request.headers().authorization, `Bearer ${token}`)
+    if (request.method() === 'PUT') {
+      assert.deepEqual(request.postDataJSON(), { bookingEmail: false })
+      bookingEmail = false
+    } else {
+      assert.equal(request.method(), 'GET')
+      preferenceReads += 1
+      if (preferenceReads === 1) return route.fulfill({ status: 503 })
+    }
+    return route.fulfill({ json: { bookingEmail } })
+  })
+  await customer.getByRole('link', { name: 'Suporte interno' }).click()
+  await expect(customer).toHaveURL(`${previewUrl}/suporte`)
+  await expect(customer.getByRole('alert')).toContainText('O serviço está temporariamente indisponível.')
+  await customer.getByRole('button', { name: 'Tentar novamente' }).click()
+  const emailPreference = customer.getByRole('combobox', { name: 'E-mail sobre minhas reservas' })
+  await expect(emailPreference).toHaveValue('true')
+  await emailPreference.selectOption('false')
+  await customer.getByRole('button', { name: 'Salvar', exact: true }).click()
+  await expect(customer.getByText('Preferência salva.')).toBeVisible()
+  await customer.reload()
+  await expect(emailPreference).toHaveValue('false')
+  assert.equal(preferenceReads, 3)
+
   const partner = await newPage(desktop, 'PARTNER')
   await partner.goto(`${previewUrl}/design-system`)
   await expect(partner).toHaveURL(`${previewUrl}/partner/dashboard`)
   await expect(partner.getByRole('link', { name: 'Design system' })).toHaveCount(0)
+  let partnerPreferenceReads = 0
+  await partner.route('**/api/v1/notifications/preferences', route => {
+    partnerPreferenceReads += 1
+    return route.fulfill({ status: 403 })
+  })
+  await partner.getByRole('link', { name: 'Suporte interno' }).click()
+  await expect(partner.getByRole('heading', { name: 'Registrar chamado' })).toBeVisible()
+  await expect(partner.getByRole('heading', { name: 'Avisos de agendamento' })).toHaveCount(0)
+  assert.equal(partnerPreferenceReads, 0)
+  await partner.getByRole('link', { name: 'Voltar ao painel' }).click()
   await checkCustomerList(partner, 'partners/me/customers')
   await expect(partner).toHaveURL(`${previewUrl}/partner/clientes`)
   await partner.getByRole('button', { name: 'Novo cliente' }).click()
@@ -345,8 +386,7 @@ try {
   await expect(galleryLink).toHaveAttribute('aria-current', 'page')
   await galleryLink.click()
   await expect(admin.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
-  await admin.getByRole('button', { name: 'Notificações' }).click()
-  await expect(admin.getByText('Tudo em dia por aqui!')).toBeVisible()
+  await expect(admin.getByRole('link', { name: 'Alertas e chamados', exact: true })).toHaveAttribute('href', '/admin/alertas')
   await checkLayout(admin)
   await admin.getByRole('button', { name: 'Abrir menu' }).click()
   await checkCustomerList(admin, 'admin/reception-customers')
@@ -362,17 +402,21 @@ try {
   await admin.route(`**/api/v1/admin/customers/${accountId}/active`, route => {
     assert.equal(route.request().method(), 'PATCH')
     assert.equal(route.request().headers().authorization, `Bearer ${token}`)
-    assert.deepEqual(route.request().postDataJSON(), { active: !accountActive })
+    assert.deepEqual(route.request().postDataJSON(), { active: !accountActive, reason: 'Validação local H2' })
     accountActive = !accountActive
     return route.fulfill({ json: account() })
   })
   await admin.getByRole('button', { name: 'Contas da plataforma' }).click()
   await expect(admin.getByRole('table', { name: 'Contas de clientes da plataforma' })).toContainText('Ana Souza')
   await admin.getByRole('button', { name: 'Desativar conta de Ana Souza' }).click()
-  await admin.getByRole('dialog', { name: 'Desativar conta' }).getByRole('button', { name: 'Desativar conta' }).click()
+  const deactivate = admin.getByRole('dialog', { name: 'Desativar conta' })
+  await deactivate.getByRole('textbox', { name: 'Motivo da alteração' }).fill('Validação local H2')
+  await deactivate.getByRole('button', { name: 'Desativar conta' }).click()
   await expect(admin.getByRole('status').filter({ hasText: 'Conta desativada.' })).toBeVisible()
   await admin.getByRole('button', { name: 'Reativar conta de Ana Souza' }).click()
-  await admin.getByRole('dialog', { name: 'Reativar conta' }).getByRole('button', { name: 'Reativar conta' }).click()
+  const activate = admin.getByRole('dialog', { name: 'Reativar conta' })
+  await activate.getByRole('textbox', { name: 'Motivo da alteração' }).fill('Validação local H2')
+  await activate.getByRole('button', { name: 'Reativar conta' }).click()
   await expect(admin.getByRole('status').filter({ hasText: 'Conta reativada.' })).toBeVisible()
   await expect(admin.getByRole('button', { name: 'Desativar conta de Ana Souza' })).toBeVisible()
   await admin.getByRole('button', { name: 'Abrir menu' }).click()

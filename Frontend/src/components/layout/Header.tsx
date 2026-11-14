@@ -1,51 +1,42 @@
 import { env } from '../../config/env'
 import { useRef, useState, useEffect, type Ref } from 'react'
-import { Bell, BellOff, ChevronDown, LogOut, Menu, Moon, ShoppingCart, Sun, UserPen } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, Moon, ShoppingCart, Sun, UserPen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTheme } from '../../contexts/ThemeContext'
 import { useCart } from '../../contexts/CartContext'
-import { EmptyState } from '../ui/FeedbackState'
+import AdminInboxBell from '../../features/support/AdminInboxBell'
 import UserAvatar from '../ui/UserAvatar'
 
-type Panel = 'notif' | 'user' | null
-
 type Props = { onMenuClick: () => void; menuOpen: boolean; menuButtonRef: Ref<HTMLButtonElement> }
-
-// Placeholder — substituir por dados reais quando a feature existir
-const NOTIFICATIONS: never[] = []
-const UNREAD_COUNT = 0
 
 export default function Header({ onMenuClick, menuOpen, menuButtonRef }: Props) {
   const { user, session, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const { itemCount }          = useCart()
   const navigate               = useNavigate()
-  const [panel, setPanel]      = useState<Panel>(null)
-  const notifRef               = useRef<HTMLDivElement>(null)
+  const [userOpen, setUserOpen] = useState(false)
   const userRef                = useRef<HTMLDivElement>(null)
+  const userTrigger            = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    if (!panel) return
+    if (!userOpen) return
     function handleOutside(e: MouseEvent) {
       const target = e.target as Node
-      if (panel === 'notif' && notifRef.current && !notifRef.current.contains(target)) setPanel(null)
-      if (panel === 'user'  && userRef.current  && !userRef.current.contains(target))  setPanel(null)
+      if (!userRef.current?.contains(target)) setUserOpen(false)
     }
     document.addEventListener('mousedown', handleOutside)
     return () => document.removeEventListener('mousedown', handleOutside)
-  }, [panel])
-
-  function toggle(p: Panel) { setPanel(prev => prev === p ? null : p) }
+  }, [userOpen])
 
   function handleLogout() {
-    setPanel(null)
+    setUserOpen(false)
     logout()
     navigate('/login')
   }
 
   function handleEditProfile() {
-    setPanel(null)
+    setUserOpen(false)
     navigate('/partner/cadastro')
   }
 
@@ -87,60 +78,25 @@ export default function Header({ onMenuClick, menuOpen, menuButtonRef }: Props) 
         </button>
       )}
 
-      {/* ── Notificações ── */}
-      <div className="relative" ref={notifRef}>
-        <button
-          type="button"
-          aria-label="Notificações"
-          aria-expanded={panel === 'notif'}
-          onClick={() => toggle('notif')}
-          className="relative p-2 rounded-lg text-(--color-icon-default) hover:text-(--color-icon-active)
-                     hover:bg-(--color-bg) transition-colors"
-        >
-          <Bell size={20} aria-hidden="true" />
-          {UNREAD_COUNT > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-(--color-secondary-500) rounded-full" />
-          )}
-        </button>
-
-        {panel === 'notif' && (
-          <div className="absolute right-0 top-full mt-2 w-80 max-w-[calc(100vw-7rem)] bg-(--color-surface) border border-(--color-border)
-                          rounded-xl shadow-lg z-50 overflow-hidden">
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-(--color-border)">
-              <span className="text-sm font-semibold text-(--color-text-heading)">Notificações</span>
-              {UNREAD_COUNT > 0 && (
-                <button className="text-xs text-(--color-primary-500) hover:underline">
-                  Marcar todas como lidas
-                </button>
-              )}
-            </div>
-
-            {/* Lista / Empty state */}
-            {NOTIFICATIONS.length === 0 ? (
-              <EmptyState
-                size="sm"
-                icon={BellOff}
-                title="Tudo em dia por aqui!"
-                description="Suas notificações aparecerão aqui."
-              />
-            ) : (
-              <div className="max-h-80 overflow-y-auto divide-y divide-(--color-border)">
-                {/* itens de notificação virão aqui */}
-              </div>
-            )}
-
-          </div>
-        )}
-      </div>
+      {session?.role === 'ADMIN' && <AdminInboxBell key={session.userId} />}
 
       {/* ── Avatar + Dropdown ── */}
-      <div className="relative" ref={userRef}>
+      <div className="relative" ref={userRef} onKeyDown={event => {
+        if (event.key === 'Escape' && userOpen) {
+          event.preventDefault()
+          setUserOpen(false)
+          userTrigger.current?.focus()
+        }
+      }}>
         <button
-          onClick={() => toggle('user')}
-          className="flex items-center gap-2 cursor-pointer rounded-lg px-2 py-1
-                     hover:bg-(--color-bg) transition-colors"
+          ref={userTrigger}
+          type="button"
+          aria-label="Opções da conta"
+          aria-expanded={userOpen}
+          aria-controls={userOpen ? 'opcoes-da-conta' : undefined}
+          onClick={() => setUserOpen(open => !open)}
+          className="flex min-h-11 items-center gap-2 cursor-pointer rounded-lg px-2 py-1
+                     hover:bg-bg transition-colors focus-visible:outline-2 focus-visible:outline-primary-400"
         >
           <UserAvatar name={user?.name ?? '?'} pictureUrl={user?.pictureUrl} size={32} />
           <span className="hidden md:block text-sm font-medium text-(--color-text-body)">
@@ -149,12 +105,12 @@ export default function Header({ onMenuClick, menuOpen, menuButtonRef }: Props) 
           <ChevronDown
             size={16}
             className={`text-(--color-icon-default) transition-transform duration-200
-                        ${panel === 'user' ? 'rotate-180' : ''}`}
+                        ${userOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
-        {panel === 'user' && (
-          <div className="absolute right-0 top-full mt-2 w-64 bg-(--color-surface) border border-(--color-border)
+        {userOpen && (
+          <div id="opcoes-da-conta" className="absolute right-0 top-full mt-2 w-64 max-w-[calc(100vw-2rem)] bg-(--color-surface) border border-(--color-border)
                           rounded-xl shadow-lg z-50 overflow-hidden">
 
             {/* Identidade */}

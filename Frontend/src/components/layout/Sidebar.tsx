@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, type KeyboardEvent } from 'react'
 import {
   LayoutDashboard, ClipboardList, Users, Wrench, Package,
-  CalendarDays, Stethoscope, X, LogOut, Server,
+  CalendarDays, Stethoscope, X, LogOut, Server, History, Search,
   Bell, Building2, LifeBuoy, Link2, Palette, PawPrint, ShieldCheck, Store, Wallet, CodeXml,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -33,6 +33,9 @@ const NAV_ITEMS: NavItem[] = [
   ] : []),
   { icon: LayoutDashboard, label: 'Visão geral', path: '/admin/visao-geral', policy: access.admin },
   { icon: Server, label: 'Sistema', path: '/admin/sistema', policy: access.admin },
+  { icon: Bell, label: 'Alertas e chamados', path: '/admin/alertas', policy: access.admin },
+  { icon: Search, label: 'Ocorrências', path: '/admin/ocorrencias', policy: access.admin },
+  { icon: History, label: 'Auditoria', path: '/admin/auditoria', policy: access.admin },
   { icon: Building2, label: 'Estabelecimentos', path: '/admin/parceiros', policy: access.admin },
   { icon: Users, label: 'Tutores', path: '/admin/clientes', policy: access.admin },
   ...(waveBEnabled ? [
@@ -144,6 +147,7 @@ export default function Sidebar({ open, onClose }: Props) {
                 to={path}
                 onClick={onClose}
                 title={label}
+                aria-label={label}
                 aria-current={isActive ? 'page' : undefined}
                 className={`sidebar-item w-full flex min-h-11 items-center gap-3 py-3 text-sm font-medium transition-colors relative
                   focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400
@@ -165,6 +169,7 @@ export default function Sidebar({ open, onClose }: Props) {
             )
           })}
           <Link to="/suporte" onClick={onClose} title="Suporte interno"
+            aria-label="Suporte interno"
             aria-current={pathname === '/suporte' ? 'page' : undefined}
             className="sidebar-item flex min-h-11 items-center gap-3 py-3 text-sm font-medium text-text-body hover:bg-bg
                        focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400">
@@ -175,7 +180,7 @@ export default function Sidebar({ open, onClose }: Props) {
 
         {/* Logout */}
         <div className="pb-2 shrink-0 overflow-hidden">
-          <button onClick={handleLogout} title="Sair"
+          <button type="button" onClick={handleLogout} title="Sair" aria-label="Sair"
                   className="sidebar-item w-full flex min-h-11 items-center gap-3 py-3 text-sm font-medium
                              text-red-400 hover:bg-red-50 hover:text-red-500
                              transition-colors cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400">
@@ -191,6 +196,7 @@ export default function Sidebar({ open, onClose }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             title="Developed by Innker Tecnologia"
+            aria-label="Developed by Innker Tecnologia"
             className="flex min-h-11 items-center gap-3 text-red-500 font-semibold hover:underline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-400"
           >
             <CodeXml size={18} aria-hidden="true" className="sidebar-credit-icon shrink-0" />
