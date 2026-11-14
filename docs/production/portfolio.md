@@ -1,6 +1,6 @@
 # Vitrine EasyPet
 
-A landing de portfólio usa HTML, CSS, imagens e cinco vídeos WebM com narração em português, trilha e legendas WebVTT. O build fica em `Frontend/dist-portfolio` e pode ser servido por um servidor estático.
+A landing de portfólio usa HTML, CSS, imagens e seis vídeos WebM com narração em português, trilha e legendas WebVTT. Cada vídeo abre com o logo e o título da jornada e encerra com o crédito à Innker Tecnologia. O build fica em `Frontend/dist-portfolio` e pode ser servido por um servidor estático.
 
 Para revisar a vitrine localmente, execute em `Frontend`:
 
@@ -25,6 +25,8 @@ npm run test:e2e -- portfolio.spec.ts
 O runner cria um projeto Compose descartável com credenciais próprias, PostgreSQL e SMTP de captura. O roteiro usa `example.test`, dois estabelecimentos com serviços e escalas e três tutores com pets e reservas. A gravação começa após autenticar cada perfil. Confira os vídeos e as capas antes de publicar.
 
 Para gravar a busca de parceiros e o acompanhamento do pet, defina `$env:E2E_PORTFOLIO_TUTOR_EXTRAS = '1'` antes de executar o mesmo comando de teste. Esse modo inclui uma consulta concluída, um registro de prontuário e vacinas com próximas doses.
+
+Para gravar a autorização de adicionais, defina `$env:E2E_PORTFOLIO_AUTHORIZATION = '1'`. O roteiro captura a proposta pela clínica, a autorização digital no app do tutor e a aplicação de R$ 25,00 pelo caixa. As três cenas usam a mesma reserva fictícia e o roteiro confere o total de R$ 85,00 e a origem digital do aceite na cobrança.
 
 O roteiro narrado de cada vídeo está nas legendas em `Frontend/portfolio/public/portfolio`. A edição usa a voz `pt-BR-ThalitaMultilingualNeural` a `+3%` e `+2Hz`, com a trilha do Setoriza a partir do segundo 16. Ao substituir capturas, sincronize novamente a narração e as legendas, revise a reprodução e copie os WebMs editados e as respectivas capas para a pasta pública antes de gerar o build.
 

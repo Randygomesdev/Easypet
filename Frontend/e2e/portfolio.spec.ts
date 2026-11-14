@@ -38,6 +38,8 @@ test('grava jornadas do EasyPet com dados fictícios', async ({ request, browser
   }
   const day = futureDate(2)
   const tutorExtrasOnly = process.env.E2E_PORTFOLIO_TUTOR_EXTRAS === '1'
+  const authorizationOnly = process.env.E2E_PORTFOLIO_AUTHORIZATION === '1'
+  let amoraBookingId = ''
   for (const [index, name] of ['Amora', 'Bento', 'Luna'].entries()) {
     const tutor = bearer(tutors[index])
     const pet = await json(request, 'POST', '/pets', 201, tutor, {
@@ -51,6 +53,7 @@ test('grava jornadas do EasyPet com dados fictícios', async ({ request, browser
         price: 60, type: 'CONSULTATION',
       })
     await json(request, 'PATCH', `/bookings/${booking.id}/status?status=CONFIRMED`, 200, bearer(partners[index % shops.length]))
+    if (index === 0) amoraBookingId = booking.id
     if (tutorExtrasOnly && index === 0) {
       const clinic = bearer(partners[0])
       await json(request, 'PATCH', `/bookings/${booking.id}/status?status=IN_PROGRESS`, 200, clinic)
@@ -102,6 +105,60 @@ test('grava jornadas do EasyPet com dados fictícios', async ({ request, browser
     } finally { await context.close() }
     await page.video()!.saveAs(resolve(output!, name + '.webm'))
     console.log(`Vídeo gravado: ${name}.`)
+  }
+
+  if (authorizationOnly) {
+    const proposalName = 'Higienização de ouvidos'
+    const chargeName = 'Consulta veterinária · Amora'
+    const clock = new Date(`${day}T13:00:00-03:00`)
+    const owner = bearer(partners[0])
+    await json(request, 'PATCH', `/bookings/${amoraBookingId}/status?status=IN_PROGRESS`, 200, owner)
+    await clip('adicional-clinica', 'parceiro-a@example.test', /\/partner\/dashboard$/, async page => {
+      await page.clock.setFixedTime(clock)
+      await page.goto(`/partner/atendimento?bookingId=${amoraBookingId}`)
+      const extra = page.getByRole('region', { name: 'Adicionais' })
+      await extra.getByRole('button', { name: 'Propor adicional' }).click()
+      const form = page.getByRole('dialog', { name: 'Propor adicional' })
+      await form.getByLabel('Descrição').fill(proposalName)
+      await form.getByLabel('Valor unitário (R$)').fill('25,00')
+      await expect(form.getByText(/Total R\$\s*25,00/)).toBeVisible()
+      await page.waitForTimeout(4000)
+      await form.getByRole('button', { name: 'Enviar proposta' }).click()
+      await expect(extra.getByText(proposalName)).toBeVisible()
+      await expect(extra.getByText(/Aguardando|Pendente/)).toBeVisible()
+    })
+
+    await clip('adicional-tutor', 'tutor@example.test', /\/app\/home$/, async page => {
+      await page.goto('/app/agendamentos')
+      await page.getByRole('button', { name: /Consulta veterinária.*Amora/ }).click()
+      const extra = page.getByRole('region', { name: 'Adicionais' })
+      await expect(extra.getByText(proposalName)).toBeVisible()
+      await extra.getByRole('button', { name: 'Revisar e decidir' }).click()
+      const decision = page.getByRole('dialog', { name: 'Decidir sobre adicional' })
+      await decision.getByRole('combobox', { name: /Sua decisão/ }).selectOption('APPROVE')
+      await page.waitForTimeout(3700)
+      await decision.getByRole('button', { name: 'Registrar decisão' }).click()
+      await expect(extra.getByText('Autorizado', { exact: true })).toBeVisible()
+    })
+
+    await clip('adicional-caixa', 'parceiro-a@example.test', /\/partner\/dashboard$/, async page => {
+      await page.goto('/partner/caixa')
+      await page.getByRole('button', { name: 'Nova cobrança' }).click()
+      await page.getByLabel('Data da reserva').fill(day)
+      await page.getByRole('combobox', { name: 'Situação' }).selectOption('IN_PROGRESS')
+      await page.getByRole('button', { name: /13:00.*Consulta veterinária.*Amora/ }).click()
+      await expect(page.getByLabel('Valor do serviço (R$)')).toHaveValue('60,00')
+      await page.getByRole('button', { name: 'Criar cobrança' }).click()
+      await page.getByRole('button', { name: 'Vincular adicional' }).click()
+      await page.getByRole('button', { name: /Higienização de ouvidos.*25,00/ }).click()
+      await page.waitForTimeout(3200)
+      await page.getByRole('button', { name: 'Aplicar adicional', exact: true }).click()
+      const charge = page.getByRole('dialog', { name: chargeName })
+      await expect(charge.getByText('Aceite digital', { exact: false })).toBeVisible()
+      await expect(charge.getByText(/R\$\s*85,00/).first()).toBeVisible()
+      await expect(charge.getByText(proposalName, { exact: false })).toBeVisible()
+    })
+    return
   }
 
   if (tutorExtrasOnly) {
