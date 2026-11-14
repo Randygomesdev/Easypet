@@ -1,6 +1,7 @@
 .env.homolog
 Frontend/playwright-report/
 Frontend/test-results/
+Frontend/dist-portfolio/
 /graphify-out/
 
 # Local Java compilation output

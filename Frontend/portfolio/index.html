@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Conheça as jornadas do EasyPet e as decisões de engenharia por trás da plataforma de serviços pet.">
+  <meta name="theme-color" content="#f6f8fb">
+  <link rel="icon" href="../src/assets/LogoEasypet.svg">
+  <link rel="stylesheet" href="./style.css">
+  <title>EasyPet | Portfólio</title>
+</head>
+<body>
+  <header class="bar wrap">
+    <a class="brand" href="#inicio"><img src="../src/assets/LogoEasypet.svg" alt="">EasyPet</a>
+    <nav aria-label="Navegação principal"><a href="#demonstracoes">Demonstrações</a><a href="#engenharia">Engenharia</a></nav>
+    <a class="repo" href="https://github.com/Randygomesdev/Easypet">GitHub ↗</a>
+  </header>
+  <main id="inicio" class="wrap">
+    <section class="hero" aria-labelledby="titulo">
+      <div>
+        <p class="eyebrow">PROJETO DE PORTFÓLIO</p>
+        <h1 id="titulo">Do primeiro agendamento ao fim do atendimento.</h1>
+        <p class="intro">O EasyPet conecta tutores e estabelecimentos em uma operação que vai da escolha do serviço à agenda, ao atendimento e ao caixa.</p>
+        <a class="button" href="#demonstracoes">Ver demonstrações <span aria-hidden="true">↓</span></a>
+      </div>
+      <img class="mascot" src="../src/assets/pet-3d-illustration-transparent.png" width="420" alt="">
+    </section>
+
+    <section id="demonstracoes" aria-labelledby="demo-title">
+      <h2 id="demo-title">Três perspectivas, uma plataforma</h2>
+      <p class="intro">Gravações da aplicação em ambiente local, com pessoas, pets e estabelecimentos fictícios.</p>
+      <div class="grid">
+        <article>
+          <video controls playsinline preload="none" poster="./portfolio/tutor.png" aria-label="Demonstração do tutor">
+            <source src="./portfolio/tutor.webm" type="video/webm">
+            <a href="./portfolio/tutor.webm">Baixar a demonstração do tutor</a>
+          </video>
+          <h3>Tutor</h3>
+          <p>Escolha o pet, consulte horários disponíveis e solicite uma reserva.</p>
+        </article>
+        <article>
+          <video controls playsinline preload="none" poster="./portfolio/parceiro.png" aria-label="Demonstração do estabelecimento">
+            <source src="./portfolio/parceiro.webm" type="video/webm">
+            <a href="./portfolio/parceiro.webm">Baixar a demonstração do estabelecimento</a>
+          </video>
+          <h3>Estabelecimento</h3>
+          <p>Confirme a reserva, conclua o atendimento e registre um recebimento parcial no caixa.</p>
+        </article>
+        <article>
+          <video controls playsinline preload="none" poster="./portfolio/admin.png" aria-label="Demonstração do painel ADMIN">
+            <source src="./portfolio/admin.webm" type="video/webm">
+            <a href="./portfolio/admin.webm">Baixar a demonstração do ADMIN</a>
+          </video>
+          <h3>Administração</h3>
+          <p>Acompanhe indicadores, a saúde dos serviços e a central de alertas.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="engenharia" aria-labelledby="engineering-title">
+      <h2 id="engineering-title">Decisões de engenharia</h2>
+      <div class="grid decisions">
+        <article>
+          <h3>Agenda consistente</h3>
+          <p>O Booking serializa a alocação de horários no PostgreSQL. A mesma chave de idempotência permite repetir uma tentativa após perda de resposta, sem criar outra reserva.</p>
+          <a href="https://github.com/Randygomesdev/Easypet/blob/codex/unificar-develop/docs/sprints/S03-agenda/contracts.md">Contrato da agenda ↗</a>
+        </article>
+        <article>
+          <h3>Aceite antes da cobrança</h3>
+          <p>O caixa consulta a autorização persistida do tutor e aplica o valor aprovado uma única vez. O registro distingue o tutor do operador que documentou o aceite presencial.</p>
+          <a href="https://github.com/Randygomesdev/Easypet/blob/codex/unificar-develop/docs/sprints/S05-caixa/h2-contracts.md">Contrato do caixa ↗</a>
+        </article>
+        <article>
+          <h3>Operação rastreável</h3>
+          <p>O painel ADMIN reúne a trilha de identidade, os chamados privados e os alertas de operação. O mesmo incidente conserva sua identidade da abertura até a recuperação.</p>
+          <a href="https://github.com/Randygomesdev/Easypet/blob/codex/unificar-develop/docs/sprints/H2-fechamento/aceite.md">Aceite integrado da H2 ↗</a>
+        </article>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap">EasyPet · Developed by <a href="https://innker.com.br">Innker Tecnologia ↗</a></footer>
+</body>
+</html>

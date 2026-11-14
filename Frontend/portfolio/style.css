@@ -1,0 +1,42 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #17334c;
+  background: #f6f8fb;
+  line-height: 1.6;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #16426b; text-underline-offset: .24em; }
+a:focus-visible, video:focus-visible { outline: 3px solid #a65400; outline-offset: 4px; }
+.wrap { max-width: 1180px; width: calc(100% - 48px); margin-inline: auto; }
+.bar { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid #dce5ed; }
+.bar nav { display: flex; gap: 24px; }
+.bar a { text-decoration: none; }
+.bar a:hover { text-decoration: underline; }
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; }
+.brand img { width: 36px; }
+.repo { font-weight: 650; white-space: nowrap; }
+.hero { padding-block: clamp(56px, 8vw, 108px); display: grid; grid-template-columns: 1.5fr 1fr; align-items: center; gap: 32px; }
+.eyebrow { color: #8d4a00; font-size: .78rem; letter-spacing: .15em; font-weight: 800; }
+h1, h2, h3 { margin: 0; line-height: 1.12; }
+h1 { font-size: clamp(2.55rem, 6vw, 5rem); letter-spacing: -.065em; }
+h2 { font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -.04em; }
+h3 { font-size: 1.15rem; }
+.intro { color: #3d566c; max-width: 62ch; }
+.hero .intro { font-size: 1.15rem; }
+.mascot { width: 100%; height: auto; max-height: 420px; object-fit: contain; }
+.button { display: inline-flex; align-items: center; gap: 16px; background: #16426b; color: white; border-radius: 12px; padding: 12px 20px; font-weight: 700; text-decoration: none; }
+.button:hover { background: #0e2d4a; }
+section + section { margin-bottom: 64px; scroll-margin-top: 24px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px; }
+article { background: white; border: 1px solid #dce5ed; border-radius: 16px; padding: 20px; }
+article p { margin-bottom: 0; color: #3d566c; }
+video { width: 100%; aspect-ratio: 16 / 9; border-radius: 10px; background: #102f4b; margin-bottom: 15px; }
+.decisions a { display: inline-block; margin-top: 16px; }
+footer { border-top: 1px solid #dce5ed; padding-block: 24px; font-size: .9rem; }
+@media (max-width: 760px) {
+  .bar { flex-wrap: wrap; gap: 10px 20px; padding-block: 14px; }
+  .bar nav { order: 3; width: 100%; }
+  .hero, .grid { grid-template-columns: 1fr; }
+  .mascot { max-height: 260px; }
+}

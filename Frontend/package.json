@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:portfolio": "vite build portfolio --outDir ../dist-portfolio --emptyOutDir",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:e2e": "node e2e/run-local.mjs",
