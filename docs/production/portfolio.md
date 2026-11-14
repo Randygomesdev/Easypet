@@ -35,3 +35,10 @@ O roteiro narrado de cada vídeo está nas legendas em `Frontend/portfolio/publi
 Antes da troca, suspenda as escritas do EasyPet e execute o [roteiro de backup e verificação](operacao.md#backup-e-ensaio-de-recuperação). Guarde a configuração atual do proxy e a referência da [versão em execução](publicacao-h2-2026-11-14.md).
 
 Sirva o build estático no domínio do EasyPet e valide a página, os vídeos e os links por HTTPS. Depois de confirmar a troca, pare o projeto Compose EasyPet e seus timers de coleta, alertas e backup. Confira o domínio do Setoriza antes e depois da mudança. Preserve os volumes e o backup para recuperar a aplicação demonstrável futuramente.
+
+## Publicação em 14/11/2026
+
+- A revisão `548886c` da vitrine está publicada em [easypet.innker.com.br](https://easypet.innker.com.br/), servida pelo Nginx em `/var/www/easypet-portfolio-548886c`. O bloco HTTPS e a renovação do certificado continuam no proxy da VPS. As rotas da antiga API retornam HTTP 404.
+- Com o acesso público do EasyPet suspenso para o corte, foram feitos seis dumps PostgreSQL da H2 em `/srv/easypet-backups/pre-portfolio-548886c`. A verificação conferiu a leitura dos catálogos dos dumps e os SHA-256 do manifesto.
+- A reprodução dos seis vídeos com áudio e legendas foi verificada no domínio público em desktop e celular. Após esse aceite, os 16 containers do projeto `easypet-homolog` foram parados e os três timers do EasyPet foram desabilitados. Os volumes e a configuração anterior do Nginx foram preservados. O Setoriza respondeu HTTP 200 antes, durante e depois da troca. A comparação dos 30 containers fora do EasyPet encontrou os mesmos IDs, horários de início, contagens de reinício e indicadores de OOM. A memória disponível nas sondas imediatamente antes e depois da parada subiu de 2.378 para 4.377 MiB.
+- Para reativar a H2, use os containers e volumes preservados conforme o [registro da publicação H2](publicacao-h2-2026-11-14.md). A configuração do proxy anterior está em `/srv/easypet-release/portfolio-548886c/previous-nginx.conf`. Valide a aplicação antes de restaurar o acesso pelo domínio e religar as rotinas operacionais.
