@@ -2,6 +2,7 @@ package br.com.innkercode.auth.service;
 
 import br.com.innkercode.auth.domain.entity.TeamAccess;
 import br.com.innkercode.auth.domain.entity.User;
+import br.com.innkercode.auth.domain.model.TeamAccessStatus;
 import br.com.innkercode.auth.domain.model.UserRole;
 import br.com.innkercode.auth.dto.request.AcceptTeamInvitationRequest;
 import br.com.innkercode.auth.dto.request.CreateTeamInvitationRequest;
@@ -38,6 +39,7 @@ public class TeamAccessService {
     private final AccountCredentials credentials;
     private final EmailService emailService;
     private final ApplicationEventPublisher events;
+    private final IdentityAuditService audit;
 
     @Transactional
     public TeamAccessResponse invite(UUID ownerId, UUID partnerId, CreateTeamInvitationRequest request) {
@@ -62,6 +64,7 @@ public class TeamAccessService {
                 .createdBy(ownerId)
                 .build();
         persist(access);
+        audit.teamInvited(ownerId, access, request.reason(), now);
         events.publishEvent(new EmailService.TeamInvitationMail(email, token));
         return TeamAccessResponse.from(access, now);
     }
@@ -90,6 +93,7 @@ public class TeamAccessService {
         user.invalidateSessions();
         access.activate(user.getId());
         persist(access);
+        audit.teamAccepted(user, access, now);
         return TeamAccessResponse.from(access, now);
     }
 
@@ -102,18 +106,20 @@ public class TeamAccessService {
     }
 
     @Transactional
-    public void revoke(UUID ownerId, UUID partnerId, UUID accessId) {
+    public void revoke(UUID ownerId, UUID partnerId, UUID accessId, String reason) {
         TeamAccess access = accesses.findByIdAndPartnerId(accessId, partnerId)
                 .orElseThrow(() -> new UserNotFoundException("Acesso não encontrado."));
-        if (access.getStatus() == ACTIVE) {
+        Instant now = Instant.now();
+        TeamAccessStatus previous = access.statusAt(now);
+        if (previous == REVOKED) return;
+        if (previous == ACTIVE) {
             User user = users.findByIdForUpdate(access.getUserId()).orElseThrow();
             user.setActive(false);
             user.invalidateSessions();
             resets.replaceOutstanding(user.getId(), LocalDateTime.now());
         }
-        if (access.getStatus() != REVOKED) {
-            access.revoke(ownerId);
-        }
+        access.revoke(ownerId);
+        audit.teamRevoked(ownerId, access, previous, reason, now);
     }
 
     public TeamAccess requireActiveAccess(UUID userId) {

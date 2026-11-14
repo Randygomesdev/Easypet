@@ -97,7 +97,7 @@ class AuthApiIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        database.execute("truncate table team_accesses, password_reset_tokens, users");
+        database.execute("truncate table identity_audit_events, team_accesses, password_reset_tokens, users");
         SMTP.clear();
     }
 
@@ -340,6 +340,7 @@ class AuthApiIntegrationTest {
         when(partnerOwnership.requireOwnedPartner(other)).thenReturn(UUID.randomUUID());
 
         String invitation = body(Map.of("email", "team@example.test", "accessRole", "RECEPTION",
+                "reason", "Cobertura de recepção", "actorId", UUID.randomUUID().toString(),
                 "partnerId", UUID.randomUUID().toString()));
         mvc.perform(post("/auth/team/invitations").contentType(MediaType.APPLICATION_JSON).content(invitation))
                 .andExpect(status().isUnauthorized());
@@ -370,7 +371,9 @@ class AuthApiIntegrationTest {
 
         String revoke = "/auth/team/accesses/" + created.get("id").asText();
         mvc.perform(delete(revoke).header(HttpHeaders.AUTHORIZATION, other)).andExpect(status().isNotFound());
-        mvc.perform(delete(revoke).header(HttpHeaders.AUTHORIZATION, owner)).andExpect(status().isNoContent());
+        mvc.perform(delete(revoke).header(HttpHeaders.AUTHORIZATION, owner)
+                .contentType(MediaType.APPLICATION_JSON).content(body(Map.of("reason", "Vínculo encerrado"))))
+                .andExpect(status().isNoContent());
         mvc.perform(delete(revoke).header(HttpHeaders.AUTHORIZATION, owner)).andExpect(status().isNoContent());
         mvc.perform(get("/auth/session").header(HttpHeaders.AUTHORIZATION, employee))
                 .andExpect(status().isUnauthorized());
@@ -384,6 +387,100 @@ class AuthApiIntegrationTest {
         mvc.perform(get("/auth/session").header(HttpHeaders.AUTHORIZATION, employee))
                 .andExpect(status().isUnauthorized());
         login("team@example.test", PASSWORD, "TEAM_MEMBER");
+
+        String ownerId = jwt.verify(owner.substring(7)).get("userId", String.class);
+        String memberId = jwt.verify(employee.substring(7)).get("userId", String.class);
+        mvc.perform(get("/admin/identity-audit").param("targetType", "TEAM_ACCESS")
+                        .param("targetId", created.get("id").asText()).param("partnerId", partnerId.toString())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(jwt.generateToken(admin()))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content[0].action").value("TEAM_ACCESS_REVOKED"))
+                .andExpect(jsonPath("$.content[0].actorId").value(ownerId))
+                .andExpect(jsonPath("$.content[0].targetUserId").value(memberId))
+                .andExpect(jsonPath("$.content[0].before.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.content[0].after.status").value("REVOKED"))
+                .andExpect(jsonPath("$.content[0].reason").value("Vínculo encerrado"))
+                .andExpect(jsonPath("$.content[1].actorId").value(memberId))
+                .andExpect(jsonPath("$.content[1].actorRole").value("TEAM_MEMBER"))
+                .andExpect(jsonPath("$.content[1].action").value("TEAM_INVITATION_ACCEPTED"))
+                .andExpect(jsonPath("$.content[2].actorId").value(ownerId))
+                .andExpect(jsonPath("$.content[2].action").value("TEAM_INVITED"))
+                .andExpect(jsonPath("$.content[2].after.accessRole").value("RECEPTION"))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("team@example.test"))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(token))));
+    }
+
+    @Test
+    void identityAuditRequiresAdminAndRecordsOnlyEffectiveCustomerChanges() throws Exception {
+        String tutor = provision("Tutor", "audit@example.test", "CUSTOMER");
+        String other = provision("Outro", "other-audit@example.test", "CUSTOMER");
+        String target = jwt.verify(tutor).get("userId", String.class);
+        String otherId = jwt.verify(other).get("userId", String.class);
+        User admin = admin();
+        String authorization = bearer(jwt.generateToken(admin));
+
+        mvc.perform(get("/admin/identity-audit")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/admin/identity-audit").header(HttpHeaders.AUTHORIZATION, bearer(tutor)))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/admin/identity-audit").header(HttpHeaders.AUTHORIZATION, authorization)
+                .param("size", "101")).andExpect(status().isBadRequest());
+        mvc.perform(get("/admin/identity-audit").header(HttpHeaders.AUTHORIZATION, authorization)
+                .param("targetId", "invalid")).andExpect(status().isBadRequest());
+        mvc.perform(patch("/admin/customers/{id}/active", target)
+                .header(HttpHeaders.AUTHORIZATION, authorization).contentType(MediaType.APPLICATION_JSON)
+                .content(body(Map.of("active", false, "reason", "x".repeat(301)))))
+                .andExpect(status().isBadRequest());
+
+        mvc.perform(patch("/admin/customers/{id}/active", target)
+                .header(HttpHeaders.AUTHORIZATION, authorization).contentType(MediaType.APPLICATION_JSON)
+                .content(body(Map.of("active", false, "reason", "  Conta encerrada  ", "actorId", otherId,
+                        "actorRole", "PARTNER", "partnerId", UUID.randomUUID().toString()))))
+                .andExpect(status().isOk());
+        setCustomer(target, authorization, false, 200);
+        setCustomer(target, authorization, true, 200);
+        setCustomer(otherId, authorization, false, 200);
+
+        mvc.perform(get("/admin/identity-audit").header(HttpHeaders.AUTHORIZATION, authorization)
+                        .param("targetType", "CUSTOMER").param("targetId", target).param("size", "1"))
+                .andExpect(status().isOk()).andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.totalElements").value(2)).andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.content[0].action").value("CUSTOMER_ACTIVATED"))
+                .andExpect(jsonPath("$.content[0].reason").value("Motivo não informado."));
+        mvc.perform(get("/admin/identity-audit").header(HttpHeaders.AUTHORIZATION, authorization)
+                        .param("targetType", "CUSTOMER").param("targetId", target).param("size", "1").param("page", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].action").value("CUSTOMER_DEACTIVATED"))
+                .andExpect(jsonPath("$.content[0].actorId").value(admin.getId().toString()))
+                .andExpect(jsonPath("$.content[0].actorRole").value("ADMIN"))
+                .andExpect(jsonPath("$.content[0].targetUserId").value(target))
+                .andExpect(jsonPath("$.content[0].partnerId").isEmpty())
+                .andExpect(jsonPath("$.content[0].before.active").value(true))
+                .andExpect(jsonPath("$.content[0].after.active").value(false))
+                .andExpect(jsonPath("$.content[0].reason").value("Conta encerrada"));
+        mvc.perform(get("/admin/identity-audit").header(HttpHeaders.AUTHORIZATION, authorization)
+                        .param("actorId", otherId).param("action", "CUSTOMER_DEACTIVATED"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/auth/session").header(HttpHeaders.AUTHORIZATION, bearer(tutor)))
+                .andExpect(status().isUnauthorized());
+        assertThat(users.findById(UUID.fromString(target)).orElseThrow().getSessionVersion()).isEqualTo(2);
+    }
+
+    @Test
+    void failedAuditInsertRollsBackAccountStateAndRevocation() throws Exception {
+        String tutor = provision("Tutor", "rollback@example.test", "CUSTOMER");
+        String target = jwt.verify(tutor).get("userId", String.class);
+        String authorization = bearer(jwt.generateToken(admin()));
+        database.execute("alter table identity_audit_events add constraint reject_test_audit check (false)");
+        try {
+            setCustomer(target, authorization, false, 503);
+        } finally {
+            database.execute("alter table identity_audit_events drop constraint reject_test_audit");
+        }
+        User unchanged = users.findById(UUID.fromString(target)).orElseThrow();
+        assertThat(unchanged.isEnabled()).isTrue();
+        assertThat(unchanged.getSessionVersion()).isZero();
+        assertThat(database.queryForObject("select count(*) from identity_audit_events", Long.class)).isZero();
+        mvc.perform(get("/auth/session").header(HttpHeaders.AUTHORIZATION, bearer(tutor)))
+                .andExpect(status().isOk());
     }
 
     @Test

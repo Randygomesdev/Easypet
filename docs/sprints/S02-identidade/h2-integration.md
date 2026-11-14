@@ -1,0 +1,6 @@
+# H2 — Integrações S02
+
+- **S04.** A tela de contas usa `authService.listIdentityAudit({targetType:'CUSTOMER',targetId:id,page,size})` para histórico paginado e `authService.setCustomerActive(id, active, reason?)` para confirmação. Usar somente o motivo operacional, nunca dados de contato ou credenciais. Preservar tratamento atual de 401/403/503.
+- **S01.** Montar a consulta geral em rota protegida de ADMIN sob sua propriedade. `authService.listIdentityAudit` oferece filtros exatos e a paginação do [contrato](h2-contracts.md#consulta-administrativa). Para galeria, a página de histórico pode compor campo de motivo opcional até 300 caracteres, paginação da tabela e estado vazio.
+- **S07.** Encaminhar apenas `GET /api/v1/admin/identity-audit` para Auth em `Backend/Gateway-Service/src/main/resources/application.yml` e ingresso conforme necessário. Preservar bearer, ADMIN/401/403, no-store e JSON opcional em DELETE de equipe. No aceite, verificar V6, trilha por alvo, autoria derivada do bearer, recusa de outro titular, no-op/replay, revogação de JWT após alteração e inclusão da tabela no restore Auth.
+- **S06/S04.** O destinatário de tutor ativo do Auth segue o contrato existente. Ajustes Auth em preferências ou contato de balcão só serão feitos se forem necessários ao contrato publicado pelo dono.

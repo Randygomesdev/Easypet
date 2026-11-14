@@ -25,6 +25,7 @@ public class AdminCustomerService {
 
     private final UserRepository users;
     private final PasswordResetTokenRepository resets;
+    private final IdentityAuditService audit;
 
     @Transactional(readOnly = true)
     public CustomerPageResponse search(int page, int size, String query, Boolean active) {
@@ -38,16 +39,18 @@ public class AdminCustomerService {
     }
 
     @Transactional
-    public AdminCustomerResponse setActive(UUID id, boolean active) {
+    public AdminCustomerResponse setActive(User actor, UUID id, boolean active, String reason) {
         User user = users.findByIdForUpdate(id)
                 .filter(account -> account.getRole() == UserRole.CUSTOMER)
                 .orElseThrow(() -> new UserNotFoundException("Cliente não encontrado."));
-        if (user.isEnabled() != active) {
+        boolean previous = user.isEnabled();
+        if (previous != active) {
             user.setActive(active);
             user.invalidateSessions();
             if (!active) {
                 resets.replaceOutstanding(user.getId(), LocalDateTime.now());
             }
+            audit.customerActiveChanged(actor, user, previous, reason);
         }
         return AdminCustomerResponse.from(user);
     }

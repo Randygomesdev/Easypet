@@ -8,5 +8,6 @@ import jakarta.validation.constraints.Size;
 
 public record CreateTeamInvitationRequest(
         @NotBlank @Email @Size(max = 255) String email,
-        @NotNull TeamAccessRole accessRole
+        @NotNull TeamAccessRole accessRole,
+        @Size(max = 300) String reason
 ) {}

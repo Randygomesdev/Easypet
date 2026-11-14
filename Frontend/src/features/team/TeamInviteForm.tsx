@@ -15,15 +15,16 @@ export default function TeamInviteForm({ onInvited }: { onInvited: () => void })
     const fields = new FormData(form)
     const email = String(fields.get('email'))
     const accessRole = fields.get('accessRole') as TeamAccessRole
+    const reason = String(fields.get('reason')).trim()
     setError('')
     setLoading(true)
     try {
-      await authService.inviteTeamMember({ email, accessRole })
+      await authService.inviteTeamMember({ email, accessRole, reason: reason || undefined })
       form.reset()
       onInvited()
     } catch (cause) {
       const response = getAuthError(cause)
-      setError(authRetryMessage(cause) ?? response?.errors?.email ?? response?.message
+      setError(authRetryMessage(cause) ?? response?.errors?.reason ?? response?.errors?.email ?? response?.message
         ?? 'Não foi possível confirmar o convite. Confira a lista e tente novamente.')
     } finally {
       setLoading(false)
@@ -39,6 +40,8 @@ export default function TeamInviteForm({ onInvited }: { onInvited: () => void })
           {Object.entries(teamRoleLabels).map(([role, label]) => <option key={role} value={role}>{label}</option>)}
         </SelectField>
       </div>
+      <TextField name="reason" label="Motivo (opcional)" maxLength={300} disabled={loading}
+        hint="Registre apenas o motivo operacional, sem dados pessoais ou credenciais." />
       {error && <p role="alert" className="text-sm text-text-danger">{error}</p>}
       <Button type="submit" variant="accent" disabled={loading}>{loading ? 'Criando convite…' : 'Enviar convite'}</Button>
     </form>

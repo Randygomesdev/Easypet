@@ -80,7 +80,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/auth/team/invitations").hasRole("PARTNER")
                                 .requestMatchers(HttpMethod.GET, "/auth/team/accesses").hasRole("PARTNER")
                                 .requestMatchers(HttpMethod.DELETE, "/auth/team/accesses/{id}").hasRole("PARTNER")
-                                .requestMatchers(HttpMethod.GET, "/admin/customers").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/admin/customers", "/admin/identity-audit").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PATCH, "/admin/customers/{id}/active").hasRole("ADMIN");
                     }
                     if (homolog) {

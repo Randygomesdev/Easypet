@@ -42,6 +42,48 @@ export type AdminCustomerPage = {
   totalPages: number
 }
 
+export type IdentityAuditAction =
+  | 'CUSTOMER_ACTIVATED'
+  | 'CUSTOMER_DEACTIVATED'
+  | 'TEAM_INVITED'
+  | 'TEAM_INVITATION_ACCEPTED'
+  | 'TEAM_ACCESS_REVOKED'
+
+export type IdentityAuditState = { active: boolean } | { status: TeamAccess['status']; accessRole: TeamAccessRole }
+
+export type IdentityAuditEntry = {
+  id: string
+  occurredAt: string
+  actorId: string
+  actorRole: 'ADMIN' | 'PARTNER' | 'TEAM_MEMBER'
+  targetType: 'CUSTOMER' | 'TEAM_ACCESS'
+  targetId: string
+  targetUserId: string | null
+  partnerId: string | null
+  action: IdentityAuditAction
+  before: IdentityAuditState | null
+  after: IdentityAuditState
+  reason: string
+}
+
+export type IdentityAuditFilters = {
+  page?: number
+  size?: number
+  targetType?: IdentityAuditEntry['targetType']
+  targetId?: string
+  actorId?: string
+  partnerId?: string
+  action?: IdentityAuditAction
+}
+
+export type IdentityAuditPage = {
+  content: IdentityAuditEntry[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
 export type TeamAccessRole = 'MANAGER' | 'RECEPTION' | 'PROFESSIONAL'
 
 export type AuthPermission =

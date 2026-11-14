@@ -2,7 +2,8 @@ import axios from 'axios'
 import { env } from '../config/env'
 import { api } from '../lib/api'
 import type {
-  AdminCustomer, AdminCustomerPage, AuthenticationResult, AuthSession, LoginRequest, RegisterRequest,
+  AdminCustomer, AdminCustomerPage, AuthenticationResult, AuthSession, IdentityAuditFilters, IdentityAuditPage,
+  LoginRequest, RegisterRequest,
   TeamAccess, TeamAccessRole, User,
 } from '../types/auth.types'
 
@@ -67,16 +68,20 @@ export const authService = {
   listTeamAccesses: (signal?: AbortSignal) =>
     api.get<TeamAccess[]>('/auth/team/accesses', { signal }).then(r => r.data),
 
-  inviteTeamMember: (data: { email: string; accessRole: TeamAccessRole }) =>
+  inviteTeamMember: (data: { email: string; accessRole: TeamAccessRole; reason?: string }) =>
     api.post<TeamAccess>('/auth/team/invitations', data).then(r => r.data),
 
-  revokeTeamAccess: (id: string) => api.delete<void>(`/auth/team/accesses/${encodeURIComponent(id)}`),
+  revokeTeamAccess: (id: string, reason?: string) =>
+    api.delete<void>(`/auth/team/accesses/${encodeURIComponent(id)}`, { data: reason ? { reason } : undefined }),
 
   listCustomers: (params: { page: number; size: number; q?: string; active?: boolean }) =>
     api.get<AdminCustomerPage>('/admin/customers', { params }).then(r => r.data),
 
-  setCustomerActive: (id: string, active: boolean) =>
-    api.patch<AdminCustomer>(`/admin/customers/${encodeURIComponent(id)}/active`, { active }).then(r => r.data),
+  setCustomerActive: (id: string, active: boolean, reason?: string) =>
+    api.patch<AdminCustomer>(`/admin/customers/${encodeURIComponent(id)}/active`, { active, reason }).then(r => r.data),
+
+  listIdentityAudit: (params: IdentityAuditFilters = {}, signal?: AbortSignal) =>
+    api.get<IdentityAuditPage>('/admin/identity-audit', { params, signal }).then(r => r.data),
 
   exchangeOAuthCode: (code: string) =>
     publicAuthApi.post<User>('/auth/oauth2/exchange', { code }).then(r => r.data),

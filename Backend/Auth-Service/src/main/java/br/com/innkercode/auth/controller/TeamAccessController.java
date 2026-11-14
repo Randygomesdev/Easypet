@@ -3,6 +3,7 @@ package br.com.innkercode.auth.controller;
 import br.com.innkercode.auth.domain.entity.User;
 import br.com.innkercode.auth.dto.request.AcceptTeamInvitationRequest;
 import br.com.innkercode.auth.dto.request.CreateTeamInvitationRequest;
+import br.com.innkercode.auth.dto.request.RevokeTeamAccessRequest;
 import br.com.innkercode.auth.dto.response.TeamAccessResponse;
 import br.com.innkercode.auth.service.PartnerOwnershipClient;
 import br.com.innkercode.auth.service.TeamAccessService;
@@ -61,7 +62,9 @@ public class TeamAccessController {
     public void revoke(
             @AuthenticationPrincipal User user,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
-            @PathVariable UUID id) {
-        team.revoke(user.getId(), partnerOwnership.requireOwnedPartner(authorization), id);
+            @PathVariable UUID id,
+            @Valid @RequestBody(required = false) RevokeTeamAccessRequest request) {
+        team.revoke(user.getId(), partnerOwnership.requireOwnedPartner(authorization), id,
+                request == null ? null : request.reason());
     }
 }
