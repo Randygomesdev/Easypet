@@ -10,12 +10,14 @@ import { Table, TableCell, TableHeaderCell } from '../../components/ui/Table'
 import { customerService } from '../../services/customer.service'
 import type { AdminCustomer } from '../../types/auth.types'
 import { CustomerAccountStatusDialog } from './CustomerAccountStatusDialog'
+import { CustomerAccountHistoryDialog } from './CustomerAccountHistoryDialog'
 import { useCustomerQuery } from './useCustomerQuery'
 import { useDirectoryFilter } from './useDirectoryFilter'
 
 export function CustomerAccountDirectory() {
   const [state, setState] = useState('all')
   const [selected, setSelected] = useState<AdminCustomer>()
+  const [historyAccount, setHistoryAccount] = useState<AdminCustomer>()
   const [notice, setNotice] = useState('')
   const { search, setSearch, submitSearch, filter: { q, page }, selectPage } = useDirectoryFilter()
   const active = state === 'all' ? undefined : state === 'active'
@@ -63,11 +65,15 @@ export function CustomerAccountDirectory() {
                     {account.active ? 'Ativa' : 'Inativa'}
                   </Badge></TableCell>
                   <TableCell>
-                    <Button size="sm" variant="secondary"
-                      aria-label={`${account.active ? 'Desativar' : 'Reativar'} conta de ${account.name}`}
-                      onClick={() => { setNotice(''); setSelected(account) }}>
-                      {account.active ? 'Desativar' : 'Reativar'}
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="secondary" aria-label={`Histórico da conta de ${account.name}`}
+                        onClick={() => setHistoryAccount(account)}>Histórico</Button>
+                      <Button size="sm" variant="secondary"
+                        aria-label={`${account.active ? 'Desativar' : 'Reativar'} conta de ${account.name}`}
+                        onClick={() => { setNotice(''); setSelected(account) }}>
+                        {account.active ? 'Desativar' : 'Reativar'}
+                      </Button>
+                    </div>
                   </TableCell>
                 </tr>
               ))}
@@ -77,6 +83,8 @@ export function CustomerAccountDirectory() {
         {data && <Pagination page={page + 1} totalPages={data.totalPages} label="Paginação de contas"
           onPageChange={next => selectPage(next - 1)} />}
       </Card>
+      {historyAccount && <CustomerAccountHistoryDialog key={historyAccount.id} account={historyAccount}
+        onClose={() => setHistoryAccount(undefined)} />}
       {selected && <CustomerAccountStatusDialog account={selected} onClose={() => setSelected(undefined)}
         onSaved={account => {
           setSelected(undefined)

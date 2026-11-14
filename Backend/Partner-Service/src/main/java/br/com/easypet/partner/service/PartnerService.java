@@ -8,6 +8,7 @@ import br.com.easypet.partner.domain.entity.Partner;
 import br.com.easypet.partner.domain.model.PartnerCategory;
 import br.com.easypet.partner.dto.request.PartnerRequest;
 import br.com.easypet.partner.dto.response.PartnerResponse;
+import br.com.easypet.partner.dto.response.CatalogPartnerResponse;
 import br.com.easypet.partner.dto.response.PartnerOperationsResponse;
 import br.com.easypet.partner.dto.request.ReviewRequest;
 import br.com.easypet.partner.dto.response.ReviewResponse;
@@ -27,6 +28,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -38,6 +42,7 @@ import br.com.easypet.partner.security.UserPrincipal;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -48,6 +53,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class PartnerService {
 
+    private static final Set<String> CATALOG_SORT_FIELDS = Set.of("name", "city", "rating", "id");
     private final PartnerRepository partnerRepository;
     private final PartnerMapper partnerMapper;
     private final PartnerReviewRepository partnerReviewRepository;
@@ -103,6 +109,36 @@ public class PartnerService {
         }
         
         return partners.map(partnerMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CatalogPartnerResponse> findCatalog(PartnerCategory category, String name, Pageable pageable) {
+        Specification<Partner> filter = (partner, query, criteria) -> criteria.isTrue(partner.get("active"));
+        if (category != null) {
+            filter = filter.and((partner, query, criteria) -> criteria.isMember(category, partner.get("categories")));
+        }
+        if (name != null && !name.isBlank()) {
+            String term = "%" + name.strip().toLowerCase(Locale.ROOT)
+                    .replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+            filter = filter.and((partner, query, criteria) -> {
+                var matchingService = query.subquery(Integer.class);
+                var service = matchingService.from(ServiceOffer.class);
+                matchingService.select(criteria.literal(1)).where(
+                        criteria.equal(service.get("partner"), partner),
+                        criteria.isTrue(service.get("active")),
+                        criteria.like(criteria.lower(service.get("name")), term, '!'));
+                return criteria.or(criteria.like(criteria.lower(partner.get("name")), term, '!'),
+                        criteria.like(criteria.lower(partner.get("city")), term, '!'),
+                        criteria.exists(matchingService));
+            });
+        }
+        Sort sort = pageable.getSortOr(Sort.by("name"));
+        if (sort.stream().anyMatch(order -> !CATALOG_SORT_FIELDS.contains(order.getProperty()))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ordenação do catálogo inválida.");
+        }
+        if (sort.getOrderFor("id") == null) sort = sort.and(Sort.by("id"));
+        var page = PageRequest.of(pageable.getPageNumber(), Math.min(pageable.getPageSize(), 100), sort);
+        return partnerRepository.findAll(filter, page).map(partnerMapper::toResponse).map(CatalogPartnerResponse::from);
     }
 
     @Transactional(readOnly = true)

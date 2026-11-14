@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
 import { customerService, type CustomerScope } from '../../services/customer.service'
 import { ReceptionPetDirectory } from './ReceptionPetDirectory'
+import { ReceptionNotificationEmail } from './ReceptionNotificationEmail'
 import { useCustomerQuery } from './useCustomerQuery'
 import { CustomerAccountBadge } from './CustomerAccountBadge'
 import { IssueClaimDialog } from '../claims/IssueClaimDialog'
@@ -41,7 +42,11 @@ export function CustomerDetail({ scope, customerId }: { scope: CustomerScope; cu
           )}
         </CardContent>
       </Card>
-      {scope === 'partner' && <ReceptionPetDirectory key={customer.id} customerId={customer.id} partnerId={customer.partnerId} />}
+      {scope === 'partner' && <>
+        <ReceptionNotificationEmail key={`notification-${customer.id}`} customerId={customer.id} email={customer.email}
+          onReloadCustomer={reload} />
+        <ReceptionPetDirectory key={customer.id} customerId={customer.id} partnerId={customer.partnerId} />
+      </>}
       <IssueClaimDialog open={claimOpen} customerId={customer.id} onClose={() => { setClaimOpen(false); reload() }} />
     </div>
   )

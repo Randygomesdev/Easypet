@@ -74,7 +74,7 @@ public class PartnerController {
     public ResponseEntity<Page<CatalogPartnerResponse>> catalog(
             @RequestParam(required = false) PartnerCategory category,
             @RequestParam(required = false) String name, Pageable pageable) {
-        return ResponseEntity.ok(partnerService.findAll(category, name, pageable).map(CatalogPartnerResponse::from));
+        return ResponseEntity.ok(partnerService.findCatalog(category, name, pageable));
     }
 
     @GetMapping("/catalog/{id}")

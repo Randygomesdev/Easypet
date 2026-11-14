@@ -8,7 +8,8 @@ import { partnerService, type PartnerResponse } from '../../services/partner.ser
 import { petService, type PetResponse, SPECIES_LABEL } from '../../services/pet.service'
 import { useAuth } from '../../contexts/AuthContext'
 import { Button } from '../../components/ui/Button'
-import { ErrorState, LoadingState } from '../../components/ui/FeedbackState'
+import { EmptyState, ErrorState, LoadingState } from '../../components/ui/FeedbackState'
+import { Pagination } from '../../components/ui/Pagination'
 import { bookingError } from '../../features/booking/bookingUi'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -265,26 +266,26 @@ export default function HomePage() {
   }, [input])
 
   const queryKey = JSON.stringify([search, category, page, sort, retry])
-  const loading = loadedQuery !== queryKey
+  const loading = loadedQuery !== queryKey || input.trim() !== search
   useEffect(() => {
-    let cancelled = false
+    const request = new AbortController()
     partnerService
-      .listCatalog({ name: search || undefined, category: category || undefined, page, size: 12 })
+      .listCatalog({ name: search || undefined, category: category || undefined, page, size: 12,
+        sort: sort === 'alpha' ? 'name,asc' : undefined }, request.signal)
       .then(data => {
-        if (cancelled) return
+        if (request.signal.aborted) return
         let list = data.content
         if (sort === 'open')  list = [...list].sort((a, b) => (isOpenNow(b.businessHours) ? 1 : 0) - (isOpenNow(a.businessHours) ? 1 : 0))
-        if (sort === 'alpha') list = [...list].sort((a, b) => a.name.localeCompare(b.name))
         setPartners(list)
         setTotal(data.totalPages)
         setCatalogError('')
       })
-      .catch(err => { if (!cancelled) setCatalogError(bookingError(err, 'Não foi possível carregar o catálogo.')) })
-      .finally(() => { if (!cancelled) setLoadedQuery(queryKey) })
-    return () => { cancelled = true }
+      .catch(err => { if (!request.signal.aborted) setCatalogError(bookingError(err, 'Não foi possível carregar o catálogo.')) })
+      .finally(() => { if (!request.signal.aborted) setLoadedQuery(queryKey) })
+    return () => request.abort()
   }, [search, category, page, sort, queryKey])
 
-  function handleCategory(val: string) { setInput(''); setSearch(''); setCategory(val); setPage(0) }
+  function handleCategory(val: string) { setSearch(input.trim()); setCategory(val); setPage(0) }
   function handleSort(val: SortMode)   { setSort(s => s === val ? '' : val); setPage(0) }
 
   return (
@@ -310,14 +311,14 @@ export default function HomePage() {
 
       {/* Busca + sort */}
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-(--color-text-muted)" />
           <input
             type="search"
             aria-label="Buscar no catálogo"
             value={input}
-            onChange={e => { setInput(e.target.value); setCategory('') }}
-            placeholder="Buscar por estabelecimento ou cidade"
+            onChange={e => setInput(e.target.value)}
+            placeholder="Estabelecimento, cidade ou serviço"
             className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-(--color-border)
                        bg-(--color-surface) text-(--color-text-body)
                        placeholder:text-(--color-text-muted) outline-none
@@ -341,7 +342,7 @@ export default function HomePage() {
       </div>
 
       {/* Categoria chips */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Categoria do estabelecimento">
         {CATEGORIES.map(c => (
           <button key={c.value} onClick={() => handleCategory(c.value)} aria-pressed={category === c.value}
                   className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors
@@ -361,35 +362,15 @@ export default function HomePage() {
           <Button variant="secondary" onClick={() => setRetry(value => value + 1)}>Tentar novamente</Button>
         } />
       ) : partners.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-16">
-          <div className="w-14 h-14 rounded-full bg-(--color-bg) border border-(--color-border) flex items-center justify-center">
-            <Store size={24} className="text-(--color-text-muted)" />
-          </div>
-          <p className="text-sm font-semibold text-(--color-text-body)">Nenhum estabelecimento encontrado</p>
-          <p className="text-xs text-(--color-text-muted)">Tente ajustar os filtros ou a busca</p>
-        </div>
+        <EmptyState icon={Store} title="Nenhum estabelecimento encontrado" description="Tente ajustar os filtros ou a busca" />
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {partners.map(p => <PartnerCard key={p.id} partner={p} />)}
           </div>
-          {total > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-2">
-              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
-                      className="px-4 py-2 text-sm rounded-lg border border-(--color-border)
-                                 text-(--color-text-body) disabled:opacity-40 hover:bg-(--color-bg)">
-                Anterior
-              </button>
-              <span className="text-sm text-(--color-text-muted)">{page + 1} / {total}</span>
-              <button onClick={() => setPage(p => Math.min(total - 1, p + 1))} disabled={page >= total - 1}
-                      className="px-4 py-2 text-sm rounded-lg border border-(--color-border)
-                                 text-(--color-text-body) disabled:opacity-40 hover:bg-(--color-bg)">
-                Próximo
-              </button>
-            </div>
-          )}
         </>
       )}
+      {!loading && !catalogError && <Pagination label="Páginas do catálogo" page={page + 1} totalPages={total} onPageChange={value => setPage(value - 1)} />}
     </div>
   )
 }

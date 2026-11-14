@@ -30,6 +30,10 @@ public interface ReceptionCustomerRepository extends JpaRepository<ReceptionCust
     @Query("select customer from ReceptionCustomer customer where customer.id = :id")
     Optional<ReceptionCustomer> lockById(UUID id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select customer from ReceptionCustomer customer where customer.id = :id and customer.partner.id = :partnerId")
+    Optional<ReceptionCustomer> lockByIdAndPartnerId(UUID id, UUID partnerId);
+
     List<ReceptionCustomer> findByClaimedUserId(UUID userId);
 
     boolean existsByIdAndPartnerIdAndClaimedUserId(UUID customerId, UUID partnerId, UUID userId);

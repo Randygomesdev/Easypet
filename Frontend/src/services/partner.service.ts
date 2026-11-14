@@ -150,8 +150,9 @@ export const partnerService = {
   listCategories: (): Promise<ServiceCategoryResponse[]> =>
     api.get('/categories').then(r => r.data),
 
-  listCatalog: (params: { name?: string; category?: string; page: number; size: number }): Promise<Page<PartnerResponse>> =>
-    api.get('/partners/catalog', { params }).then(r => r.data),
+  listCatalog: (params: { name?: string; category?: string; page: number; size: number; sort?: 'name,asc' },
+    signal?: AbortSignal): Promise<Page<PartnerResponse>> =>
+    api.get('/partners/catalog', { params, signal }).then(r => r.data),
 
   getCatalogPartner: (id: string): Promise<PartnerResponse> =>
     api.get(`/partners/catalog/${id}`).then(r => r.data),

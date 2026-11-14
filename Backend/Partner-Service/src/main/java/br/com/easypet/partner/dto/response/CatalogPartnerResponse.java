@@ -17,6 +17,7 @@ public record CatalogPartnerResponse(
         return new CatalogPartnerResponse(partner.id(), partner.name(), partner.description(),
                 partner.address(), partner.number(), partner.neighborhood(), partner.city(), partner.state(),
                 partner.zipCode(), partner.categories(), partner.galleryPictures(), partner.rating(),
-                partner.pictureUrl(), partner.latitude(), partner.longitude(), partner.businessHours(), partner.services());
+                partner.pictureUrl(), partner.latitude(), partner.longitude(), partner.businessHours(),
+                partner.services().stream().filter(service -> Boolean.TRUE.equals(service.active())).toList());
     }
 }

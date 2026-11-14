@@ -1,15 +1,18 @@
 package br.com.easypet.partner.security;
 
+import br.com.easypet.partner.controller.InternalReceptionNotificationController;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,12 +22,16 @@ import java.util.ArrayList;
 @Component
 @RequiredArgsConstructor
 public class AuthSessionFilter extends OncePerRequestFilter {
+    private static final AntPathMatcher PATHS = new AntPathMatcher();
     private final AuthSessionClient auth;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI().substring(request.getContextPath().length());
         if (path.startsWith("/internal/partners/customer-claims/") && path.endsWith("/owner")) {
+            return true;
+        }
+        if (HttpMethod.GET.matches(request.getMethod()) && PATHS.match(InternalReceptionNotificationController.ROUTE, path)) {
             return true;
         }
         return path.equals("/actuator/health") || path.equals("/swagger-ui.html")

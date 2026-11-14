@@ -4,13 +4,16 @@ import br.com.easypet.partner.dto.request.ReceptionCustomerRequest;
 import br.com.easypet.partner.dto.response.ReceptionCustomerResponse;
 import br.com.easypet.partner.security.UserPrincipal;
 import br.com.easypet.partner.service.ReceptionCustomerService;
+import br.com.easypet.partner.service.ReceptionNotificationService;
 import br.com.easypet.partner.service.DeskAccess;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,6 +28,7 @@ public class ReceptionCustomerController {
     private static final String PARTNER = "/partners/me/customers";
     private static final String ADMIN = "/admin/reception-customers";
     private final ReceptionCustomerService customers;
+    private final ReceptionNotificationService notifications;
     private final DeskAccess deskAccess;
 
     @GetMapping("/partners/me/desk")
@@ -54,6 +58,21 @@ public class ReceptionCustomerController {
         return customers.findForPartner(actor, customerId);
     }
 
+    @GetMapping(PARTNER + "/{customerId}/notification-email")
+    public ResponseEntity<ReceptionNotificationService.Authorization> notificationEmail(
+            @AuthenticationPrincipal UserPrincipal actor, @PathVariable UUID customerId) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(notifications.status(actor, customerId));
+    }
+
+    @PutMapping(PARTNER + "/{customerId}/notification-email")
+    public ResponseEntity<ReceptionNotificationService.Authorization> updateNotificationEmail(
+            @AuthenticationPrincipal UserPrincipal actor, @PathVariable UUID customerId,
+            @Valid @RequestBody NotificationEmailRequest request) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(notifications.update(actor, customerId,
+                request.authorized(), request.expectedRevision(), Boolean.TRUE.equals(request.confirmedInPerson()),
+                request.confirmedEmail()));
+    }
+
     @GetMapping(ADMIN)
     public Page<ReceptionCustomerResponse> listForAdmin(
             @RequestParam(defaultValue = "") @Size(max = 254) String q,
@@ -75,4 +94,6 @@ public class ReceptionCustomerController {
     }
 
     public record DeskContext(UUID partnerId) {}
+    public record NotificationEmailRequest(@NotNull Boolean authorized, @NotNull @Min(0) Long expectedRevision,
+                                           Boolean confirmedInPerson, @Size(max = 254) String confirmedEmail) {}
 }

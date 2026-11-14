@@ -1,5 +1,6 @@
 package br.com.easypet.partner.config;
 
+import br.com.easypet.partner.controller.InternalReceptionNotificationController;
 import br.com.easypet.partner.security.AuthSessionFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers("/internal/partners/me/staff-assignment")
                         .hasAnyAuthority("BOOKINGS_ASSIGNED_READ", "BOOKINGS_ASSIGNED_ATTEND")
                 .requestMatchers(HttpMethod.GET, "/internal/partners/customer-claims/*/owner").permitAll()
+                .requestMatchers(HttpMethod.GET, InternalReceptionNotificationController.ROUTE).permitAll()
                 .requestMatchers("/partners/customer-claims/**", "/internal/partners/customer-claims/**")
                         .hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.GET, "/partners/me").hasRole("PARTNER")
