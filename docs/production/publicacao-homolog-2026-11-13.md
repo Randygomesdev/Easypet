@@ -4,6 +4,8 @@ EasyPet publicado em **https://easypet.innker.com.br**, na VPS de homologação 
 
 ## Release e instalação
 
+O registro abaixo descreve a publicação inicial. O frontend recebeu posteriormente a atualização de menu compacto documentada ao final desta página.
+
 - Backend e painel master: `4f6ce3c`; checkout final `354eebb`, com correções de título, favicon, idioma do HTML e crédito do rodapé. A aba mostra `EasyPet`; o favicon usa o SVG oficial com endereço versionado pelo Vite. Conteúdo e MIME conferidos no domínio publicado. Rodapé `Developed by Innker Tecnologia`, com link para `https://innker.com.br` em nova aba.
 - Imagens construídas fora da VPS, transportadas por SSH com limite de banda e conferidas por SHA-256 e IDs. Nenhum build Maven, Gradle ou Vite foi executado no host compartilhado. Manifestos de checkout limpo guardados em `/srv/easypet-release`.
 - Projeto `easypet-homolog`, 16 serviços, cinco arquivos Compose: base, host, compacto, demonstração e monitoramento. Tetos somados de 3.632 MiB, swap desabilitado; única porta publicada em `127.0.0.1:18080`. Rede própria `172.30.80.0/24`, sem conexão com redes Setoriza.
@@ -42,3 +44,13 @@ Este aceite cobre uma demonstração acompanhada, não capacidade sustentada ou 
 Usar o [roteiro com os cinco arquivos Compose](setoriza-homolog.md). A cópia privada local `.env.easypet-vps.local` foi sincronizada com o ambiente publicado. Não executar builds no host. Para pressão de recursos, parar somente o projeto EasyPet, preservando volumes; não trocar automaticamente para o perfil padrão maior.
 
 Para reverter apenas a correção visual, a imagem anterior está retida como `easypet-homolog-frontend:4f6ce3c-google-on`. Para desativar OAuth, a configuração inicial protegida e a imagem `google-off` foram preservadas; manter o mesmo conjunto de overlays. Não remover volumes para reverter um problema de aplicação. Não modificar o vhost ou os serviços Setoriza.
+
+## Menu compacto — 14/11/2026
+
+Frontend publicado no commit `28cc8aa`, com imagem construída localmente, hash do arquivo e ID da imagem conferidos na VPS. Checkout limpo e manifesto verificados antes da troca exclusiva do serviço `frontend`, usando os cinco arquivos Compose e `--no-deps`. Backend preservado na versão da publicação inicial.
+
+A navegação usa barra de 64 px no desktop e expande para 224 px sobre o conteúdo ao receber mouse ou foco de teclado, sem deslocar a página. No celular, mantém o drawer completo, Escape, retenção e retorno do foco. Dispositivos sem hover mantêm os rótulos visíveis. A animação respeita a preferência de movimento reduzido. Rotas e permissões permanecem filtradas pelo perfil.
+
+Validação: `npm run build`, ESLint do componente e `npm run test:design-system` aprovados. A suíte existente teve dois seletores atualizados para alterações anteriores: “Tutores” no ADMIN e link do crédito como último elemento focável do menu. O lint global continua com oito erros e um aviso em arquivos não alterados nesta entrega (CartContext, ThemeContext, PaymentSuccessPage, PetDetailPage, PetFormPage e PetsPage).
+
+No domínio publicado, conferidos visualmente o estado compacto, expansão com mouse, recolhimento ao sair, expansão com foco e navegação por teclado até Sistema. Às 00h07 de 14/11/2026 (America/Sao_Paulo), EasyPet e Setoriza responderam HTTP 200; os 16 serviços EasyPet estavam saudáveis, o timer de monitoramento ativo e havia 2.428 MiB disponíveis no host. Os 15 containers Setoriza conservaram ID, início, contagem de reinícios e estado de OOM. Evidência operacional em `/srv/easypet-release/compact-menu-after.json`. Não foi necessária alteração no proxy ou no login Google; esta rodada valida a interface e a troca isolada do frontend, não substitui o aceite integrado S07.
