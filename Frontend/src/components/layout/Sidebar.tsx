@@ -97,7 +97,7 @@ export default function Sidebar({ open, onClose }: Props) {
         />
       )}
 
-      {/* Reserve only the icon rail on desktop; expansion overlays the content. */}
+      {/* Desktop expansion reserves its full width in the page layout. */}
       <div className="sidebar-rail">
       <aside
         id="painel-navegacao"
@@ -107,7 +107,7 @@ export default function Sidebar({ open, onClose }: Props) {
         onKeyDown={handleMenuKey}
         className={`
           panel-sidebar fixed z-30 top-0 left-0 h-full bg-surface flex flex-col
-          md:visible md:absolute md:translate-x-0
+          md:visible md:relative md:translate-x-0
           ${open ? 'visible translate-x-0' : 'invisible -translate-x-full'}
           w-56
         `}
